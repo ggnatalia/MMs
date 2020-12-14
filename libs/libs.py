@@ -1,0 +1,234 @@
+#!/usr/bin/python3
+
+import pandas as pd
+import numpy as np
+import random
+import subprocess
+import logging
+import daiquiri
+################################################################################################### Useful functions, common in different steps
+
+########################### WORK WITH FASTA/ ALIGN FILES
+
+def simplifyString(string, splitChar = '\t', conservative = False): # TESTED!
+    """ For a string: change splitChar by '_' or split by it """
+    if conservative:# Replace splitChar by '_' and remove blank spaces
+        string = string.replace(splitChar, '_').replace(' ','')
+    else:# Maintain first element of the splitted string
+        if splitChar in string:  
+            string = string.split(splitChar)[0]
+    return(string)
+
+def fasta2dict(fasta):
+        SeqDic = {}
+        with open(fasta) as f:
+            for sequece in f.read().strip().lstrip('>').split('>'):
+                name, seq = sequece.split('\n',1)
+                #print(name)
+                name = name.split('\t')[0]
+                if not 'N' in seq:
+                    SeqDic[name] = seq.replace('\n','')
+        return(SeqDic)
+
+
+def fastq2fasta(fastq, fasta):
+    """ Convert fastq files to fasta file. Ignoring qualities True """
+    with open(fastq, 'r') as fastqfile, open('{}.fasta'.format(fasta), 'w') as fastafile:
+        while True:
+            header = fastqfile.readline().rstrip('\n').lstrip('@')
+            if not header:
+                break
+            seq = fastqfile.readline().rstrip('\n')
+            coment= fastqfile.readline().rstrip('\n')
+            qual = fastqfile.readline().rstrip('\n')
+            fastafile.write('>{}\n{}\n'.format(header, seq))
+
+
+def align_to_array(Seqs, expand = False):
+    """ Convert a set of Sequence objects into a align array """
+    #NOTE: numpy arrays do not have rownames, but are faster than lists, especially to do calculations, so the best option is to convert my dict ib two lists (save the same order and then split the seq nt by nt)
+    #array = np.array(list(self.align.items())) #dtype is '<U50000' : unicode string of 50000
+    # I want that each column would be a character
+    sortedSeqs = sorted(Seqs, key = lambda x : x.abun, reverse = True)
+    #Now create the array with just the split sequences:
+    seqsArray = np.array(list(tuple(s.seq) for s in sortedSeqs)) # dtype='<U1': string 1 length
+    abundances = list(s.abun for s in sortedSeqs)
+    #rows are in the same order than seqs, which means that they pair with seqNames list
+    # How access seqs and positions: seqsArray[1, 7500:8000] row 1, col 7500:8000 
+    # x = np.array([[1, 2], [3, 4], [5, 6]]); x[[0, 1, 2], [0, 1, 1]] = array([1, 4, 5])- 'For elements 0,1 & 2 of the dim 1, extract the element 0 for the first category and the element 1 for the others.
+    # Access the whole column (ej. 1): seqsArray[:, 1], 
+    # Dim of the array (tree structure):  np.ndim(seqsArray)=2 -> structure of my array: [[]], with my data: [16*[seq]].
+    # Now, shape is the number of elements in each dimension: np.shape(seqsArray)=16,50000
+    #** To understand it better run a=np.zeros((2, 3, 4)) and np.shape(a), np.dim(a)
+    if expand:
+        return(expand_alignment(seqsArray, abundances))
+    else:
+        return(seqsArray)
+
+def expand_alignment(seqsArray, abundances): 
+    """ Expand an alignment taking into account the abundances of each sequence """
+    expandSeqsArray = np.array([expand_column(seqsArray[:,column], abundances) for column in range(np.shape(seqsArray)[1])]).T
+    return(expandSeqsArray)
+
+def expand_column(column, abundances): 
+    return(np.repeat(column, abundances))
+
+
+
+########################### LIST
+
+def flattened(l):
+    """ Flatten a list """
+    return([y for x in l for y in x])
+
+
+def reversedict(d):
+    """ Convert keys into values and vice versa. Values are returned in lists for repeated values """
+    # https://stackoverflow.com/questions/1031851/how-do-i-exchange-keys-with-values-in-a-dictionary
+    inverse = {}
+    for i in d:  
+        inverse.setdefault(d[i],[]).append(i)
+    return(inverse)
+
+
+
+########################### WORK WITH TABLES
+def make_percent(data, outputDir = '.', write = True, fileName = None, T = False):
+    """ Calculate the percentages %1 by rows of an abudance table """
+    if T:
+        data = data.T
+    pcdata = data[data.columns].apply(lambda x: x/x.sum(), axis=1)
+    if T:
+        pcdata = pcdata.T
+    if write:
+        write_table(pcdata, title = '{}/{}'.format(outputDir, fileName), rows = list(pcdata.index) , columns = list(pcdata.columns), dataframe = None)
+    return(pcdata)
+
+def write_table(data, title, outputDir = '.', rows = None , columns = None, dataframe = None):
+    """ Write a csv file from matrix. Return a pandas Dataframe if asked """
+    if not rows:
+        rows = ['R_' + str(i) for i in range(data.shape()[0])]
+    if not columns:
+        columns = ['C_' + str(i) for i in range(data.shape()[1])]
+    df = pd.DataFrame(data, index = rows , columns = columns)
+    export_csv = df.to_csv ('{}/{}.tsv'.format(outputDir, title), index = True, header=True, sep = '\t')
+    export_csv = df.to_csv ('{}/{}.csv'.format(outputDir, title), index = True, header=True, sep = ',')
+    if dataframe:
+        return(df)
+    
+def load_table(filepath, rows = None , cols = None, path = '.', sep = ','):
+    """ Load a csv file as pandas dataframe """
+    if rows  and cols:
+        data = pd.read_csv(filepath, sep = sep, index_col = 0)
+    else:
+        data = pd.read_csv(filepath, sep = sep, header=None)
+    return(data)
+
+########################### MUTATIONS
+def mutate(string, N, start = None, end = None, randomly = True): # WORK
+    """ Generate a mutate string from original one in N positions """
+    bases = ['A','T','C','G','-']
+    strings_list = np.array(list(string), dtype ='U1')
+    if not start:
+        start = 0
+    if not end:
+        end = len(string)-1
+    # If mutation site includes '.' sample another mutation site. No repeat positions
+    # List of possible positions without '.'
+    possiblePos = [i for i,nt in enumerate(strings_list) if nt != '.']
+    mutation_sites = list(np.random.choice(possiblePos, N, replace=False))
+    #print(mutation_sites)
+    if randomly == True:
+        for pos in mutation_sites: # Avoid cases in which the mutated base is identical to the original
+            strings_list[pos] = random.sample(list(filter(lambda x: x != string[pos], bases)), 1)[0]
+    return (''.join(strings_list.tolist()))
+
+########################### TAXONOMY
+def rank2number(rank): 
+    """ Convert taxonomic ranks into numerical factors 0 based"""
+    if rank == 'kingdom':
+        return(0)
+    elif rank == 'phylum':
+        return(1)
+    elif rank == 'class':
+        return(2)
+    elif rank == 'order':
+        return(3)
+    elif rank == 'family':
+        return(4)
+    elif rank == 'genus':
+        return(5)
+    else:
+        write_logfile('error', 'LIBS: convertTaxlevel' , '{} is not a valid taxlevel. Valid taxlevel are: kingdom, phylum, order, class, family, genus'.format(rank))
+        exit(-3)
+
+
+def estimate_mutations(rank, length = 1500): #1500 bp approximately 16S rRNA
+    if rank == 1: #phylum
+        cutoff =  1-0.75
+        write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
+        return(cutoff * length)
+    elif rank == 2: #class
+        cutoff =  1-0.785
+        write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
+        return(cutoff * length)
+    elif rank == 3: #order
+        cutoff =  1-0.82
+        write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
+        return(cutoff * length)
+    elif rank == 4: #family
+        cutoff =  1-0.865
+        write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
+        return(cutoff * length)
+    elif rank == 5: #genus
+        cutoff =  1-0.945
+        write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
+        return(cutoff * length)
+    else:
+        return(100)
+
+
+
+def loadTaxa(refTax = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', rank = None):
+    """ For a seq return taxonomy. Prepare for parsing silvaDB taxonomy"""
+    with open(refTax, 'r') as taxReference:
+        all_sequences_list = taxReference.readlines()
+        if not rank:
+            taxas = {line.rstrip('\n').split('\t')[0] : line.rstrip('\n').split('\t')[1] for line in all_sequences_list}
+        else:
+            taxas = {line.rstrip('\n').split('\t')[0] : line.rstrip('\n').split('\t')[1].split(';')[rank] for line in all_sequences_list}
+        return(taxas)
+    
+def loadEnviro(referenceEnviro = '/media/natalia/Linux/natalia/opt/makemocks/DB/speciesperEnvironment.tsv'):
+    """ For the environment table subset an enviro """
+    enviro_df = pd.read_csv(referenceEnviro, sep = '\t', comment = '#', index_col = 0) # OK
+    return(enviro_df)
+    
+########################### SYSTEM
+
+def runCommand(command, stdout = None, stderr = None):
+    """Run the command and check the success of the subprocess. Return exit if it went wrong"""    
+    write_logfile('info', 'Command' , '{}'.format(' '.join(map(str, command))))
+    exitcode = subprocess.call(map(str, command), stdout = stdout, stderr = stderr)
+    if exitcode != 0:
+        write_logfile('error', 'LIBS: runCommand' , 'There must be some problem with "{}".\nIt\'s better to stop and check it'.format(' '.join(map(str, command))))
+        exit(-1)
+
+def write_logfile(level, step, message):
+    """ Write log file using daiquiri and logging """
+    if level == 'debug':
+        daiquiri.getLogger(step).debug(message)
+    elif level == 'info':
+        daiquiri.getLogger(step).info(message)
+    elif level == 'warning':
+        daiquiri.getLogger(step).warning(message)
+    elif level == 'error':
+        daiquiri.getLogger(step).error(message)
+    else:
+        daiquiri.getLogger(step).critical(message)
+
+
+
+    
+    
+    

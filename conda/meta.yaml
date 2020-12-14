@@ -5,55 +5,65 @@ package:
 source:
   git_url: https://github.com/ggnatalia/MMs
   git_tag: last_features
-
+  #md5: 
 
 requirements:
-  build:
+  build:          
   run:
-    - python=3.6
-    - argparse 
-    - os
-    - sys
-    - shutil
+    - python=3.7
+      #- argparse 
+      #- os
+      #- sys
+      #- shutil
     - numpy
     - scipy  
-    - math
+      #- math
     - pandas
-    - sklearn
-    - random
-    - re
-    - glob
-    - logging
+    - scikit-learn
+      #- random
+      #- re
+      #- glob
+      #- logging
     - daiquiri
-    - collections
-    - itertools
-    - multiprocessing  
+      #- collections
+      #- itertools
+      #- multiprocessing  
     - matplotlib
     - seaborn  
-    - mothur
+    - mothur=1.44
+    - biopython
+      #- joblib
+    - pysam
+    - requests  
 
 build:
   noarch: generic
 
 test:
+  imports:
+    - numpy
+    - pandas
+    - scipy
+    - sklearn
+    - daiquiri
+    - matplotlib
+    - seaborn
+    - pysam  
   command: "pwd"
 
 about:
   home:  https://github.com/ggnatalia/MMs
   license: GPL-3
   license_file: ../LICENSE
-  summary: 'SqueezeMeta: a fully automated metagenomics pipeline, from reads to bins'
+  summary: 'M&Ms: a software to generate Metagenomic samples from realistic microbial communities'
   description:
-          "SqueezeMeta is a fully automatic pipeline for metagenomics/metatranscriptomics,
-          covering all steps of the analysis. SqueezeMeta includes multi-metagenome
-          support allowing the co-assembly of related metagenomes and the retrieval of
-          individual genomes via binning procedures.
+          "MMs is a automatic pipeline for generating metagenomic samples from realistic microbial communities
           \n
           \n
           To install this package with conda run:
           \n
           \n
-          `conda create -n MMs -c bioconda -c conda-forge -c ggnatalia mms`
+          `conda create -n MMs -c auto -c anaconda -c bioconda -c conda-forge -c ggnatalia mms`
           \n
           \n
           And activate it with:
