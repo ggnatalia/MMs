@@ -1,6 +1,6 @@
 package:
   name: mms
-  version: '0.0.0'
+  version: '0.0.1'
 
 source:
   git_url: git@github.com:ggnatalia/MMs.git
@@ -8,9 +8,12 @@ source:
   #md5: 
 
 requirements:
-  build:          
+  build:
+    - python=3.7
+      #- insilicoseq      
   run:
     - python=3.7
+    - insilicoseq  
       #- argparse 
       #- os
       #- sys
@@ -32,14 +35,12 @@ requirements:
     - seaborn  
     - mothur=1.44
     - biopython
-      #- joblib
+    - joblib
     - pysam
     - requests  
 
 build:
   noarch: generic
-conda-build:
-    output_folder: conda-bld
 test:
   imports:
     - numpy

@@ -1,12 +1,11 @@
 MMS_DIR=$PREFIX/MMs
-echo $PREFIX
-echo $MMS_DIR
+#$PREFIX is the MMs directory if there is nothing to build. Otherwise, it is the common conda env structure
 mkdir $MMS_DIR
 cp -r $SRC_DIR/* $MMS_DIR
-echo $SRC_DIR
 cd $PREFIX/bin
 ln -s $MMS_DIR/makemocks.py .
 ln -s $MMS_DIR/utils/* .
-ln -s $MMS_DIR/extlibs/iss/ ./../lib/python3.7/site-packages/
-ln -s $MMS_DIR/bin/iss .
-
+sed 's/python/$PYTHON/' $MMS_DIR/bin/iss -i
+#rm $PREFIX/lib/python3.7/site-packages/iss
+ln -s $MMS_DIR/extlibs/iss/ $PREFIX/lib/python3.7/site-packages/
+ln -s $MMS_DIR/bin/iss $PREFIX/bin/

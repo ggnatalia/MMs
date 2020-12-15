@@ -1,4 +1,4 @@
-#!/home/natalia/miniconda3/envs/probatina/bin/python3.7
+#!python
 # -*- coding: utf-8 -*-
 import re
 import sys
