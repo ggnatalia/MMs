@@ -9,11 +9,9 @@ source:
 
 requirements:
   build:
-    - python=3.7
-      #- insilicoseq      
+    - python=3.7   
   run:
-    - python=3.7
-    - insilicoseq  
+    - python=3.7  
       #- argparse 
       #- os
       #- sys
