@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 from libs.libs import *#Library with general functions
 from libs.maths import *
