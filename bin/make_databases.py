@@ -12,7 +12,7 @@ def parse_arguments():
     """Parse the command line arguments and return an object containing them"""
     # Required
     general = argparse.ArgumentParser(description = 'Process input files')
-    general.add_argument('-refEnv', '--refEnviro', type = str, help = 'Path to species per Environment reference')
+    #general.add_argument('-refEnv', '--refEnviro', type = str, help = 'Path to species per Environment reference')
     general.add_argument( '-ref','--ref', type = str, help = 'Path to SILVA alignment reference')
     general.add_argument( '-refTax','--refTax', type = str, help = 'Path to SILVA alignment TAX reference')
     general.add_argument('--force-overwrite', action = 'store_true', help = 'Force overwrite if the output directory already exists')
@@ -24,17 +24,17 @@ def parse_arguments():
 def main(args):
     make_install_home = abspath(dirname(realpath(__file__)))
     DB = '/'.join(abspath(dirname(realpath(__file__))).split('/')[:-1] + ['DB'])
-    try:
-        os.mkdir(DB)
-    except OSError as e: #[Errno 17] File exists: 'outputDir'
-        if e.errno != 17:
-            raise
-        elif not args.force_overwrite:
-            print('warning: The directory {} already exists. Please, remove it or choose other name for the output directory'.format(DB))
-            exit(-17)
-        else:
-            shutil.rmtree(DB, ignore_errors = True)
-            os.mkdir(DB)
+    #try:
+    #    os.mkdir(DB)
+    #except OSError as e: #[Errno 17] File exists: 'outputDir'
+    #    if e.errno != 17:
+    #        raise
+    #    elif not args.force_overwrite:
+    #        print('warning: The directory {} already exists. Please, remove it or choose other name for the output directory'.format(DB))
+    #        exit(-17)
+    #    else:
+    #        shutil.rmtree(DB, ignore_errors = True)
+    #        os.mkdir(DB)
     os.chdir(DB)
     
     if (not args.refTax) and (not args.ref):
@@ -52,13 +52,13 @@ def main(args):
         os.symlink(args.refTax, '.')
         
         
-    if not args.refEnviro:
+    #if not args.refEnviro:
         # Species per Enviro: always download!
-        env_url = 'https://raw.githubusercontent.com/ggnatalia/MMs/main/DB/SpeciesperEnviro.tsv?token=AMC24ROKCNQHCPXIMI7BWTC73NXVK'
-        env = requests.get(env_url)
-        env.raise_for_status()
-    else:
-        os.symlink(args.refEnviro, '.')   
+    #    env_url = 'https://github.com/ggnatalia/MMs/tree/main/DB' # Change for raw link
+    #    env = requests.get(env_url)
+    #    env.raise_for_status()
+    #else:
+    #    os.symlink(args.refEnviro, '.')   
     
     print('Your DB are in:\n{}\n'.format(DB))
 
