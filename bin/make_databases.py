@@ -22,8 +22,8 @@ def parse_arguments():
 
 
 def main(args):
-    make_install_home = abspath(dirname(realpath(__file__)))
-    DB = '/'.join(abspath(dirname(realpath(__file__))).split('/')[:-1] + ['DB'])
+    make_install_home = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+    DB = '/'.join(make_install_home.split('/')[:-1] + ['DB'])
     #try:
     #    os.mkdir(DB)
     #except OSError as e: #[Errno 17] File exists: 'outputDir'
