@@ -5,17 +5,15 @@
 import argparse 
 import os
 import sys
-import re # regular expressions
+import re 
 import random
 import numpy as np
 import pandas as pd
 import shutil
 from glob import glob
-# Other
-#from collections import defaultdict
 
 # My modules
-from libs.libs import * # verify
+from libs.libs import * 
 from libs.maths import *
 from libs.plots import *
 from libs.enviroClass import Enviro
@@ -23,68 +21,72 @@ from libs.seqsClass import Sequence
 from libs.mockClass import Mock
 from libs.sampleClass import Sample
 
-# Plot
-#import matplotlib.pyplot as plt
-#import seaborn as sns
-
-
 # Logging
 import logging
 import daiquiri
 
 def parse_arguments():
     """Parse the command line arguments and return an object containing them"""
+    
     # Required
     general = argparse.ArgumentParser(description = 'Process input files')
-    general.add_argument( '-m', '--mockName', type = str, required = True, help = 'Mock name. Ex: mock1')
-    general.add_argument( '-o', '--output', type = str, required = True, help = 'Output directory. Preferably, name of the environment. Ex: Aquatic')
-    general.add_argument( '-s','--start', default = 1, type = int, help = 'SILVA alignment reference positions-START. Default 1. 1-based') 
-    general.add_argument( '-e','--end', default = 50000, type = int, help = 'SILVA alignment reference positions-END. Default 50000. 1-based') 
-    general.add_argument( '--region', default = '16S', help = 'Name of the studied region')    # Plot distances
-    general.add_argument( '-H','--shannonIndex', default = 2,type = float, help = 'ShannonIndex') ################################################# Ofrecer en un futuro una lista de posibles H según ambiente? Vincular a nS?
-    general.add_argument( '-N', '--nSamples', default = 5, type = int, help = 'Number of samples')
     
-    # Options for making your mock randomly
-    general.add_argument( '-r','--rank', type = str, default = 'phylum', help = 'Rank to subset taxa: phlyum, order, class, family, genus')
-    general.add_argument( '-ASVsmean','--ASVsmean',type = int, default = 2, help = 'Mean of mutant ASV per silva sequence')
-    general.add_argument( '-nASVs','--nASVs', type = int, required = False, help = 'Number of ASVs') 
-    general.add_argument( '-env', '--enviro', type = str, default = False, help = 'Let the user to simulate an environmental mock. Look refEnv for options')
+    general.add_argument( '-m', '--mockName', type = str, required = True, help = 'Name of the mock e.g. mock1.' )
+    general.add_argument( '-o', '--output', type = str, required = True, help = 'Name of the output directory e.g. aquatic.' )
+    general.add_argument( '-N', '--nSamples', type = int, default = 5, help = 'Number of samples to generate. Default 5 samples per mock.' )
+    general.add_argument( '-nASVs','--nASVs', type = int, help = 'Number of ASVs.' ) 
+
+    # Options to design your mock community
+    general.add_argument( '-H','--shannonIndex', type = float, default = 3, help = 'Shannon diversity Index. Default 3.' )
+    general.add_argument( '-r','--rank', type = str, default = 'genus', help = 'Rank to subset taxa: phlyum, order, class, family, genus.' )
+    general.add_argument( '-ASVsmean','--ASVsmean', type = int, default = 5, help = 'Mean of the number of mutants per reference.' )
+    general.add_argument( '-env', '--enviro', type = str, default = False, help = 'Select one of the predefined environments to simulate the mock. See the file SpeciesperEnviro.tsv for options.' )
 
     # Options for customizing more your mock community
-    general.add_argument( '-tx', '--taxa', type = str, nargs = '+', default = [], help = 'List of taxa')
-    general.add_argument( '-seqs', '--seqs', type = str, nargs = '+', default = [], help = 'List of sequences\' header or fasta file') 
-    general.add_argument( '--minseqs', type = int, default = 5, help = 'Minimun number of sequences to extract from DB') # Subsettting random from silva means that you can subset 1 seq, produce, two strains and you'll want 5, no possibility to reach that number. Repeat strain generation
-    general.add_argument( '-txAbund', '--taxaAbund', type = int, nargs = '+', default = [], help = 'List of abundances of taxa')
-    general.add_argument( '--inputfile', type = str, help = 'The user can provide an align file without creating it from scratch.')
+    general.add_argument( '--taxa', type = str, nargs = '+', default = [], help = 'List of taxa to generate the mock.' )
+    general.add_argument( '--seqs', type = str, nargs = '+', default = [], help = 'List of sequences\'s header.' ) 
+    general.add_argument( '--minseqs', type = int, default = 5, help = 'Minimun number of sequences to randomly extract from DB. Default 5.' ) 
+    general.add_argument( '--taxaAbund', type = int, nargs = '+', default = [], help = 'List of taxa abundances in percentages.' )
+    general.add_argument( '--input-file', type = str, help = 'Provide a previous fasta/align file.' )
     
-    # Reference files: harcode PATHS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    general.add_argument( '-ref','--ref', type = str, default = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', help = 'SILVA alignment reference')
-    general.add_argument( '-refTax','--refTax', type = str, default = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', help = 'SILVA alignment TAX reference')    
-    general.add_argument('-refEnv', '--refEnviro', type = str , default = '/home/natalia/Projects/natalia/opt/makemocks/utils/speciesperEnviro.check.collapse.tsv', help = 'Environment reference')
+    # Reference files
+    general.add_argument( '-ref','--ref', type = str, help = 'SILVA alignment reference formatted for using mothur e.g. silva.nr_v138.align.' )
+    general.add_argument( '-refTax','--refTax', type = str, help = 'SILVA taxonomy reference formatted for using mothur e.g. silva.nr_v138.tax.' )    
+    general.add_argument( '-refEnv', '--refEnviro', type = str, help = 'Table with most frequent species per environment e. g. SpeciesperEnviro.tsv.' )
+    # SILVA
+    general.add_argument( '-s','--start', type = int, default = 1,  help = 'Start position in the SILVA alignment reference. Default 1.' ) 
+    general.add_argument( '-e','--end', type = int, default = 50000, help = 'End position in the SILVA alignment reference. Default 50000.' ) 
+    general.add_argument( '--region', type = str, default = '16S', help = 'Region of the 16S rRNA gene.' )
 
     # Extra features:
-    general.add_argument('--cutoff', type = float, default = 0.03, help = 'Make & filter strains using distances. Without this flag, sequences can be identical in the studied region')
-    general.add_argument('--cpus', default = 12, type = int, help = 'Number of threads')   ########## HACER MÁS COSAS EN MULTITAREA, DEBERÍA SER POSIBLE FACILMENTE DEDICAR UN PROCESADOR A CADA MUESTRA
-    general.add_argument('--force-overwrite', action = 'store_true', help = 'Force overwrite if the output directory already exists')
-    # InSilicoSeqs parameters: add insert size & read length?
-    general.add_argument('--errormodel', default = 'perfect', type = str, help = 'Mode to generate InSilicoSeqs')
-    general.add_argument('--InSilicoparams', default = [150, 200], type = int, nargs = '+', help = '(Read length, insert size) NOTE: ONLY FOR NAMING FILES. CHANGE VALUES IN ~/.local/lib/python3.6/site-packages/iss/error_models/perfect.py ')
-    general.add_argument( '--sequences_files', type = str, nargs = '+', default = [], help = 'List of files to obtain reads: sequences <projectName><mockName>.<sampleName>.sequences16S.fasta. Same order that paired abundance files')
-    general.add_argument( '--abundance_files', type = str, nargs = '+', default = [], help = 'List of files to obtain reads: abundances<projectName><mockName>.<sampleName>.abundances. Same order that paired sequence files')
-    general.add_argument( '--repeat_InSilicoSeqs_autocomplete', action = 'store_true', help = 'If True use mock and samples directly from the directory, without writing one by one the files')
+    general.add_argument( '--cutoff', type = float, default = 0.03, help = 'Filter ASVs depending on sequence similarity. Without this flag, sequences can be identical in the studied region.' )
+    general.add_argument( '--cpus', type = int, default = 12, help = 'Number of threads.' )   
+    general.add_argument( '--force-overwrite', action = 'store_true', help = 'Force overwrite if the output directory already exists.' )
+    
+    # InSilicoSeqs parameters: add insert size & read length
+    general.add_argument( '--error-model', type = str, default = 'perfect', help = 'Mode to simulate reads in InSilicoSeqs.' )
+    general.add_argument( '--read-length', type = int, nargs = '+', default = 150, help = 'Read length of the simulated reads. Only available for basic and perfect modes.' )
+    general.add_argument( '--insert-size', type = int, nargs = '+', default = 200, help = 'Insert size of the simulated reads. Only available for basic and perfect modes.' )
+    general.add_argument( '--sequences-files', type = str, nargs = '+', default = [], help = 'Sequences files for InSilicoSeqs: <projectName><mockName>.<sampleName>.sequences16S.fasta.' )
+    general.add_argument( '--abundance-files', type = str, nargs = '+', default = [], help = 'Abundances files for InSilicoSeqs: <projectName><mockName>.<sampleName>.abundances.' )
+    general.add_argument( '--repeat-InSilicoSeqs-autocomplete', action = 'store_true', help = 'Repeat reads simulation using previous files.' )
     
     # Other customizable parameters
-    general.add_argument('--reads', default = 20000, type = int, help = 'Number of reads approximately in total, counting both pairs')
-    general.add_argument('--alpha', default = 0.9, type = float, help = 'Correlation Matrix: Probability that a coefficient is zero. Larger values enforce more sparsity.')
-    general.add_argument('--pstr0', default = 0.2, type = float, help = 'ZINBD: Probability of structure 0')
-    general.add_argument('--size', default = 1, type = int, help = 'ZINBD: Size - dispersion of ZINBD')
-    general.add_argument('--figsize', default = (20, 20), type = tuple, help = 'Size of plots')
+    general.add_argument( '--reads', type = int, default = 50000, help = 'Number of reads approximately in total, counting both pairs.' )
+    general.add_argument( '--alpha', type = float, default = 0.9, help = 'Correlation Matrix: Probability that a coefficient is zero. Larger values enforce more sparsity.' )
+    general.add_argument( '--pstr0', type = float, default = 0.2, help = 'ZINBD: Probability of structure 0.' )
+    general.add_argument( '--size', type = int, default = 1, help = 'ZINBD: Size - dispersion of ZINBD.' )
+    # Plots
+    general.add_argument( '--figsize', type = tuple, default = (20, 20), help = 'Size of plots.' )
     
     args = general.parse_args()
     return(args)
 
 
 def main(args): 
+    
+    MMs_home = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+    DB = MMs_home + '/DB'
     
     # SET GENERAL VARIABLES
     path = os.getcwd()
@@ -121,20 +123,31 @@ def main(args):
     taxaAbund = args.taxaAbund
     inputfile = args.inputfile
 
-    # DB-------------------------------------------------------------------------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>< CHANGE IN FUTURE
-    #ref  =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align'
-    #refTax = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax'    
-    #refEnviro = '/home/natalia/Projects/natalia/opt/makemocks/utils/speciesperEnviro.check.collapse.tsv'
-    ref  =  args.ref
-    refTax = args.refTax
-    refEnviro = args.refEnviro
+    
+    
+    if args.ref:
+        ref  =  args.ref
+    else:
+        ref = DB + '/silva.nr_v138.align'
+        
+    if args.refTax:
+        refTax = args.refTax
+    else:
+        refTax = DB + '/silva.nr_v138.tax'
+    
+    if args.refEnviro:
+        refEnviro = args.refEnviro
+    else:
+        refEnviro = DB + '/SpeciesperEnviro.tsv'
+        
+    
 
     # Extra features:
     cutoff = args.cutoff
     cpus = args.cpus
     force_overwrite = args.force_overwrite
-    errormodel = args.errormodel
-    InSilicoparams = tuple(args.InSilicoparams)
+    errormodel = args.error_model
+    InSilicoparams = tuple(args.read_length, args.insert_size)
     sequences_files  = args.sequences_files
     abundance_files = args.abundance_files
     
@@ -197,7 +210,7 @@ def main(args):
             elif taxa: 
                 Env = Enviro.init_from_taxa(nASVs = nASVs, perfix = projectPrefix, rank = rank, taxa = taxa, taxa_abundances = taxaAbund, refTax =  refTax, ref = ref)
             else: # seqs
-                Env = Enviro.init_from_seqs(prefix = projectPrefix, rank = rank, seqs = seqs, nASVs = nASVs, minseqs = minseqs, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align')
+                Env = Enviro.init_from_seqs(prefix = projectPrefix, rank = rank, seqs = seqs, nASVs = nASVs, minseqs = minseqs, refTax =  refTax, ref = ref)
             Env.makeASVs(region, start, end, ASVsmean, cutoff , cpus, figsize)   # Only with sequences that are not in the align file. Assume align file provided by the user is ok!
             write_logfile('info', 'ENVIRONMENT', 'Writing output files')
             Env.write_output()
