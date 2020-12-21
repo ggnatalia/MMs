@@ -93,22 +93,19 @@ def load_table(filepath, rows = None , cols = None, path = '.', sep = ','):
     return(data)
 
 ########################### MUTATIONS
-def mutate(string, N, start = None, end = None, randomly = True): # WORK
+def mutate(string, N, start = None, end = None, randomly = True): 
     """ Generate a mutate string from original one in N positions """
     bases = ['A','T','C','G','-']
     strings_list = np.array(list(string), dtype ='U1')
-    if not start:
-        start = 0
-    if not end:
-        end = len(string)-1
+    if not start: start = 0
+    if not end: end = len(string)-1
     # If mutation site includes '.' sample another mutation site. No repeat positions
     # List of possible positions without '.'
-    possiblePos = [i for i,nt in enumerate(strings_list) if nt != '.']
-    mutation_sites = list(np.random.choice(possiblePos, N, replace=False))
-    #print(mutation_sites)
-    if randomly == True:
-        for pos in mutation_sites: # Avoid cases in which the mutated base is identical to the original
-            strings_list[pos] = random.sample(list(filter(lambda x: x != string[pos], bases)), 1)[0]
+    possiblePos = [i for i, nt in enumerate(strings_list) if nt != '.']
+    mutation_sites = list(np.random.choice(possiblePos, N, replace = False))
+    for pos in mutation_sites: # Avoid cases in which the mutated base is identical to the original
+        strings_list[pos] = random.sample(list(filter(lambda x: x != string[pos], bases)), 1)[0]
+    
     return (''.join(strings_list.tolist()))
 
 ########################### TAXONOMY
