@@ -61,10 +61,6 @@ class Sequence():
                 clusterSeqs.add(newSequence) # Add new Seq objects
         return(clusterSeqs)         # set with different Seq objects from a single Seq object
 
-    @staticmethod
-    def makedistances(s):
-        """ Calculate distance between two Sequence object in a tuple """
-        return(s[0].header, s[1].header, calculate_distance(s[0].seq, s[1].seq))
 
     @staticmethod
     def assign_taxonomy(header, silva_taxa, taxlevel = None): 

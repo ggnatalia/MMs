@@ -197,7 +197,7 @@ class Enviro():
     @classmethod
     def calc_dist(cls, args): 
         """ args is a tuple of two index combinations with the index of the sequences between calculate distances """
-        d = calculate_distance_set(cls.multiprocessing_globals_seqs[args[0]], cls.multiprocessing_globals_seqs[args[1]])
+        d = calculate_distance(cls.multiprocessing_globals_seqs[args[0]], cls.multiprocessing_globals_seqs[args[1]])
         if d != 0:
             return(d)
         elif args[0] == args[1]: # Si es el mismo indice contra si mismo, d = 0 they are identical
