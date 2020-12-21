@@ -1,10 +1,7 @@
 # MMs
 Software for generating Metagenomic samples of realistic Microbial Mock communities
 
-usage: makemocks.py [-h] -m MOCKNAME -o OUTPUT [-N NSAMPLES] [-nASVs NASVS] [-H SHANNON] [-r RANK] [-ASVsmean ASVSMEAN] [-env ENVIRO] [--taxa TAXA [TAXA ...]] [--seqs SEQS [SEQS ...]] [--minseqs MINSEQS] [--taxaAbund TAXAABUND [TAXAABUND ...]] [--input-file INPUT_FILE]
-                    [-ref REF] [-refTax REFTAX] [-refEnv REFENVIRO] [-s START] [-e END] [--region REGION] [--cutoff CUTOFF] [--cpus CPUS] [--force-overwrite] [--error-model ERROR_MODEL] [--read-length READ_LENGTH [READ_LENGTH ...]]
-                    [--insert-size INSERT_SIZE [INSERT_SIZE ...]] [--sequences-files SEQUENCES_FILES [SEQUENCES_FILES ...]] [--abundance-files ABUNDANCE_FILES [ABUNDANCE_FILES ...]] [--repeat-inSilicoSeqs-autocomplete] [--reads READS] [--alpha ALPHA] [--pstr0 PSTR0]
-                    [--size SIZE] [--figsize FIGSIZE]
+usage: makemocks.py [-h] -m MOCKNAME -o OUTPUT -N NSAMPLES -nASVs NASVS [-H SHANNON] [-r RANK] [-env ENVIRO] [--cpus CPUS] [--force-overwrite] 
 
 Process input files
 
