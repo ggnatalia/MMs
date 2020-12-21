@@ -68,7 +68,7 @@ def generate_reads(args):
             from iss.error_models import basic
             ### NEW
             #err_mod = basic.BasicErrorModel()
-            err_mod = basic.BasicErrorModel(read_length = args.InSilicoparams[0], insert_size = args.InSilicoparams[1])
+            err_mod = basic.BasicErrorModel(read_length = args.inSilicoparams[0], insert_size = args.inSilicoparams[1])
             ### END        
         elif args.mode == 'perfect':
             if args.model is not None:
@@ -77,7 +77,7 @@ def generate_reads(args):
             from iss.error_models import perfect
             ### NEW
             #err_mod = perfect.PerfectErrorModel()
-            err_mod = perfect.PerfectErrorModel(read_length = args.InSilicoparams[0], insert_size = args.InSilicoparams[1])
+            err_mod = perfect.PerfectErrorModel(read_length = args.inSilicoparams[0], insert_size = args.inSilicoparams[1])
             ### END
     except ImportError as e:
         logger.error('Failed to import ErrorModel module: %s' % e)
@@ -518,7 +518,7 @@ def main():
     )
     ################## NEW
     parser_gen.add_argument(
-        '--InSilicoparams',
+        '--inSilicoparams',
         default = [150, 200],
         nargs = '+',
         type = int,
