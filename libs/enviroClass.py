@@ -23,9 +23,9 @@ class Enviro():
     multiprocessing_globals_combinations = tuple()
     
     def __init__(self, prefix, enviro, Seqs, nASVs):
-        self.prefix = prefix # better if it is the name of the enviro
-        self.enviro = enviro # enviro from table
-        self.Seqs = Seqs # set of Sequence Objects with complete seq: 0-50000
+        self.prefix = prefix 
+        self.enviro = enviro 
+        self.Seqs = Seqs 
         self.nASVs = nASVs
     
     @classmethod
@@ -35,7 +35,6 @@ class Enviro():
         taxa = cls.subset_taxa_from_environment( enviro, refEnviro = refEnviro, nTaxa = nTaxa ) 
         # Collapse abundances of equal taxa
         taxAbun =  dict(Counter(taxa)) # Sequences from most abundant taxa will have been selected more times
-        #print(taxAbun)
         # tuple([(i,j) for i, j in taxAbun.items()])
         headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, rank = rank )
         #print('headers ' + str(len(headers)))
@@ -45,7 +44,6 @@ class Enviro():
         #print('Seqs ' + str(len(Seqs)))
         #print('Fake ' + str(len(FakeSeqs)))
         #print('TotalSeqs' + str(len(TotalSeqs)))
-        ### AHORA MISMO INUTIL
         cls.plotTaxonomy2(TotalSeqs, '{}.silvasubset'.format(prefix), rank, figsize)
         return( Enviro(prefix, enviro, TotalSeqs, nASVs) ) 
     
@@ -54,7 +52,6 @@ class Enviro():
         """ Return a Seqs set with the fake taxa that fall short """
         fakeSeqs = set()
         seqs2fake = {}
-        #print(neededSeqs)
         # Add sequences from each taxa that fail because there were not enough sequences
         for abun, seqsHeaders in neededSeqs: # With one seq, it can be generated so many fake species as needed, but for the shake of variety, it's better to distribute the number of species from which the fake will be generated
             if abun <= len(seqsHeaders):
@@ -66,7 +63,6 @@ class Enviro():
                     seqs2fake[s] = basic 
                 privilegeSeq = random.sample(list(seqs2fake.keys()), 1)[0] # Add the rest of the division to one random sequence.
                 seqs2fake[privilegeSeq] = seqs2fake[privilegeSeq] + int(abun%len(seqsHeaders)) # Add the rest of the division to one random sequence.
-        #print(seqs2fake)
         moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, selected = list(seqs2fake.keys())) # Set pf sequences to make more sequences from them
         for s in moreSeqs:
             Nposmax = int(estimate_mutations(rank, length = len(s.seq.replace('.','').replace('-',''))))

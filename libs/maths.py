@@ -190,7 +190,7 @@ def relative_abundance(n, total):
     else:
         return (float(n)/total)
 
-def shannonIndexCalc(data):
+def shannonCalc(data):
     """ Given a list of abundance values , returns the Shannon real Index """
     total = sum(data)
     return(-sum(relative_abundance(n, total) * np.log(float(n)/total) for n in data if n != 0.0))

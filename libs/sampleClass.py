@@ -39,8 +39,6 @@ class Sample():
         #self.run_inSilicoSeq(prefix, reads, errormodel = errormodel, cpus = cpus ) #########33 A LO MEJOR LO SACO DE AQUI Y LO HAGO EN GENERAL
         write_logfile('info', 'PROCESSING SAMPLE {}'.format(self.sample_name), 'Plotting abundances')
         self.plot_abundances()
-        #write_logfile('info', 'PROCESSING SAMPLE {}'.format(self.sample_name), 'Plotting entropies')
-        #self.sample_entropy()
         write_logfile('info', 'PROCESSING SAMPLE {}'.format(self.sample_name), 'Writing align file for the required region')       
         self.write_align_by_region()
         return('{}.{}.sequences16S.fasta'.format(self.prefix, self.sample_name), '{}.{}.abundances'.format(self.prefix, self.sample_name), self.sample_name) 
@@ -84,27 +82,6 @@ class Sample():
         plotDataDF = pd.DataFrame(plotData, columns = ['seqName', 'Percentage'])
         plotDataDF = plotDataDF.set_index('seqName')
         barplot(plotDataDF, outputDir = outputDir, title = '{}.abundances'.format(prefix), T=True, ylab = 'Percentage reads', xlab = 'Sequences', textSize=8, figsize = self.figsize)
-    # DE MOMENTO INUTIL 
-    def sample_entropy(self):
-        """ Calculate entropy of one sample. Take into account coverage """
-        prefix = '{}.{}'.format(self.prefix, self.sample_name)
-        outputDir = '{}/samples'.format(self.pwd)
-        #seqsArray = self.align_to_array()
-        #nrow, ncol = np.shape(seqsArray)
-        length = len(set([len(s.seq)for s in self.Seqs]))
-        # All the squences in silva have length: 50000
-        if length == 1: 
-            #I take into account if a seq repeats n times.
-            #Calculate entropyes ignoring dots
-            #entropies = {pos:sp.entropy(list(map(float, dict(sp.itemfreq(np.repeat(seqsArray[:,pos], abundances))).values()))) for pos in range(0,ncol)}
-            #entropies = {pos:sp.entropy(list(map(float, dict(sp.itemfreq(np.delete(self.expand_column(seqsArray[:,pos], abundances), np.where(self.expand_column(seqsArray[:,pos], abundances) == '.')))).values()))) for pos in range(ncol)}
-            # Expanding all the alignment previously
-            seqsArray = align_to_array(self.Seqs, expand = True)
-            #entropies = {pos:sp.entropy(list(map(float, dict(sp.itemfreq(np.delete(seqsArray[:,pos], np.where(seqsArray[:,pos] == '.')))).values()))) for pos in range(ncol)}
-            plot_entropy(seqsArray, title = prefix, outputDir = outputDir)
-        else:
-            write_logfile('error', 'PROCESSING sample_entropy', 'Your sequences have different lengths, align them before please')
-            
             
     @classmethod
     def init_from_df(cls, prefix, sample, Seqs, alignment, figsize):
@@ -123,10 +100,10 @@ class Sample():
 
 
     @staticmethod
-    def run_inSilicoSeq(prefix, seqFile, abunFile, sampleName, reads = 10000, errormodel = 'perfect', cpus = 12, InSilicoparams = (150,200)):  
+    def run_inSilicoSeq(prefix, seqFile, abunFile, sampleName, reads = 10000, errormodel = 'perfect', cpus = 12, inSilicoparams = (150,200)):  
         """Run inSilicoSeq"""
         # Run inSilicoSeq in samples directory from command line to generate the fasta samples
-        command = ['iss', 'generate', '-g', seqFile, '--abundance_file', abunFile, '-o', '{}.{}.{}-{}-{}r-{}i.InSilicoSeq'.format(prefix, sampleName, reads, errormodel, InSilicoparams[0], InSilicoparams[1]), '--n_reads', reads, '--cpus', cpus, '--InSilicoparams', str(InSilicoparams[0]), str(InSilicoparams[1])] # Reads are the total count both pairs, to have the reads required by the user in each file
+        command = ['iss', 'generate', '-g', seqFile, '--abundance_file', abunFile, '-o', '{}.{}.{}-{}-{}r-{}i.InSilicoSeq'.format(prefix, sampleName, reads, errormodel, inSilicoparams[0], inSilicoparams[1]), '--n_reads', reads, '--cpus', cpus, '--InSilicoparams', str(inSilicoparams[0]), str(inSilicoparams[1])] # Reads are the total count both pairs, to have the reads required by the user in each file
         if errormodel == 'MiSeq' or errormodel == 'HiSeq' or errormodel == 'NovaSeq':
             command.append('--model')
             command.append(errormodel)

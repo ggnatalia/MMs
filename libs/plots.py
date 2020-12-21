@@ -76,28 +76,6 @@ def barplotpc(df, title, outputDir, figsize = (20, 20), ylab = 'Axis y', xlab = 
     plt.close()  
       
    
-      
-      
-def plot_entropy(array, title, outputDir ):
-    nrow, ncol = np.shape(array)
-    # SIMPLY CODE:
-    entropies = {}
-    for pos in range(ncol):
-        entropies[pos] = sp.entropy(list(map(float,{nt:i for nt, i in zip(*np.unique(array[:,pos], return_counts=True)) if nt != '.'}.values())))
-    # entropies = {pos: sp.entropy(list(map(float,{nt:i for nt, i in zip(*np.unique(array[:,pos], return_counts=True)) if nt != '.'}.values()))) for pos in range(ncol)}
-    # Impossible to see 50000 positions, need to remove some
-    higherentropies = { pos:S for pos, S in entropies.items() if S > 0.0 }
-    plotData = sorted(tuple(higherentropies.items()), key = lambda x: x[0])
-    plotDataDF = pd.DataFrame(plotData, columns = ['Pos', 'Entropy']) # Add 1 to position, because python is 0 based
-    plotDataDF = plotDataDF.set_index('Pos')
-    barplot(plotDataDF, outputDir = outputDir, title = '{}.entropy'.format(title), figsize = (12,12), T = True, ylab = 'Entropy', xlab = 'Position', textSize = 8 )
-
-
-
-
-
-
-
 
 
 
