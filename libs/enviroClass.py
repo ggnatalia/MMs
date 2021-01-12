@@ -23,7 +23,7 @@ class Enviro():
     multiprocessing_globals_combinations = tuple()
     silva_taxa = dict()
     selected = []
-    
+    rank = 0 
     def __init__(self, prefix, enviro, Seqs, nASVs):
         self.prefix = prefix 
         self.enviro = enviro 
@@ -35,18 +35,25 @@ class Enviro():
         """ Return a Environment object from a given environment """
         print('Environment: \'{}\''.format(enviro))
         taxa = cls.subset_taxa_from_environment( enviro, refEnviro = refEnviro, nTaxa = nTaxa ) 
+        print(len(taxa))
         # Collapse abundances of equal taxa
         taxAbun =  dict(Counter(taxa)) # Sequences from most abundant taxa will have been selected more times
+        print('subsetSilvaproportions')
         headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, rank = rank )
+        #print(str(len(headers)))
         cls.selected = list(headers)
+        print(cls.selected)
         Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank) # Original Seqs from Silva
-        FakeSeqs = cls.make_fake_taxa(neededSeqs, rank, ref, refTax)
+        print('fakeASVs')
+        print(ref)
+        FakeSeqs = cls.make_fake_taxa(neededSeqs, rank, cpus, ref, refTax)
         TotalSeqs = Seqs|FakeSeqs
         return( Enviro(prefix, enviro, TotalSeqs, nASVs) ) 
     
     @classmethod
-    def make_fake_taxa(cls, neededSeqs, rank, ref, refTax):
+    def make_fake_taxa(cls, neededSeqs, rank, cpus, ref, refTax):
         """ Return a Seqs set with the fake taxa that fall short """
+
         fakeSeqs = set()
         seqs2fake = {}
         # Add sequences from each taxa that fail because there were not enough sequences
@@ -60,11 +67,14 @@ class Enviro():
                     seqs2fake[s] = basic 
                 privilegeSeq = random.sample(list(seqs2fake.keys()), 1)[0] # Add the rest of the division to one random sequence.
                 seqs2fake[privilegeSeq] = seqs2fake[privilegeSeq] + int(abun%len(seqsHeaders)) # Add the rest of the division to one random sequence.
-        moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, selected = list(seqs2fake.keys())) # Set pf sequences to make more sequences from them
+        #moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, selected = list(seqs2fake.keys())) # Set pf sequences to make more sequences from them
+        print(seqs2fake)
+        moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, cpus = cpus, rank = rank, selected = list(seqs2fake.keys()))
         for s in moreSeqs:
+            print(s.header)
             Nposmax = int(estimate_mutations(rank, length = len(s.seq.replace('.','').replace('-',''))))
             #print('Nposmax ' , str(Nposmax))
-            Nstrains = int(seqs2fake[s.header]) 
+            Nstrains = int(seqs2fake[s.header].keys()) 
             #print('mutant seqs I want ' + s.header + ' ' + str(Nstrains))
             newS = s.generatemutantASVs(Nstrains = Nstrains, Nposmax = Nposmax, start = 0, end = 50000, include_original = False)
             #print('newS ' + str(len(newS)))
@@ -255,19 +265,20 @@ class Enviro():
                     fasta.write('>{}\n{}\n'.format(s.header, s.deGap().seq))
                     taxonomy.write('{}\t{}\n'.format(s.header, s.tax))
                 return(True)
-
-    def set_sequences(fastaFile, refTax, rank, cpus, Nrandom = 0, selected = []):
+    @classmethod
+    def set_sequences( cls, fastaFile, refTax, rank, cpus = 1, Nrandom = 0, selected = []):
         """ Make a list of sequence objects (or select some based on the header) from fasta"""
         cls.silva_taxa = loadTaxa(refTax = refTax, rank = rank)
+        cls.rank = rank
         if Nrandom != 0:
             cls.selected = random.sample(cls.silva_taxa.keys(), Nrandom)
         with Pool(cpus) as pool:
             with open(fastaFile, 'r') as fasta:
-                Seqs = pool.map(validate_Sequence, itertools.zip_longest(*[fasta]*2))
+                Seqs = pool.map(cls.validate_Sequence, itertools.zip_longest(*[fasta]*2))
             return(Seqs)
     
     @classmethod
-    def validate_Sequence(combo, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, selected = []):
+    def validate_Sequence(cls, combo, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, selected = []):
         cls.selected = selected
         header = combo[0]
         seq = combo[1]
@@ -278,12 +289,12 @@ class Enviro():
         if not 'N' in seq: #checkpoint: some sequences from silva contain N, exclude those sequences
             if not cls.selected: # select all the sequences from the fasta file
                 #write_logfile('debug', 'Sequence.set_Sequences', selected)
-                Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa, rank), 0)
+                Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa, cls.rank), 0)
                 #write_logfile('debug', 'Sequence.set_Sequences NOT selected ', Seq.header)
             else:
                 #write_logfile('debug', 'Sequence.set_Sequences', selected)
                 if header in cls.selected: #add sequence to the set
-                    Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa, rank), 0)
+                    Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa, cls.rank), 0)
                 #write_logfile('debug', 'Sequence.set_Sequences SELECTED', Seq.header)
             if degap:
                 Seq = Seq.deGap()
