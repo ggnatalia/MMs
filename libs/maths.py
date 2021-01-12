@@ -25,19 +25,19 @@ def calculate_distance(a, b):
     return(sum(diff)/lengthmax)
 
 
-def estimate_abundances_old(Nfeatures, total = 100): 
-    """ Create a random vector with percentages """
-    abun = random.sample(range(1, total + 1), Nfeatures)
+#def estimate_abundances_old(Nfeatures, total = 100): 
+#    """ Create a random vector with percentages """
+#    abun = random.sample(range(1, total + 1), Nfeatures)
     # NOTE: https://stackoverflow.com/questions/8064629/random-numbers-that-add-to-100-matlab/8068956#8068956  ### FUTURE: No best method, after renormalizing, numbers are not uniformally distributed
-    normalizedAbun = [round((i*total/sum(abun))) for i in abun]
-    if sum(normalizedAbun) == total:
-        return(normalizedAbun)
-    else: # Si no suma el total o se pasa, quitarle/add la diferencia al primer elemento.
-        diff = total-sum(normalizedAbun) #que pasa si se queda negativo el elemento [0] al hacerlo
-        #print(str(diff))
+#    normalizedAbun = [round((i*total/sum(abun))) for i in abun]
+#    if sum(normalizedAbun) == total:
+ #       return(normalizedAbun)
+ #   else: # Si no suma el total o se pasa, quitarle/add la diferencia al primer elemento.
+#        diff = total-sum(normalizedAbun) #que pasa si se queda negativo el elemento [0] al hacerlo
+#        #print(str(diff))
         #print(str(normalizedAbun[0]))
-        normalizedAbun[0] = normalizedAbun[0] + diff
-        return(normalizedAbun)
+#        normalizedAbun[0] = normalizedAbun[0] + diff
+#        return(normalizedAbun)
     
     
     
