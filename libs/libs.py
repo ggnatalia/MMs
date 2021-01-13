@@ -44,37 +44,6 @@ def fastq2fasta(fastq, fasta):
             fastafile.write('>{}\n{}\n'.format(header, seq))
 
 
-def align_to_array(Seqs, expand = False):
-    """ Convert a set of Sequence objects into a align array """
-    #NOTE: numpy arrays do not have rownames, but are faster than lists, especially to do calculations, so the best option is to convert my dict ib two lists (save the same order and then split the seq nt by nt)
-    #array = np.array(list(self.align.items())) #dtype is '<U50000' : unicode string of 50000
-    # I want that each column would be a character
-    sortedSeqs = sorted(Seqs, key = lambda x : x.abun, reverse = True)
-    #Now create the array with just the split sequences:
-    seqsArray = np.array(list(tuple(s.seq) for s in sortedSeqs)) # dtype='<U1': string 1 length
-    abundances = list(s.abun for s in sortedSeqs)
-    #rows are in the same order than seqs, which means that they pair with seqNames list
-    # How access seqs and positions: seqsArray[1, 7500:8000] row 1, col 7500:8000 
-    # x = np.array([[1, 2], [3, 4], [5, 6]]); x[[0, 1, 2], [0, 1, 1]] = array([1, 4, 5])- 'For elements 0,1 & 2 of the dim 1, extract the element 0 for the first category and the element 1 for the others.
-    # Access the whole column (ej. 1): seqsArray[:, 1], 
-    # Dim of the array (tree structure):  np.ndim(seqsArray)=2 -> structure of my array: [[]], with my data: [16*[seq]].
-    # Now, shape is the number of elements in each dimension: np.shape(seqsArray)=16,50000
-    #** To understand it better run a=np.zeros((2, 3, 4)) and np.shape(a), np.dim(a)
-    if expand:
-        return(expand_alignment(seqsArray, abundances))
-    else:
-        return(seqsArray)
-
-def expand_alignment(seqsArray, abundances): 
-    """ Expand an alignment taking into account the abundances of each sequence """
-    expandSeqsArray = np.array([expand_column(seqsArray[:,column], abundances) for column in range(np.shape(seqsArray)[1])]).T
-    return(expandSeqsArray)
-
-def expand_column(column, abundances): 
-    return(np.repeat(column, abundances))
-
-
-
 ########################### LIST
 
 def flattened(l):

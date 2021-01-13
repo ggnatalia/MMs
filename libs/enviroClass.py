@@ -21,9 +21,13 @@ class Enviro():
     multiprocessing_globals = tuple()
     multiprocessing_globals_seqs = tuple()
     multiprocessing_globals_combinations = tuple()
+    
     silva_taxa = dict()
+    rank = None
+    degap = False
+    
     selected = []
-    rank = 0 
+    
     def __init__(self, prefix, enviro, Seqs, nASVs):
         self.prefix = prefix 
         self.enviro = enviro 
@@ -35,19 +39,22 @@ class Enviro():
         """ Return a Environment object from a given environment """
         print('Environment: \'{}\''.format(enviro))
         taxa = cls.subset_taxa_from_environment( enviro, refEnviro = refEnviro, nTaxa = nTaxa ) 
-        print(len(taxa))
+        #print(len(taxa))
         # Collapse abundances of equal taxa
         taxAbun =  dict(Counter(taxa)) # Sequences from most abundant taxa will have been selected more times
         print('subsetSilvaproportions')
         headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, rank = rank )
-        #print(str(len(headers)))
-        cls.selected = list(headers)
+        print('headers ' + str(len(headers)))
+        print('neededSeqs ' + str(len(neededSeqs)))
         print(cls.selected)
-        Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank) # Original Seqs from Silva
+        cls.degap = False
+        Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, selected = list(headers), degap = False) # Original Seqs from Silva
         print('fakeASVs')
-        print(ref)
-        FakeSeqs = cls.make_fake_taxa(neededSeqs, rank, cpus, ref, refTax)
-        TotalSeqs = Seqs|FakeSeqs
+        if neededSeqs:
+            FakeSeqs = cls.make_fake_taxa(neededSeqs, rank = rank, cpus = cpus, ref = ref, refTax = refTax)
+            TotalSeqs = Seqs|FakeSeqs
+        else:
+            TotalSeqs = Seqs
         return( Enviro(prefix, enviro, TotalSeqs, nASVs) ) 
     
     @classmethod
@@ -55,7 +62,7 @@ class Enviro():
         """ Return a Seqs set with the fake taxa that fall short """
 
         fakeSeqs = set()
-        seqs2fake = {}
+        seqs2fake = {} # number of mutants for each sequence that will be generated        
         # Add sequences from each taxa that fail because there were not enough sequences
         for abun, seqsHeaders in neededSeqs: # With one seq, it can be generated so many fake species as needed, but for the shake of variety, it's better to distribute the number of species from which the fake will be generated
             if abun <= len(seqsHeaders):
@@ -68,14 +75,14 @@ class Enviro():
                 privilegeSeq = random.sample(list(seqs2fake.keys()), 1)[0] # Add the rest of the division to one random sequence.
                 seqs2fake[privilegeSeq] = seqs2fake[privilegeSeq] + int(abun%len(seqsHeaders)) # Add the rest of the division to one random sequence.
         #moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, selected = list(seqs2fake.keys())) # Set pf sequences to make more sequences from them
-        print(seqs2fake)
-        moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, cpus = cpus, rank = rank, selected = list(seqs2fake.keys()))
+        print('fake taxa ' + str(sum(seqs2fake.values)))
+        moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, cpus = cpus, rank = rank, selected = list(seqs2fake.keys()), degap = False)
         for s in moreSeqs:
             print(s.header)
             Nposmax = int(estimate_mutations(rank, length = len(s.seq.replace('.','').replace('-',''))))
             #print('Nposmax ' , str(Nposmax))
-            Nstrains = int(seqs2fake[s.header].keys()) 
-            #print('mutant seqs I want ' + s.header + ' ' + str(Nstrains))
+            Nstrains = int(seqs2fake[s.header]) 
+            print('mutant seqs I want ' + s.header + ' ' + str(Nstrains))
             newS = s.generatemutantASVs(Nstrains = Nstrains, Nposmax = Nposmax, start = 0, end = 50000, include_original = False)
             #print('newS ' + str(len(newS)))
             fakeSeqs.update(newS)                
@@ -265,34 +272,40 @@ class Enviro():
                     fasta.write('>{}\n{}\n'.format(s.header, s.deGap().seq))
                     taxonomy.write('{}\t{}\n'.format(s.header, s.tax))
                 return(True)
+    
     @classmethod
-    def set_sequences( cls, fastaFile, refTax, rank, cpus = 1, Nrandom = 0, selected = []):
-        """ Make a list of sequence objects (or select some based on the header) from fasta"""
-        cls.silva_taxa = loadTaxa(refTax = refTax, rank = rank)
+    def set_sequences( cls, fastaFile, refTax, rank, cpus = 1, Nrandom = 0, selected = [], degap = False):
+        """ Make a list of sequence objects (or select some based on the header) from fasta """
         cls.rank = rank
+        cls.silva_taxa = loadTaxa(refTax = refTax, rank = cls.rank)
+        cls.degap = degap
+        
         if Nrandom != 0:
             cls.selected = random.sample(cls.silva_taxa.keys(), Nrandom)
+        else:
+            cls.selected = selected
+            
         with Pool(cpus) as pool:
             with open(fastaFile, 'r') as fasta:
                 Seqs = pool.map(cls.validate_Sequence, itertools.zip_longest(*[fasta]*2))
             return(Seqs)
     
     @classmethod
-    def validate_Sequence(cls, combo, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, selected = []):
-        cls.selected = selected
+    def validate_Sequence(cls, combo):
         header = combo[0]
         seq = combo[1]
-        if cleanHeader:
-            header = simplifyString(header.lstrip('>').rstrip('\n'), splitChar, conservative)
-        else:
-            header = header.lstrip('>').rstrip('\n')
+        #if cleanHeader: # if it is other DB distict from SILVA
+        #    header = simplifyString(header.lstrip('>').rstrip('\n'))
+        #else:
+        #    header = header.lstrip('>').rstrip('\n')
+        header = simplifyString(header.lstrip('>').rstrip('\n')) # assuming SILVA db
         if not 'N' in seq: #checkpoint: some sequences from silva contain N, exclude those sequences
             if not cls.selected: # select all the sequences from the fasta file
-                #write_logfile('debug', 'Sequence.set_Sequences', selected)
+                #write_logfile('debug', 'Sequence.set_Sequences', cls.selected)
                 Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa, cls.rank), 0)
                 #write_logfile('debug', 'Sequence.set_Sequences NOT selected ', Seq.header)
             else:
-                #write_logfile('debug', 'Sequence.set_Sequences', selected)
+                #write_logfile('debug', 'Sequence.set_Sequences', cls.selected)
                 if header in cls.selected: #add sequence to the set
                     Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa, cls.rank), 0)
                 #write_logfile('debug', 'Sequence.set_Sequences SELECTED', Seq.header)
