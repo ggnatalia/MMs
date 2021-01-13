@@ -44,10 +44,8 @@ class Enviro():
         taxAbun =  dict(Counter(taxa)) # Sequences from most abundant taxa will have been selected more times
         print('subsetSilvaproportions')
         headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, rank = rank )
-        print('headers ' + str(len(headers)))
-        print('neededSeqs ' + str(len(neededSeqs)))
-        print(cls.selected)
-        cls.degap = False
+        #print('headers ' + str(len(headers)))
+        #print('neededSeqs ' + str(len(neededSeqs)))
         Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, selected = list(headers), degap = False) # Original Seqs from Silva
         print('fakeASVs')
         if neededSeqs:
@@ -76,6 +74,7 @@ class Enviro():
                 seqs2fake[privilegeSeq] = seqs2fake[privilegeSeq] + int(abun%len(seqsHeaders)) # Add the rest of the division to one random sequence.
         #moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, selected = list(seqs2fake.keys())) # Set pf sequences to make more sequences from them
         print('fake taxa ' + str(sum(seqs2fake.values)))
+        print(seqs2fake)
         moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, cpus = cpus, rank = rank, selected = list(seqs2fake.keys()), degap = False)
         for s in moreSeqs:
             print(s.header)
@@ -277,7 +276,7 @@ class Enviro():
     def set_sequences( cls, fastaFile, refTax, rank, cpus = 1, Nrandom = 0, selected = [], degap = False):
         """ Make a list of sequence objects (or select some based on the header) from fasta """
         cls.rank = rank
-        cls.silva_taxa = loadTaxa(refTax = refTax, rank = cls.rank)
+        #cls.silva_taxa = loadTaxa(refTax = refTax, rank = cls.rank)
         cls.degap = degap
         
         if Nrandom != 0:
@@ -287,7 +286,7 @@ class Enviro():
             
         with Pool(cpus) as pool:
             with open(fastaFile, 'r') as fasta:
-                Seqs = pool.map(cls.validate_Sequence, itertools.zip_longest(*[fasta]*2))
+                Seqs = list(filter(None, pool.map(cls.validate_Sequence, itertools.zip_longest(*[fasta]*2))))
             return(Seqs)
     
     @classmethod
@@ -300,6 +299,7 @@ class Enviro():
         #    header = header.lstrip('>').rstrip('\n')
         header = simplifyString(header.lstrip('>').rstrip('\n')) # assuming SILVA db
         if not 'N' in seq: #checkpoint: some sequences from silva contain N, exclude those sequences
+            Seq = None
             if not cls.selected: # select all the sequences from the fasta file
                 #write_logfile('debug', 'Sequence.set_Sequences', cls.selected)
                 Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa, cls.rank), 0)
@@ -309,10 +309,11 @@ class Enviro():
                 if header in cls.selected: #add sequence to the set
                     Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa, cls.rank), 0)
                 #write_logfile('debug', 'Sequence.set_Sequences SELECTED', Seq.header)
-            if degap:
-                Seq = Seq.deGap()
-            write_logfile('debug', 'Sequence.set_Sequences ADD', Seq.header)
-            return(Seq)
+            if Seq:
+                if cls.degap:
+                    Seq = Seq.deGap()
+                    write_logfile('debug', 'Sequence.set_Sequences ADD', Seq.header)
+                return(Seq)
     
     @staticmethod
     def subset_taxa_from_environment(enviro, refEnviro = '/home/natalia/Projects/natalia/opt/makemocks/utils/speciesperEnviro.check.collapse.tsv',  nTaxa = 0): #the table consists of genus
@@ -348,12 +349,13 @@ class Enviro():
     @staticmethod
     def subsetSilvaproportions(taxAbun, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', rank = 3):
         """ From a dict of taxas {'tax':Abun} take, sequences from from silva """
-        silvaTaxas = loadTaxa(refTax  = refTax, rank = rank) # {seq:tax}
+        cls.rank = rank
+        cls.silva_taxa = loadTaxa(refTax = refTax, rank = cls.rank)
         silvaSeqs = list(fasta2dict(ref).keys())
-        for seq in list(silvaTaxas.keys()):
+        for seq in list(cls.silva_taxa.keys()):
             if not seq in silvaSeqs:
-                silvaTaxas.pop(seq)
-        taxonSeqs = reversedict(silvaTaxas) # {taxa:[seq,...]}
+                cls.silva_taxa.pop(seq)
+        taxonSeqs = reversedict(cls.silva_taxa) # {taxa:[seq,...]}
         # Some sequences from silva have 'N', we do not want to include them, so exclude these sequences
          # Only sequences without 'N'
         # Check good sequences in taxonSeqs, remove those that does not appear.
