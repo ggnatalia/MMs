@@ -256,8 +256,8 @@ class Enviro():
     
     def plot_taxonomy(self, rank):
         """ Barplot stacked and percent of the taxonomy of the sequences included in the mock """
-        #taxa = [s.tax.split(';')[rank] for s in self.Seqs]
-        taxa = [s.tax for s in self.Seqs]
+        taxa = [s.tax.split(';')[rank] for s in self.Seqs]
+        #taxa = [s.tax for s in self.Seqs]
         taxAbun =  dict(Counter(taxa))
         # Create a df of taxonomy and counts
         df = pd.DataFrame.from_dict(taxAbun, orient='index', columns=['counts']).transpose()
@@ -278,7 +278,7 @@ class Enviro():
     def set_sequences( cls, fastaFile, refTax, rank, cpus = 1, Nrandom = 0, selected = [], degap = False):
         """ Make a list of sequence objects (or select some based on the header) from fasta """
         cls.rank = rank
-        cls.silva_taxa = loadTaxa(refTax = refTax, rank = cls.rank)
+        cls.silva_taxa = loadTaxa(refTax = refTax)
         cls.degap = degap
         
         if Nrandom != 0:
@@ -304,12 +304,12 @@ class Enviro():
             Seq = None
             if not cls.selected: # select all the sequences from the fasta file
                 #write_logfile('debug', 'Sequence.set_Sequences', cls.selected)
-                Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa, cls.rank), 0)
+                Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa), 0)
                 #write_logfile('debug', 'Sequence.set_Sequences NOT selected ', Seq.header)
             else:
                 #write_logfile('debug', 'Sequence.set_Sequences', cls.selected)
                 if header in cls.selected: #add sequence to the set
-                    Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa, cls.rank), 0)
+                    Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa), 0)
                 #write_logfile('debug', 'Sequence.set_Sequences SELECTED', Seq.header)
             if Seq:
                 if cls.degap:
