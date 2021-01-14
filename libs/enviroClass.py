@@ -106,10 +106,12 @@ class Enviro():
         taxAbun = dict(zip(taxa, taxa_abundances))
         #taxAbun = tuple(zip(taxa, taxa_abundances))
         headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, rank = rank )
-        cls.selected = list(headers)
-        Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank)
-        FakeSeqs = cls.make_fake_taxa(neededSeqs, rank, ref, refTax)
-        TotalSeqs = Seqs|FakeSeqs
+        Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, selected = list(headers), degap = False)
+        if neededSeqs:
+            FakeSeqs = cls.make_fake_taxa(neededSeqs, rank = rank, cpus = cpus, ref = ref, refTax = refTax)
+            TotalSeqs = Seqs|FakeSeqs
+        else:
+            TotalSeqs = Seqs
         print('TotalSeqs' + str(len(TotalSeqs)))
         return( Enviro(prefix, enviro, TotalSeqs, nASVs) ) 
     
@@ -123,11 +125,10 @@ class Enviro():
                     write_logfile('warning', 'SEQUENCES PROVIDED', 'You want less total ASVs ({}) than provided sequences ({})'.format(nASVs, len(seqs)))
                     print('You want less total ASVs ({}) than provided sequences ({})'.format(nASVs, len(seqs)))
                     print('Reduce your sequences, rise the number of ASVs and if you do not want strains, fix ASVmean = 0')
-                    cls.selected = seqs
-                    Seqs = cls.set_sequences(fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank) # Subset the list of sequences from SILVA DB
+                    Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, selected = seqs, degap = False)
                 else:
                     write_logfile('info', 'RANDOM SEQUENCES', 'You have not pass any align, environment, list of sequences or taxas, random sequences will be subsetted to make ASVs')
-                    Seqs = cls.set_sequences(fastaFile = ref, refTax = refTax, cpus = cpus, rank = rank, Nrandom = random.randint(minseqs, nASVs)) # Subset the list of sequences from SILVA DB
+                    Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, Nrandom = random.randint(minseqs, nASVs), degap = False)
         return( Enviro(prefix, enviro, Seqs, nASVs) ) 
     
     @classmethod
@@ -136,7 +137,7 @@ class Enviro():
         if os.path.isfile('{}/{}'.format(path, inputfile)): 
             write_logfile('info', 'PREVIOUS ALIGN', 'The file {}/{} will be used as reference'.format(path, inputfile))
             enviro = 'inputfile'
-            Seqs = cls.set_sequences(fastaFile = '{}/{}'.format(path, inputfile), refTax = refTax, cpus = cpus, rank = rank)
+            Seqs = cls.set_sequences( fastaFile = '{}/{}'.format(path, inputfile), refTax = refTax , cpus = cpus, rank = rank, selected = [], degap = False)
         else:
             write_logfile('warning', 'INPUT ALIGN', '{} not found in {}.'.format(inputfile, projectPath))
             exit(-2)
@@ -202,7 +203,7 @@ class Enviro():
     @classmethod
     def calc_dist(cls, args): 
         """ args is a tuple of two index combinations with the index of the sequences between calculate distances """
-        d = calculate_distance(cls.multiprocessing_globals_seqs[args[0]], cls.multiprocessing_globals_seqs[args[1]])
+        d = calculate_distance_set(cls.multiprocessing_globals_seqs[args[0]], cls.multiprocessing_globals_seqs[args[1]])
         if d != 0:
             return(d)
         elif args[0] == args[1]: # Si es el mismo indice contra si mismo, d = 0 they are identical
@@ -286,7 +287,7 @@ class Enviro():
             
         with Pool(cpus) as pool:
             with open(fastaFile, 'r') as fasta:
-                Seqs = list(filter(None, pool.map(cls.validate_Sequence, itertools.zip_longest(*[fasta]*2))))
+                Seqs = set(list(filter(None, pool.map(cls.validate_Sequence, itertools.zip_longest(*[fasta]*2)))))
             return(Seqs)
     
     @classmethod
