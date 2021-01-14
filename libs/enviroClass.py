@@ -256,6 +256,8 @@ class Enviro():
     
     def plot_taxonomy(self, rank):
         """ Barplot stacked and percent of the taxonomy of the sequences included in the mock """
+        print(rank)
+        [print('{}\t{}'.format(s.header, s.tax)) for s in self.Seqs]
         taxa = [s.tax.split(';')[rank] for s in self.Seqs]
         taxAbun =  dict(Counter(taxa))
         # Create a df of taxonomy and counts
