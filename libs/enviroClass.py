@@ -256,9 +256,8 @@ class Enviro():
     
     def plot_taxonomy(self, rank):
         """ Barplot stacked and percent of the taxonomy of the sequences included in the mock """
-        print(rank)
-        [print('{}\t{}'.format(s.header, s.tax)) for s in self.Seqs]
-        taxa = [s.tax.split(';')[rank] for s in self.Seqs]
+        #taxa = [s.tax.split(';')[rank] for s in self.Seqs]
+        taxa = [s.tax for s in self.Seqs]
         taxAbun =  dict(Counter(taxa))
         # Create a df of taxonomy and counts
         df = pd.DataFrame.from_dict(taxAbun, orient='index', columns=['counts']).transpose()
@@ -279,7 +278,7 @@ class Enviro():
     def set_sequences( cls, fastaFile, refTax, rank, cpus = 1, Nrandom = 0, selected = [], degap = False):
         """ Make a list of sequence objects (or select some based on the header) from fasta """
         cls.rank = rank
-        #cls.silva_taxa = loadTaxa(refTax = refTax, rank = cls.rank)
+        cls.silva_taxa = loadTaxa(refTax = refTax, rank = cls.rank)
         cls.degap = degap
         
         if Nrandom != 0:
@@ -352,13 +351,13 @@ class Enviro():
     @staticmethod
     def subsetSilvaproportions(taxAbun, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', rank = 3):
         """ From a dict of taxas {'tax':Abun} take, sequences from from silva """
-        cls.rank = rank
-        cls.silva_taxa = loadTaxa(refTax = refTax, rank = cls.rank)
+        rank = rank
+        silva_taxa = loadTaxa(refTax = refTax, rank = rank)
         silvaSeqs = list(fasta2dict(ref).keys())
-        for seq in list(cls.silva_taxa.keys()):
+        for seq in list(silva_taxa.keys()):
             if not seq in silvaSeqs:
-                cls.silva_taxa.pop(seq)
-        taxonSeqs = reversedict(cls.silva_taxa) # {taxa:[seq,...]}
+                silva_taxa.pop(seq)
+        taxonSeqs = reversedict(silva_taxa) # {taxa:[seq,...]}
         # Some sequences from silva have 'N', we do not want to include them, so exclude these sequences
          # Only sequences without 'N'
         # Check good sequences in taxonSeqs, remove those that does not appear.
