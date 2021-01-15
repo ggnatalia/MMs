@@ -73,8 +73,8 @@ class Enviro():
                 privilegeSeq = random.sample(list(seqs2fake.keys()), 1)[0] # Add the rest of the division to one random sequence.
                 seqs2fake[privilegeSeq] = seqs2fake[privilegeSeq] + int(abun%len(seqsHeaders)) # Add the rest of the division to one random sequence.
         #moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, selected = list(seqs2fake.keys())) # Set pf sequences to make more sequences from them
-        print('fake taxa ' + str(sum(seqs2fake.values)))
-        print(seqs2fake)
+        #print('fake taxa ' + str(sum(seqs2fake.values())))
+        #print(seqs2fake)
         moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, cpus = cpus, rank = rank, selected = list(seqs2fake.keys()), degap = False)
         for s in moreSeqs:
             print(s.header)
