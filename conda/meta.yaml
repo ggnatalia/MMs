@@ -34,7 +34,8 @@ requirements:
     - biopython
       #- joblib
     - pysam
-    - requests  
+    - requests
+    - plotly
 
 build:
   noarch: generic
@@ -49,7 +50,8 @@ test:
     - daiquiri
     - matplotlib
     - seaborn
-    - pysam  
+    - pysam
+    - plotly
   command: "pwd"
 
 about:
