@@ -261,7 +261,8 @@ class Enviro():
         taxAbun =  dict(Counter(taxa))
         # Create a df of taxonomy and counts
         df = pd.DataFrame.from_dict(taxAbun, orient='index', columns=['counts']).transpose()
-        barplotpc(df, outputDir = os.getcwd(), title = '{}.pctax'.format(self.prefix), figsize = (20, 20), ylab = 'taxon pc %', xlab = 'Mock', textSize = 8 )
+        #barplotpc(df, outputDir = os.getcwd(), title = '{}.pctax'.format(self.prefix), figsize = (20, 20), ylab = 'taxon pc %', xlab = 'Mock', textSize = 8 )
+        barplotpc(df, outputDir = os.getcwd(), title = '{}.pctax'.format(self.prefix), ylab = 'taxon pc %', xlab = 'Taxonomy at the rank level')
         write_table(df, title = '{}.pctax'.format(self.prefix), outputDir = '.', rows = list(df.index) , columns = list(df.columns), dataframe = None)
 
     def write_output(self): 
@@ -350,7 +351,7 @@ class Enviro():
 
     @staticmethod
     def subsetSilvaproportions(taxAbun, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', rank = 3):
-        """ From a dict of taxas {'tax':Abun} take, sequences from from silva """
+        """ From a dict of taxas {'tax':Abun} take, sequences from silva """
         rank = rank
         silva_taxa = loadTaxa(refTax = refTax, rank = rank)
         silvaSeqs = list(fasta2dict(ref).keys())

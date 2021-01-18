@@ -6,6 +6,9 @@ import pandas as pd
 import numpy as np
 import math
 import scipy.stats as sp
+import plotly.express as px
+#import psutil kaleido?? #https://plotly.com/python/static-image-export/
+import plotly.io as pio
 
 ########################### PLOT FUNCTIONS
 def plot_heatmap(data, outputDir, title, vmin, vmax, center,  legendtitle = 'z', text = None, symmetric = None, figsize = (20, 20)):
@@ -62,42 +65,33 @@ def barplot(df, title, outputDir, rowfig = None, colfig = None, figsize = (20, 2
     plt.close()
 
 
-def barplotpc(df, title, outputDir, figsize = (20, 20), ylab = 'Axis y', xlab = 'Axis x', textSize = 8):
-    stacked_data = df.apply(lambda x: x*100/sum(x), axis=1)
+#def barplotpc(df, title, outputDir, figsize = (20, 20), ylab = 'Axis y', xlab = 'Axis x', textSize = 8):
+    #stacked_data = df.apply(lambda x: x*100/sum(x), axis=1)
     # plot
-    stacked_data.plot(kind="bar", stacked=True).legend(loc='center left', bbox_to_anchor=(1, 0.5))
-    plt.title(title)
-    plt.xlabel(xlab)
-    plt.ylabel(ylab)
-    plt.tight_layout()
-    plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.4)
+    #stacked_data.plot(kind="bar", stacked=True).legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    #plt.title(title)
+    #plt.xlabel(xlab)
+    #plt.ylabel(ylab)
+    #plt.tight_layout()
+    #plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.4)
     #plt.show()
-    plt.savefig('{}/{}.png'.format(outputDir, title))
-    plt.close()  
+    #plt.savefig('{}/{}.png'.format(outputDir, title))
+    #plt.close()  
       
    
       
-      
-def plot_entropy(array, title, outputDir ):
-    nrow, ncol = np.shape(array)
-    # SIMPLY CODE:
-    entropies = {}
-    for pos in range(ncol):
-        entropies[pos] = sp.entropy(list(map(float,{nt:i for nt, i in zip(*np.unique(array[:,pos], return_counts=True)) if nt != '.'}.values())))
-    # entropies = {pos: sp.entropy(list(map(float,{nt:i for nt, i in zip(*np.unique(array[:,pos], return_counts=True)) if nt != '.'}.values()))) for pos in range(ncol)}
-    # Impossible to see 50000 positions, need to remove some
-    higherentropies = { pos:S for pos, S in entropies.items() if S > 0.0 }
-    plotData = sorted(tuple(higherentropies.items()), key = lambda x: x[0])
-    plotDataDF = pd.DataFrame(plotData, columns = ['Pos', 'Entropy']) # Add 1 to position, because python is 0 based
-    plotDataDF = plotDataDF.set_index('Pos')
-    barplot(plotDataDF, outputDir = outputDir, title = '{}.entropy'.format(title), figsize = (12,12), T = True, ylab = 'Entropy', xlab = 'Position', textSize = 8 )
 
-
-
-
-
-
-
+def barplotpc(df, title, outputDir, ylab = 'Axis y', xlab = 'Axis x'):
+    stacked_data = df.apply(lambda x: x*100/sum(x), axis=1)
+    # Sort by value
+    df.sort_values(by = 'counts', axis = 1, ascending = False, inplace = True)
+    # plot
+    fig = px.bar(x = stacked_data.columns, y = stacked_data.iloc[0])
+    fig.update_xaxes(showgrid = True, ticks = "outside")
+    fig.update_layout(title = {'text': title, 'xanchor': 'center', 'yanchor': 'top', 'y' : 1, 'x' : 0.5}, xaxis_title = xlab, yaxis_title = ylab)
+    #fig.write_image('{}/{}.png'.format(outputDir, title))
+    pio.write_image(fig, '{}/{}.svg'.format(outputDir, title))
+    #fig.show()
 
 
 
