@@ -31,6 +31,31 @@ def plot_heatmap(data, outputDir, title, vmin, vmax, center,  legendtitle = 'z',
     plt.tight_layout()
     #plt.show()
     plt.savefig('{}/{}.png'.format(outputDir, title))
+    
+    
+
+
+
+def plot_heatmap2(data, outputDir, title, vmin, vmax, center,  legendtitle = 'z', text = None, symmetric = None, figsize = (20, 20)):
+    """ Plot a heatmap """
+    #palette = sns.diverging_palette(240, 10, n = 20, sep = 10, center = 'light') # n =21 [-1:1, 0.1]=> 21 breaks
+    mask = np.ones(data.shape, dtype = bool)
+    if symmetric: # plot triangular matrix
+        mask[np.tril_indices_from(mask, k = 0)] = False
+    else:
+        mask = False
+    fig = px.imshow(df.transpose(), x = df.index, y = df.columns, color_continuous_scale=["white", "blue"])
+    fig.update_xaxes(side="bottom")
+    pio.write_image(fig, '{}/{}.svg'.format(outputDir, title))
+    fig.show()
+    
+    
+    
+    
+    
+    
+    
+    
  
     
 def barplot(df, title, outputDir, rowfig = None, colfig = None, figsize = (20, 20), T = False, ylab = 'Axis y', xlab = 'Axis x', textSize = 8):
@@ -91,7 +116,7 @@ def barplotpc(df, title, outputDir, ylab = 'Axis y', xlab = 'Axis x'):
     fig.update_layout(title = {'text': title, 'xanchor': 'center', 'yanchor': 'top', 'y' : 1, 'x' : 0.5}, xaxis_title = xlab, yaxis_title = ylab)
     #fig.write_image('{}/{}.png'.format(outputDir, title))
     pio.write_image(fig, '{}/{}.svg'.format(outputDir, title))
-    #fig.show()
+    fig.show()
 
 
 
