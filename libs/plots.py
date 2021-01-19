@@ -8,7 +8,7 @@ import math
 import scipy.stats as sp
 import plotly.express as px
 #import psutil kaleido?? #https://plotly.com/python/static-image-export/
-import plotly.io as pio
+#import plotly.io as pio
 
 ########################### PLOT FUNCTIONS
 def plot_heatmap(data, outputDir, title, vmin, vmax, center,  legendtitle = 'z', text = None, symmetric = None, figsize = (20, 20)):
@@ -36,7 +36,7 @@ def plot_heatmap(data, outputDir, title, vmin, vmax, center,  legendtitle = 'z',
 
 
 
-def plot_heatmap2(data, outputDir, title, vmin, vmax, center,  legendtitle = 'z', text = None, symmetric = None, figsize = (20, 20)):
+def plot_heatmap2(data, outputDir, title, vmin, vmax, center,  legendtitle = 'z', symmetric = None):
     """ Plot a heatmap """
     #palette = sns.diverging_palette(240, 10, n = 20, sep = 10, center = 'light') # n =21 [-1:1, 0.1]=> 21 breaks
     mask = np.ones(data.shape, dtype = bool)
@@ -44,9 +44,11 @@ def plot_heatmap2(data, outputDir, title, vmin, vmax, center,  legendtitle = 'z'
         mask[np.tril_indices_from(mask, k = 0)] = False
     else:
         mask = False
-    fig = px.imshow(df.transpose(), x = df.index, y = df.columns, color_continuous_scale=["white", "blue"])
+    fig = px.imshow(data, x = data.index, y = data.columns, color_continuous_scale=["white", "blue"], color = legendtitle )
     fig.update_xaxes(side="bottom")
-    pio.write_image(fig, '{}/{}.svg'.format(outputDir, title))
+    fig.update_layout(title = {'text': title, 'xanchor': 'center', 'yanchor': 'top', 'y' : 1, 'x' : 0.5}, xaxis_title = xlab, yaxis_title = ylab)
+    #pio.write_image(fig, '{}/{}.svg'.format(outputDir, title))
+    fig.write_html('{}/{}.html'.format(outputDir, title))
     fig.show()
     
     
@@ -115,7 +117,8 @@ def barplotpc(df, title, outputDir, ylab = 'Axis y', xlab = 'Axis x'):
     fig.update_xaxes(showgrid = True, ticks = "outside")
     fig.update_layout(title = {'text': title, 'xanchor': 'center', 'yanchor': 'top', 'y' : 1, 'x' : 0.5}, xaxis_title = xlab, yaxis_title = ylab)
     #fig.write_image('{}/{}.png'.format(outputDir, title))
-    pio.write_image(fig, '{}/{}.svg'.format(outputDir, title))
+    #pio.write_image(fig, '{}/{}.svg'.format(outputDir, title))
+    fig.write_html('{}/{}.html'.format(outputDir, title))
     fig.show()
 
 
