@@ -252,7 +252,7 @@ class Enviro():
         """ Plot distances among selected sequences """
         # Update df with the final sequences that finally have been included:
         shortdf = df.loc[ [idseq.header for idseq in self.Seqs] , [idseq.header for idseq in self.Seqs] ] # select columns and rows
-        plot_heatmap2(shortdf, outputDir = os.getcwd(), title = '{}.{}.distances'.format(self.prefix, region), vmin=0, vmax=1, center= 0, legendtitle = 'distance', text = text, symmetric = symmetric, figsize = figsize)
+        plot_heatmap(shortdf, outputDir = os.getcwd(), title = '{}.{}.distances'.format(self.prefix, region), zmin = 0, zmax = 1, legendtitle = 'distance', symmetric = symmetric)
     
     def plot_taxonomy(self, rank):
         """ Barplot stacked and percent of the taxonomy of the sequences included in the mock """

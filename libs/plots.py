@@ -11,42 +11,46 @@ import plotly.express as px
 #import plotly.io as pio
 
 ########################### PLOT FUNCTIONS
-def plot_heatmap(data, outputDir, title, vmin, vmax, center,  legendtitle = 'z', text = None, symmetric = None, figsize = (20, 20)):
-    """ Plot a heatmap """
-    palette = sns.diverging_palette(240, 10, n = 20, sep = 10, center = 'light') # n =21 [-1:1, 0.1]=> 21 breaks
-    mask = np.ones(data.shape, dtype = bool)
-    if symmetric: # plot triangular matrix
-        mask[np.tril_indices_from(mask, k = 0)] = False
-    else:
-        mask = False
-    plt.figure(figsize = figsize) # select figure size
-    with sns.axes_style("white"):
-        if text: # add text values per cell
-            p = sns.heatmap(data, annot = True, fmt = '.2f' , cmap = palette, square = True, vmin = float(vmin), vmax = float(vmax), center = float(center), mask = mask,  cbar_kws = {'label': legendtitle}) 
-        else:
-            p = sns.heatmap(data, annot = False, fmt = '.2f' , cmap = palette, square = True, vmin = float(vmin), vmax = float(vmax), center = float(center), mask = mask,  cbar_kws = {'label': legendtitle}) 
-    p.tick_params(right = False, bottom = True, labelright = False, labelbottom = True, top = False, labeltop = False, left = True, labelleft = True)
-    p.set_title(title, fontsize = 18)
-    plt.legend(fontsize = 'large', title_fontsize = '16')
-    plt.tight_layout()
+#def plot_heatmap(data, outputDir, title, vmin, vmax, center,  legendtitle = 'z', text = None, symmetric = None, figsize = (20, 20)):
+    #""" Plot a heatmap """
+    #palette = sns.diverging_palette(240, 10, n = 20, sep = 10, center = 'light') # n =21 [-1:1, 0.1]=> 21 breaks
+    #mask = np.ones(data.shape, dtype = bool)
+    #if symmetric: # plot triangular matrix
+    #    mask[np.tril_indices_from(mask, k = 0)] = False
+    #else:
+    #    mask = False
+    #plt.figure(figsize = figsize) # select figure size
+    #with sns.axes_style("white"):
+    #    if text: # add text values per cell
+    #        p = sns.heatmap(data, annot = True, fmt = '.2f' , cmap = palette, square = True, vmin = float(vmin), vmax = float(vmax), center = float(center), mask = mask,  cbar_kws = {'label': legendtitle}) 
+    #    else:
+    #        p = sns.heatmap(data, annot = False, fmt = '.2f' , cmap = palette, square = True, vmin = float(vmin), vmax = float(vmax), center = float(center), mask = mask,  cbar_kws = {'label': legendtitle}) 
+    #p.tick_params(right = False, bottom = True, labelright = False, labelbottom = True, top = False, labeltop = False, left = True, labelleft = True)
+    #p.set_title(title, fontsize = 18)
+    #plt.legend(fontsize = 'large', title_fontsize = '16')
+    #plt.tight_layout()
     #plt.show()
-    plt.savefig('{}/{}.png'.format(outputDir, title))
+    #plt.savefig('{}/{}.png'.format(outputDir, title))
     
     
 
 
 
-def plot_heatmap2(data, outputDir, title, vmin, vmax, center,  legendtitle = 'z', symmetric = None):
+def plot_heatmap(data, outputDir, title, zmin, zmax, legendtitle = 'z', symmetric = None):
     """ Plot a heatmap """
     #palette = sns.diverging_palette(240, 10, n = 20, sep = 10, center = 'light') # n =21 [-1:1, 0.1]=> 21 breaks
     mask = np.ones(data.shape, dtype = bool)
+    if zmin == 0 and zmax == 1:
+         color_continuous_scale = ['white', 'blue']
+    else:
+        color_continuous_scale = ['red', 'white' , 'green']
     if symmetric: # plot triangular matrix
         mask[np.tril_indices_from(mask, k = 0)] = False
     else:
         mask = False
-    fig = px.imshow(data, x = data.index, y = data.columns, color_continuous_scale=["white", "blue"], color = legendtitle )
-    fig.update_xaxes(side="bottom")
-    fig.update_layout(title = {'text': title, 'xanchor': 'center', 'yanchor': 'top', 'y' : 1, 'x' : 0.5}, xaxis_title = xlab, yaxis_title = ylab)
+    fig = px.imshow(data, x = data.index, y = data.columns, color_continuous_scale = color_continuous_scale, zmin = zmin, zmax = zmax , labels = dict(x = xlab, y = ylab, color = legendtitle))
+    fig.update_xaxes(side = "bottom")
+    fig.update_layout(title = {'text': title, 'xanchor': 'center', 'yanchor': 'top', 'y' : 1, 'x' : 0.5})
     #pio.write_image(fig, '{}/{}.svg'.format(outputDir, title))
     fig.write_html('{}/{}.html'.format(outputDir, title))
     fig.show()

@@ -110,7 +110,8 @@ class Mock():
             abunTable = cls.ZINBD(nASVs = len(Enviro.Seqs), nSamples = Nsamples, CorrMatrix = CorrMatrix, shannonIndex = shannonIndex, reads = reads, pstr0 = pstr0, size = size)
             df =  pd.DataFrame(abunTable.reshape(Nsamples, len(Enviro.Seqs)), index = ['S_' + str(i) for i in range(Nsamples)] , columns = [s.header for s in Enviro.Seqs]) 
             write_logfile('info', 'CREATE MOCK', 'Plotting abundance correlation')
-            plot_heatmap(df.corr(method ='spearman'), outputDir = os.getcwd(), title = '{}.correlationMatrix_fromAbunTable'.format(prefix), vmin = -1, vmax = 1, center = 0, legendtitle = 'Correlation', text = None, symmetric = True, figsize = (20, 20))
+        #    plot_heatmap(df.corr(method ='spearman'), outputDir = os.getcwd(), title = '{}.correlationMatrix_fromAbunTable'.format(prefix), vmin = -1, vmax = 1, center = 0, legendtitle = 'Correlation', text = None, symmetric = True, figsize = (20, 20))
+            plot_heatmap(df.corr(method ='spearman'), outputDir = os.getcwd(), title = '{}.correlationMatrix_fromAbunTable'.format(prefix), zmin = -1, zmax = 1, legendtitle = 'Correlation', symmetric = True)
         # To each sequence, add they global abundance in all the samples
         for s in Enviro.Seqs:
             s.abun = df[s.header].sum()
