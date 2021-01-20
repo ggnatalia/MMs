@@ -10,32 +10,8 @@ import plotly.express as px
 #import psutil kaleido?? #https://plotly.com/python/static-image-export/
 #import plotly.io as pio
 
-########################### PLOT FUNCTIONS
-#def plot_heatmap(data, outputDir, title, vmin, vmax, center,  legendtitle = 'z', text = None, symmetric = None, figsize = (20, 20)):
-    #""" Plot a heatmap """
-    #palette = sns.diverging_palette(240, 10, n = 20, sep = 10, center = 'light') # n =21 [-1:1, 0.1]=> 21 breaks
-    #mask = np.ones(data.shape, dtype = bool)
-    #if symmetric: # plot triangular matrix
-    #    mask[np.tril_indices_from(mask, k = 0)] = False
-    #else:
-    #    mask = False
-    #plt.figure(figsize = figsize) # select figure size
-    #with sns.axes_style("white"):
-    #    if text: # add text values per cell
-    #        p = sns.heatmap(data, annot = True, fmt = '.2f' , cmap = palette, square = True, vmin = float(vmin), vmax = float(vmax), center = float(center), mask = mask,  cbar_kws = {'label': legendtitle}) 
-    #    else:
-    #        p = sns.heatmap(data, annot = False, fmt = '.2f' , cmap = palette, square = True, vmin = float(vmin), vmax = float(vmax), center = float(center), mask = mask,  cbar_kws = {'label': legendtitle}) 
-    #p.tick_params(right = False, bottom = True, labelright = False, labelbottom = True, top = False, labeltop = False, left = True, labelleft = True)
-    #p.set_title(title, fontsize = 18)
-    #plt.legend(fontsize = 'large', title_fontsize = '16')
-    #plt.tight_layout()
-    #plt.show()
-    #plt.savefig('{}/{}.png'.format(outputDir, title))
+
     
-    
-
-
-
 def plot_heatmap(data, outputDir, title, zmin, zmax, legendtitle = 'z', symmetric = None):
     """ Plot a heatmap """
     #palette = sns.diverging_palette(240, 10, n = 20, sep = 10, center = 'light') # n =21 [-1:1, 0.1]=> 21 breaks
@@ -58,12 +34,7 @@ def plot_heatmap(data, outputDir, title, zmin, zmax, legendtitle = 'z', symmetri
     fig.show()
     
     
-    
-    
-    
-    
-    
-    
+     
  
     
 def barplot(df, title, outputDir, rowfig = None, colfig = None, figsize = (20, 20), T = False, ylab = 'Axis y', xlab = 'Axis x', textSize = 8):
@@ -97,20 +68,6 @@ def barplot(df, title, outputDir, rowfig = None, colfig = None, figsize = (20, 2
     plt.savefig('{}/{}.png'.format(outputDir, title))
     plt.close()
 
-
-#def barplotpc(df, title, outputDir, figsize = (20, 20), ylab = 'Axis y', xlab = 'Axis x', textSize = 8):
-    #stacked_data = df.apply(lambda x: x*100/sum(x), axis=1)
-    # plot
-    #stacked_data.plot(kind="bar", stacked=True).legend(loc='center left', bbox_to_anchor=(1, 0.5))
-    #plt.title(title)
-    #plt.xlabel(xlab)
-    #plt.ylabel(ylab)
-    #plt.tight_layout()
-    #plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.4)
-    #plt.show()
-    #plt.savefig('{}/{}.png'.format(outputDir, title))
-    #plt.close()  
-      
    
       
 

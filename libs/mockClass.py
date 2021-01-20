@@ -125,8 +125,8 @@ class Mock():
         write_table(self.df, title = 'checkDB/{}.raw.abundances_original'.format(self.prefix), rows = list(self.df.index) , columns = list(self.df.columns), dataframe = None)
         abunTablePercent = make_percent(self.df, outputDir = 'checkDB/', write = True, fileName = '{}.abundances_original'.format(self.prefix), T = False)
         write_logfile('info', 'CREATE MOCK', 'This is the real shannon index diversity in all the mock: {}'.format(str(shannonIndexCalc(self.df.sum()))))
-        barplot(self.df, outputDir = os.getcwd(), title = '{}.sampleDistribution'.format(self.prefix),  ylab = 'Abundances', xlab = 'Species', T = False, figsize = (30, 30)) # Plot asvs distribution by sample: lognormal
-        barplot(self.df, outputDir = os.getcwd(), title = '{}.asvsDistribution'.format(self.prefix), ylab = 'Abundances', xlab = 'Samples', T = True, figsize = (30, 30))  # Plot distribution of one asvs in the different samples: ZINBD
+        barplotpc(self.df, outputDir = os.getcwd(), title = '{}.sampleDistribution'.format(self.prefix),  ylab = 'Abundances', xlab = 'Species') # Plot asvs distribution by sample: lognormal
+        barplotpc(self.df.T, outputDir = os.getcwd(), title = '{}.asvsDistribution'.format(self.prefix), ylab = 'Abundances', xlab = 'Samples')  # Plot distribution of one asvs in the different samples: ZINBD
         write_logfile('info', 'CREATE MOCK', 'Preparing samples')
         self.multiprocessing_globals_samples = self.samples
         if self.cpus == 1:
