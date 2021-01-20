@@ -253,7 +253,7 @@ class Enviro():
         # Update df with the final sequences that finally have been included:
         Seqs_headers = [s.header for s in self.Seqs]
         shortdf = df.loc[ [idseq for idseq in df.index if idseq in Seqs_headers] , [idseq for idseq in df.columns if idseq in Seqs_headers] ] # select columns and rows
-        plot_heatmap(shortdf, outputDir = os.getcwd(), title = '{}.{}.distances'.format(self.prefix, region), zmin = 0, zmax = 1, legendtitle = 'distance', symmetric = symmetric)
+        plot_heatmap(shortdf.T, outputDir = os.getcwd(), title = '{}.{}.distances'.format(self.prefix, region), zmin = 0, zmax = 1, legendtitle = 'distance', symmetric = symmetric)
     
     def plot_taxonomy(self, rank):
         """ Barplot stacked and percent of the taxonomy of the sequences included in the mock """

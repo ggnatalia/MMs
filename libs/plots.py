@@ -117,7 +117,7 @@ def barplot(df, title, outputDir, rowfig = None, colfig = None, figsize = (20, 2
 def barplotpc(df, title, outputDir, ylab = 'Axis y', xlab = 'Axis x'):
     stacked_data = df.apply(lambda x: x*100/sum(x), axis=1)
     # Sort by value
-    df = df.sort_values(by = 'counts', axis = 1, ascending = False, inplace = True)
+    stacked_data.sort_values(by = 'counts', axis = 1, ascending = False, inplace = True)
     # plot
     fig = px.bar(x = stacked_data.columns, y = stacked_data.iloc[0])
     fig.update_xaxes(showgrid = True, ticks = "outside")
