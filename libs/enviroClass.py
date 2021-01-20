@@ -251,7 +251,8 @@ class Enviro():
     def plot_distances(self, df, region = '16S', cutoff = 0.03, text = None, symmetric = None, figsize = (20, 20)):
         """ Plot distances among selected sequences """
         # Update df with the final sequences that finally have been included:
-        shortdf = df.loc[ [idseq.header for idseq in self.Seqs] , [idseq.header for idseq in self.Seqs] ] # select columns and rows
+        Seqs_headers = [s.header for s in self.Seqs]
+        shortdf = df.loc[ [idseq for idseq in df.index if idseq in Seqs_headers] , [idseq for idseq in df.columns if idseq in Seqs_headers] ] # select columns and rows
         plot_heatmap(shortdf, outputDir = os.getcwd(), title = '{}.{}.distances'.format(self.prefix, region), zmin = 0, zmax = 1, legendtitle = 'distance', symmetric = symmetric)
     
     def plot_taxonomy(self, rank):
