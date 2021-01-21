@@ -263,6 +263,8 @@ class Enviro():
         # Create a df of taxonomy and counts
         df = pd.DataFrame.from_dict(taxAbun, orient='index', columns=['counts']).transpose()
         #barplotpc(df, outputDir = os.getcwd(), title = '{}.pctax'.format(self.prefix), figsize = (20, 20), ylab = 'taxon pc %', xlab = 'Mock', textSize = 8 )
+        # Sort by value
+        df.sort_values(by = 'counts', axis = 1, ascending = False, inplace = True)
         barplotpc(df, outputDir = os.getcwd(), title = '{}.pctax'.format(self.prefix), ylab = 'taxon pc %', xlab = 'Taxonomy at the rank level')
         write_table(df, title = '{}.pctax'.format(self.prefix), outputDir = '.', rows = list(df.index) , columns = list(df.columns), dataframe = None)
 
