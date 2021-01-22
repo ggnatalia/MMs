@@ -195,7 +195,7 @@ def main(args):
                 Env = Enviro.init_from_enviro(nASVs = nASVs, prefix = projectPrefix, enviro = enviro, refEnviro = refEnviro, refTax = refTax, ref = ref, nTaxa = 10000, rank = 5)
                 rank = 5
             elif taxa: 
-                Env = Enviro.init_from_taxa(nASVs = nASVs, perfix = projectPrefix, rank = rank, taxa = taxa, taxa_abundances = taxaAbund, refTax =  refTax, ref = ref)
+                Env = Enviro.init_from_taxa(nASVs = nASVs, prefix = projectPrefix, rank = rank, taxa = taxa, taxa_abundances = taxaAbund, refTax =  refTax, ref = ref)
             else: # seqs
                 Env = Enviro.init_from_seqs(prefix = projectPrefix, rank = rank, seqs = seqs, nASVs = nASVs, minseqs = minseqs, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align')
             Env.makeASVs(region, start, end, ASVsmean, cutoff , cpus, figsize)   # Only with sequences that are not in the align file. Assume align file provided by the user is ok!

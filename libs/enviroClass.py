@@ -139,7 +139,7 @@ class Enviro():
             enviro = 'inputfile'
             Seqs = cls.set_sequences( fastaFile = '{}/{}'.format(path, inputfile), refTax = refTax , cpus = cpus, rank = rank, selected = [], degap = False)
         else:
-            write_logfile('warning', 'INPUT ALIGN', '{} not found in {}.'.format(inputfile, projectPath))
+            write_logfile('warning', 'INPUT ALIGN', '{} not found in {}.'.format(inputfile, path))
             exit(-2)
         return( Enviro(prefix, enviro, Seqs, len(Seqs)) )
     

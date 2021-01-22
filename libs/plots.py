@@ -37,44 +37,8 @@ def plot_heatmap(data, outputDir, title, zmin, zmax, legendtitle = 'z', symmetri
     fig.show()
     
     
-     
- 
-    
-def barplot2(df, title, outputDir, rowfig = None, colfig = None, figsize = (20, 20), T = False, ylab = 'Axis y', xlab = 'Axis x', textSize = 8):
-    " Barplot by rows per default. If you want to plot it by columns, use T (transpose) option."
-    #fig = plt.figure()
-    fig = plt.figure(figsize = figsize)
-    if T:
-        df = df.T
-    if not rowfig:
-        rowfig = math.floor(math.sqrt(len(df.index))) #sqrt(nSpecies)
-    if not colfig:
-        if len(df.index)%rowfig == 0:
-            colfig = math.floor(len(df.index)/rowfig)  #Dividendo = Divisor * Cociente + Resto -> Cociente = (Dividendo - R)/Divisor; colfig = (nSpecies - nSpecies%sqrt(nSpecies))/sqrt(nSpecies)
-        else:
-            colfig = math.floor(len(df.index)/rowfig + 1 )
-    for row in range(len(df.index)):
-        xlabels = list(df.columns.values)
-        x = range(len(xlabels))
-        y = df.iloc[row]
-        ax = fig.add_subplot(rowfig, colfig, row + 1)
-        ax.bar(x, y, color = 'blue')
-        ax.set_title('{}'.format(df.index.values[row]), fontsize = textSize + 2)
-        ax.set_ylabel(ylab, fontsize = textSize)
-        ax.set_xlabel(xlab, fontsize = textSize)
-        ax.set_xticks(np.arange(len(xlabels)))
-        ax.set_xticklabels(xlabels)
-        ax.tick_params(axis="x", labelsize = textSize - 2,rotation=70 )
-    plt.tight_layout()
-    plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.4)
-    #plt.show()
-    plt.savefig('{}/{}.png'.format(outputDir, title))
-    plt.close()
-
-   
-      
-
 def barplotpc(df, title, outputDir, ylab = 'Axis y', xlab = 'Axis x'):
+    """ Barplot by rows per default in percentages. If you want to plot it by columns, use T (transpose) option."""
     stacked_data = df.apply(lambda x: x*100/sum(x), axis=1)
     # Sort by value
     #stacked_data.sort_values(by = 'counts', axis = 1, ascending = False, inplace = True)
@@ -90,6 +54,7 @@ def barplotpc(df, title, outputDir, ylab = 'Axis y', xlab = 'Axis x'):
 
 
 def barplot(df, title, outputDir, T = False, rowfig = None, colfig = None, ylab = 'Axis y', xlab = 'Axis x'):
+    """ Barplot by rows per default. If you want to plot it by columns, use T (transpose) option."""
     if T:
         df = df.T
     if not rowfig:
@@ -99,7 +64,7 @@ def barplot(df, title, outputDir, T = False, rowfig = None, colfig = None, ylab 
             colfig = math.floor(df.shape[0]/rowfig)  #Dividendo = Divisor * Cociente + Resto -> Cociente = (Dividendo - R)/Divisor; colfig = (nSpecies - nSpecies%sqrt(nSpecies))/sqrt(nSpecies)
         else:
             colfig = math.floor(df.shape[0]/rowfig + 1 )
-    fig = make_subplots(rows = rowfig, cols = colfig)
+    fig = make_subplots(rows = rowfig, cols = colfig, subplot_titles= tuple(df.index))
     i = 1
     z = 0 
     while i <= colfig:
@@ -115,7 +80,9 @@ def barplot(df, title, outputDir, T = False, rowfig = None, colfig = None, ylab 
             z = z + 1
             j = j + 1
         i = i +1
-    fig.update_xaxes(tickangle = -45)
+    fig.update_layout(title = {'text': title, 'xanchor': 'center', 'yanchor': 'top', 'y' : 1, 'x' : 0.5})
+    fig.update_xaxes(title_text = xlab,  tickangle = -45)
+    fig.update_yaxes(title_text = ylab)
     fig.write_html('{}/{}.html'.format(outputDir, title))
     fig.show()
 
