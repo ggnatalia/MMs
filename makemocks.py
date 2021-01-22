@@ -228,7 +228,7 @@ def main(args):
         # ShannonIndex correspondence (mothur is REQUIRED : CHECK)
         write_logfile('info', 'SHANNON INDEX', 'To know the correspondence of Shannon Index in the different taxonomic ranks, mothur is required')
         command = ['python3', '{}/utils/shannonIndex_sweep.py'.format(os.path.dirname(os.path.abspath(__file__))), '-o', projectPrefix, '-m', mockName, '--align', '{}.align'.format(projectPrefix)]
-        #runCommand(command)
+        runCommand(command)
         # Taxonomy subset check 
         if enviro:
             command = ['Rscript', '{}/check_scripts/checkTaxonomy.R'.format(os.path.dirname(os.path.abspath(__file__))), projectPrefix, projectPath, mockPrefix, mockPath, enviro, rank, 15 ]

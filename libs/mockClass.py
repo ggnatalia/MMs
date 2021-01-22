@@ -69,8 +69,6 @@ class Mock():
         # Mas facil, pasar todo vacio, generar un objeto mock incompleto y ya esta
         return(mock.run_mock())
     
-    
-        
     @classmethod    
     def init_and_run_InSilico(cls, prefix, sequence_files, abundance_files, reads = 20000, errormodel = 'perfect', alignment = [0, 50000, '16S'], InSilicoparams = (150, 200), figsize = (20, 20), cpus = 12):
         # Open abundance files and sequence files to rebuild Seqs and df
@@ -96,7 +94,6 @@ class Mock():
         #mock = Mock(prefix, Seqs, df, samples, reads, errormodel, alignment, figsize, cpus, InSilicoparams)
         # Mas facil, pasar todo vacio, generar un objeto mock incompleto y ya esta
         return(mock.reads_generation())
-    
     
     @classmethod
     def init_from_enviro(cls, Enviro, prefix, Nsamples, shannonIndex, alignment = [0, 50000, '16S'], alpha = 0.9,  smallest_coef = 0.1, largest_coef = 0.9, reads = 20000, pstr0 = 0.2, size = 1, errormodel = 'perfect', figsize = (20,20), cpus = 12, InSilicoparams = (150,200)):
@@ -126,7 +123,8 @@ class Mock():
         abunTablePercent = make_percent(self.df, outputDir = 'checkDB/', write = True, fileName = '{}.abundances_original'.format(self.prefix), T = False)
         write_logfile('info', 'CREATE MOCK', 'This is the real shannon index diversity in all the mock: {}'.format(str(shannonIndexCalc(self.df.sum()))))
         barplot(self.df, outputDir = os.getcwd(), title = '{}.sampleDistribution'.format(self.prefix),  ylab = 'Abundances', xlab = 'Species') # Plot asvs distribution by sample: lognormal
-        barplot(self.df.T, outputDir = os.getcwd(), title = '{}.asvsDistribution'.format(self.prefix), ylab = 'Abundances', xlab = 'Samples')  # Plot distribution of one asvs in the different samples: ZINBD
+        if len(self.samples) > 1:
+            barplot(self.df.T, outputDir = os.getcwd(), title = '{}.asvsDistribution'.format(self.prefix), ylab = 'Abundances', xlab = 'Samples')  # Plot distribution of one asvs in the different samples: ZINBD
         write_logfile('info', 'CREATE MOCK', 'Preparing samples')
         self.multiprocessing_globals_samples = self.samples
         if self.cpus == 1:
