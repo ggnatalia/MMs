@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from libs.libs import *#Library with general functions
+from libs.libs import *
 from libs.maths import *
 from libs.plots import *
 from libs.seqsClass import Sequence
@@ -22,6 +22,12 @@ class Enviro():
     multiprocessing_globals_seqs = tuple()
     multiprocessing_globals_combinations = tuple()
     
+    silva_taxa = dict()
+    rank = None
+    degap = False
+    
+    selected = []
+    
     def __init__(self, prefix, enviro, Seqs, nASVs):
         self.prefix = prefix 
         self.enviro = enviro 
@@ -29,29 +35,32 @@ class Enviro():
         self.nASVs = nASVs
     
     @classmethod
-    def init_from_enviro(cls, nASVs, prefix, enviro, refEnviro = '/home/natalia/Projects/natalia/opt/makemocks/utils/speciesperEnviro.check.collapse.tsv', refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', nTaxa = 10000, rank = 5, figsize = (20, 20)):
+    def init_from_enviro(cls, nASVs, prefix, enviro, refEnviro = '/home/natalia/Projects/natalia/opt/makemocks/utils/speciesperEnviro.check.collapse.tsv', refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', nTaxa = 10000, rank = 5, figsize = (20, 20), cpus = 20):
         """ Return a Environment object from a given environment """
         print('Environment: \'{}\''.format(enviro))
         taxa = cls.subset_taxa_from_environment( enviro, refEnviro = refEnviro, nTaxa = nTaxa ) 
+        #print(len(taxa))
         # Collapse abundances of equal taxa
         taxAbun =  dict(Counter(taxa)) # Sequences from most abundant taxa will have been selected more times
-        # tuple([(i,j) for i, j in taxAbun.items()])
+        print('subsetSilvaproportions')
         headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, rank = rank )
         #print('headers ' + str(len(headers)))
-        Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, selected = list(headers)) # Original Seqs from Silva
-        FakeSeqs = cls.make_fake_taxa(neededSeqs, rank, ref, refTax)
-        TotalSeqs = Seqs|FakeSeqs
-        #print('Seqs ' + str(len(Seqs)))
-        #print('Fake ' + str(len(FakeSeqs)))
-        #print('TotalSeqs' + str(len(TotalSeqs)))
-        cls.plotTaxonomy2(TotalSeqs, '{}.silvasubset'.format(prefix), rank, figsize)
+        #print('neededSeqs ' + str(len(neededSeqs)))
+        Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, selected = list(headers), degap = False) # Original Seqs from Silva
+        print('fakeASVs')
+        if neededSeqs:
+            FakeSeqs = cls.make_fake_taxa(neededSeqs, rank = rank, cpus = cpus, ref = ref, refTax = refTax)
+            TotalSeqs = Seqs|FakeSeqs
+        else:
+            TotalSeqs = Seqs
         return( Enviro(prefix, enviro, TotalSeqs, nASVs) ) 
     
     @classmethod
-    def make_fake_taxa(cls, neededSeqs, rank, ref, refTax):
+    def make_fake_taxa(cls, neededSeqs, rank, cpus, ref, refTax):
         """ Return a Seqs set with the fake taxa that fall short """
+
         fakeSeqs = set()
-        seqs2fake = {}
+        seqs2fake = {} # number of mutants for each sequence that will be generated        
         # Add sequences from each taxa that fail because there were not enough sequences
         for abun, seqsHeaders in neededSeqs: # With one seq, it can be generated so many fake species as needed, but for the shake of variety, it's better to distribute the number of species from which the fake will be generated
             if abun <= len(seqsHeaders):
@@ -63,22 +72,21 @@ class Enviro():
                     seqs2fake[s] = basic 
                 privilegeSeq = random.sample(list(seqs2fake.keys()), 1)[0] # Add the rest of the division to one random sequence.
                 seqs2fake[privilegeSeq] = seqs2fake[privilegeSeq] + int(abun%len(seqsHeaders)) # Add the rest of the division to one random sequence.
-        moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, selected = list(seqs2fake.keys())) # Set pf sequences to make more sequences from them
+        moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, cpus = cpus, rank = rank, selected = list(seqs2fake.keys()), degap = False)
         for s in moreSeqs:
+            print(s.header)
             Nposmax = int(estimate_mutations(rank, length = len(s.seq.replace('.','').replace('-',''))))
             #print('Nposmax ' , str(Nposmax))
             Nstrains = int(seqs2fake[s.header]) 
-            #print('mutant seqs I want ' + s.header + ' ' + str(Nstrains))
+            print('mutant seqs I want ' + s.header + ' ' + str(Nstrains))
             newS = s.generatemutantASVs(Nstrains = Nstrains, Nposmax = Nposmax, start = 0, end = 50000, include_original = False)
             #print('newS ' + str(len(newS)))
             fakeSeqs.update(newS)                
         return(fakeSeqs)
              
     
-    
-    
     @classmethod
-    def init_from_taxa(cls, nASVs, prefix, rank, taxa, taxa_abundances = [], refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', figsize = (20, 20)):
+    def init_from_taxa(cls, nASVs, prefix, rank, taxa, taxa_abundances = [], refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', figsize = (20, 20), cpus = 20):
         """ Create an environment from a list of user taxa or from random taxa at the selected rank """
         enviro = 'taxas'
         write_logfile('info', 'SUBSET SEQUENCES', 'You have pass a list of taxa {} from which take sequences and make ASVs'.format(taxa))
@@ -95,12 +103,13 @@ class Enviro():
         taxAbun = dict(zip(taxa, taxa_abundances))
         #taxAbun = tuple(zip(taxa, taxa_abundances))
         headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, rank = rank )
-        Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, selected = list(headers) ) 
-        FakeSeqs = cls.make_fake_taxa(neededSeqs, rank, ref, refTax)
-        TotalSeqs = Seqs|FakeSeqs
+        Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, selected = list(headers), degap = False)
+        if neededSeqs:
+            FakeSeqs = cls.make_fake_taxa(neededSeqs, rank = rank, cpus = cpus, ref = ref, refTax = refTax)
+            TotalSeqs = Seqs|FakeSeqs
+        else:
+            TotalSeqs = Seqs
         print('TotalSeqs' + str(len(TotalSeqs)))
-        ### AHORA MISMO INUTIL
-        cls.plotTaxonomy2(TotalSeqs, '{}.silvasubset'.format(prefix), rank, figsize)
         return( Enviro(prefix, enviro, TotalSeqs, nASVs) ) 
     
     @classmethod   
@@ -113,29 +122,23 @@ class Enviro():
                     write_logfile('warning', 'SEQUENCES PROVIDED', 'You want less total ASVs ({}) than provided sequences ({})'.format(nASVs, len(seqs)))
                     print('You want less total ASVs ({}) than provided sequences ({})'.format(nASVs, len(seqs)))
                     print('Reduce your sequences, rise the number of ASVs and if you do not want strains, fix ASVmean = 0')
-                    Seqs = cls.set_sequences(fastaFile = ref, refTax = refTax, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, selected = seqs) # Subset the list of sequences from SILVA DB
+                    Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, selected = seqs, degap = False)
                 else:
                     write_logfile('info', 'RANDOM SEQUENCES', 'You have not pass any align, environment, list of sequences or taxas, random sequences will be subsetted to make ASVs')
-                    Seqs = cls.set_sequences(fastaFile = ref, refTax = refTax, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, Nrandom = random.randint(minseqs, nASVs)) # Subset the list of sequences from SILVA DB
-            else: #seqs is a fasta file with the sequences:
-                seqs = list(fasta2dict(seqs).keys()) # Extract header of the sequences. I do this to take the alignment sequence from silva
-                Seqs = cls.set_sequences(fastaFile = ref, refTax = refTax, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, selected = seqs)
+                    Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, Nrandom = random.randint(minseqs, nASVs), degap = False)
         return( Enviro(prefix, enviro, Seqs, nASVs) ) 
     
     @classmethod
-    def init_from_file(cls, prefix, path, inputfile, refTax = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax'):
+    def init_from_file(cls, prefix, path, inputfile, refTax = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', cpus = 20, rank = 5):
         """ Open and load an align file """
         if os.path.isfile('{}/{}'.format(path, inputfile)): 
             write_logfile('info', 'PREVIOUS ALIGN', 'The file {}/{} will be used as reference'.format(path, inputfile))
             enviro = 'inputfile'
-            Seqs = cls.set_sequences(fastaFile = '{}/{}'.format(path, inputfile), refTax = refTax, degap = False, cleanHeader = False, splitChar = '\t', conservative = False)
+            Seqs = cls.set_sequences( fastaFile = '{}/{}'.format(path, inputfile), refTax = refTax , cpus = cpus, rank = rank, selected = [], degap = False)
         else:
-            write_logfile('warning', 'INPUT ALIGN', '{} not found in {}.'.format(inputfile, projectPath))
+            write_logfile('warning', 'INPUT ALIGN', '{} not found in {}.'.format(inputfile, path))
             exit(-2)
         return( Enviro(prefix, enviro, Seqs, len(Seqs)) )
-    
-    
-    
     
     @classmethod 
     def distances(cls, Seqs, prefix, region, start, end, cutoff, cpus, complete = False): # igual se puede combinar con makeASVs
@@ -152,7 +155,7 @@ class Enviro():
         else:
             write_logfile('info', 'CONVERT SEQS', 'Start multiprocessing')
             with Pool(cpus) as pool:
-                cls.multiprocessing_globals_seqs = tuple(pool.map(Sequence.nt2dict, cls.multiprocessing_globals))
+                cls.multiprocessing_globals_seqs = tuple(pool.map(Sequence.nt2dict, cls.multiprocessing_globals, chunksize = 50))
         write_logfile('info', 'CONVERT SEQS', 'Finish')
         cls.multiprocessing_globals = tuple()
         cls.multiprocessing_globals_combinations = tuple(combinations_with_replacement(list(range(len(cls.multiprocessing_globals_seqs))),2))
@@ -162,7 +165,7 @@ class Enviro():
         else:
             write_logfile('info', 'DISTANCE CALCULATIONS', 'Start multiprocessing')
             with Pool(cpus) as pool:
-                distances = list(pool.map(cls.calc_dist, cls.multiprocessing_globals_combinations))
+                distances = list(pool.map(cls.calc_dist, cls.multiprocessing_globals_combinations, chunksize = 50))
         write_logfile('info', 'DISTANCE CALCULATIONS', 'Finish')
         
         length2split = list(reversed(range(1, len(equivalence) + 1)))   # split the list into one row per original sequence: for 3 sequences: [(1,1),(1,2),(1,3)],[(2,2), (2,3)],[(3,3)]: split 3, 2, 1
@@ -245,16 +248,21 @@ class Enviro():
     def plot_distances(self, df, region = '16S', cutoff = 0.03, text = None, symmetric = None, figsize = (20, 20)):
         """ Plot distances among selected sequences """
         # Update df with the final sequences that finally have been included:
-        shortdf = df.loc[ [idseq.header for idseq in self.Seqs] , [idseq.header for idseq in self.Seqs] ] # select columns and rows
-        plot_heatmap(shortdf, outputDir = os.getcwd(), title = '{}.{}.distances'.format(self.prefix, region), vmin=0, vmax=1, center= 0, legendtitle = 'distance', text = text, symmetric = symmetric, figsize = figsize)
+        Seqs_headers = [s.header for s in self.Seqs]
+        shortdf = df.loc[ [idseq for idseq in df.index if idseq in Seqs_headers] , [idseq for idseq in df.columns if idseq in Seqs_headers] ] # select columns and rows
+        plot_heatmap(shortdf.T, outputDir = os.getcwd(), title = '{}.{}.distances'.format(self.prefix, region), zmin = 0, zmax = 1, legendtitle = 'distance', symmetric = symmetric)
     
     def plot_taxonomy(self, rank):
         """ Barplot stacked and percent of the taxonomy of the sequences included in the mock """
         taxa = [s.tax.split(';')[rank] for s in self.Seqs]
+        #taxa = [s.tax for s in self.Seqs]
         taxAbun =  dict(Counter(taxa))
         # Create a df of taxonomy and counts
         df = pd.DataFrame.from_dict(taxAbun, orient='index', columns=['counts']).transpose()
-        barplotpc(df, outputDir = os.getcwd(), title = '{}.pctax'.format(self.prefix), figsize = (20, 20), ylab = 'taxon pc %', xlab = 'Mock', textSize = 8 )
+        #barplotpc(df, outputDir = os.getcwd(), title = '{}.pctax'.format(self.prefix), figsize = (20, 20), ylab = 'taxon pc %', xlab = 'Mock', textSize = 8 )
+        # Sort by value
+        df.sort_values(by = 'counts', axis = 1, ascending = False, inplace = True)
+        barplotpc(df, outputDir = os.getcwd(), title = '{}.pctax'.format(self.prefix), ylab = 'taxon pc %', xlab = 'Taxonomy at the rank level')
         write_table(df, title = '{}.pctax'.format(self.prefix), outputDir = '.', rows = list(df.index) , columns = list(df.columns), dataframe = None)
 
     def write_output(self): 
@@ -266,63 +274,49 @@ class Enviro():
                     fasta.write('>{}\n{}\n'.format(s.header, s.deGap().seq))
                     taxonomy.write('{}\t{}\n'.format(s.header, s.tax))
                 return(True)
-
-    # DE MOMENTO CANCELADA
-    def plot_taxon_entropy(self, ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', rank = 3, title = None):
-        """ Calculate and plot the entropy of the all the taxons """
-        # Need to look for all the sequences that have the same taxon
-        taxons = set() #taxons = {'Micrococcales', 'Alteromodalaes'}
-        for s in self.Seqs:
-            taxons.add(s.tax.split(';')[rank])
-        print(taxons)
-        # New strategy: read everything in silva tax, extract sequences from the corresponding taxa and then select sequences of this taxa    
-        silvaTaxas = loadTaxa(refTax  = refTax, rank = rank)    
-        taxaselectedSequences = { taxa : Sequence.set_sequences(ref, refTax = refTax, rank = rank, selected = [k for k,v in silvaTaxas.items() if v == taxa ]) for taxa in taxons}    
-        for taxa in taxaselectedSequences.keys():
-            print(taxa)
-            length = len(set([len(s.seq)for s in taxaselectedSequences[taxa]]))
-            # All the squences in silva have length: 50000
-            if length == 1:
-                #Now create the array with just the split sequences:
-                seqsArray = align_to_array(taxaselectedSequences[taxa], expand = False) # dtype='<U1': string 1 length
-                title = '{}.{}'.format(self.prefix, taxa)
-                plot_entropy(seqsArray, title, outputDir = self.prefix)
-
-    @staticmethod
-    def set_sequences(fastaFile, refTax, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, rank = None, selected = [], Nrandom = 0): # TESTED! ################## MIRAR CASO FASTA MULTILINEA
-        """ Make a list of sequence objects (or select some based on the header) from fasta"""
-        with open(fastaFile, 'r') as fasta:
-            all_sequences_list = fasta.readlines()
-            silva_taxa = loadTaxa(refTax, rank = rank)
-            Seqs = set()
-            if Nrandom != 0:
-                selected = random.sample(silva_taxa.keys(), Nrandom)
-            for i in range(0, len(all_sequences_list), 2): 
-                if cleanHeader:
-                    header = simplifyString(all_sequences_list[i].lstrip('>').rstrip('\n'), splitChar, conservative)
-                else:
-                    header = all_sequences_list[i].lstrip('>').rstrip('\n')
-                if not 'N' in all_sequences_list[i + 1]: #checkpoint: some sequences from silva contain N, exclude those sequences
-                    if not selected: # select all the sequences from the fasta file
-                        #write_logfile('debug', 'Sequence.set_Sequences', selected)
-                        Seq = Sequence(header, all_sequences_list[i + 1].rstrip('\n'), Sequence.assign_taxonomy(header, silva_taxa, rank), 0)
-                        #write_logfile('debug', 'Sequence.set_Sequences NOT selected ', Seq.header)
-                    else: # Select just the sequences of the list
-                        #write_logfile('debug', 'Sequence.set_Sequences', selected)
-                        if header in selected: #add sequence to the set
-                            Seq = Sequence(header, all_sequences_list[i + 1].rstrip('\n'), Sequence.assign_taxonomy(header, silva_taxa, rank), 0)
-                            #write_logfile('debug', 'Sequence.set_Sequences SELECTED', Seq.header)
-                        else:
-                            continue
-                    if degap:
-                        #write_logfile('debug', 'Sequence.set_Sequences degap', degap)
-                        Seq = Seq.deGap()
-                    write_logfile('debug', 'Sequence.set_Sequences ADD', Seq.header)
-                    Seqs.add(Seq)  
-                else:
-                    continue
-            write_logfile('debug', 'Sequence.set_sequences', 'If there are repeated sequences in the fasta, there will be repeated sequences in the set Sequences, each Sequence object is different although it contains the same elements')
+    
+    @classmethod
+    def set_sequences( cls, fastaFile, refTax, rank, cpus = 1, Nrandom = 0, selected = [], degap = False):
+        """ Make a list of sequence objects (or select some based on the header) from fasta """
+        cls.rank = rank
+        cls.silva_taxa = loadTaxa(refTax = refTax)
+        cls.degap = degap
+        
+        if Nrandom != 0:
+            cls.selected = random.sample(cls.silva_taxa.keys(), Nrandom)
+        else:
+            cls.selected = selected
+            
+        with Pool(cpus) as pool:
+            with open(fastaFile, 'r') as fasta:
+                Seqs = set(list(filter(None, pool.map(cls.validate_Sequence, itertools.zip_longest(*[fasta]*2)))))
             return(Seqs)
+    
+    @classmethod
+    def validate_Sequence(cls, combo):
+        header = combo[0]
+        seq = combo[1]
+        #if cleanHeader: # if it is other DB distict from SILVA
+        #    header = simplifyString(header.lstrip('>').rstrip('\n'))
+        #else:
+        #    header = header.lstrip('>').rstrip('\n')
+        header = simplifyString(header.lstrip('>').rstrip('\n')) # assuming SILVA db
+        if not 'N' in seq: #checkpoint: some sequences from silva contain N, exclude those sequences
+            Seq = None
+            if not cls.selected: # select all the sequences from the fasta file
+                #write_logfile('debug', 'Sequence.set_Sequences', cls.selected)
+                Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa), 0)
+                #write_logfile('debug', 'Sequence.set_Sequences NOT selected ', Seq.header)
+            else:
+                #write_logfile('debug', 'Sequence.set_Sequences', cls.selected)
+                if header in cls.selected: #add sequence to the set
+                    Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa), 0)
+                #write_logfile('debug', 'Sequence.set_Sequences SELECTED', Seq.header)
+            if Seq:
+                if cls.degap:
+                    Seq = Seq.deGap()
+                    write_logfile('debug', 'Sequence.set_Sequences ADD', Seq.header)
+                return(Seq)
     
     @staticmethod
     def subset_taxa_from_environment(enviro, refEnviro = '/home/natalia/Projects/natalia/opt/makemocks/utils/speciesperEnviro.check.collapse.tsv',  nTaxa = 0): #the table consists of genus
@@ -357,13 +351,14 @@ class Enviro():
 
     @staticmethod
     def subsetSilvaproportions(taxAbun, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', rank = 3):
-        """ From a dict of taxas {'tax':Abun} take, sequences from from silva """
-        silvaTaxas = loadTaxa(refTax  = refTax, rank = rank) # {seq:tax}
+        """ From a dict of taxas {'tax':Abun} take, sequences from silva """
+        rank = rank
+        silva_taxa = loadTaxa(refTax = refTax, rank = rank)
         silvaSeqs = list(fasta2dict(ref).keys())
-        for seq in list(silvaTaxas.keys()):
+        for seq in list(silva_taxa.keys()):
             if not seq in silvaSeqs:
-                silvaTaxas.pop(seq)
-        taxonSeqs = reversedict(silvaTaxas) # {taxa:[seq,...]}
+                silva_taxa.pop(seq)
+        taxonSeqs = reversedict(silva_taxa) # {taxa:[seq,...]}
         # Some sequences from silva have 'N', we do not want to include them, so exclude these sequences
          # Only sequences without 'N'
         # Check good sequences in taxonSeqs, remove those that does not appear.
@@ -394,22 +389,6 @@ class Enviro():
             nTaxa = random.randint(1, len(silvaTaxas))
         taxa = random.sample(silvaTaxas.keys(), nTaxa)
         return(taxa)
-
-#### PROVISIONAL
-    @staticmethod # Este es ahora para probar si el subset de silva respeta proporciones, luego se borra
-    def plotTaxonomy2(Seqs, prefix, rank, figsize = (20, 20)):
-        """ Bar plot stacked and percent of the taxonomy of the sequences included in the silva subset """
-        taxas = [s.tax.split(';')[rank] for s in Seqs]
-        count = {}
-        for i in taxas: 
-            count[i] = count.get(i, 0) + 1    
-        # Create a df of taxonomy and counts
-        df = pd.DataFrame.from_dict(count, orient='index', columns=['counts'])
-        df = df.transpose()
-        barplotpc(df, outputDir = os.getcwd(), title = '{}.pctax'.format(prefix), figsize = figsize, ylab = 'taxon pc %', xlab = 'Mock', textSize = 8 )   
-        write_table(df, title = '{}.pctax'.format(prefix), outputDir = '.', rows = list(df.index) , columns = list(df.columns), dataframe = None)
-
-
 
 
 

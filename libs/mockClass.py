@@ -69,8 +69,6 @@ class Mock():
         # Mas facil, pasar todo vacio, generar un objeto mock incompleto y ya esta
         return(mock.run_mock())
     
-    
-        
     @classmethod    
     def init_and_run_inSilico(cls, prefix, sequence_files, abundance_files, reads = 20000, errormodel = 'perfect', alignment = [0, 50000, '16S'], inSilicoparams = (150, 200), figsize = (20, 20), cpus = 12):
         # Open abundance files and sequence files to rebuild Seqs and df
@@ -97,7 +95,6 @@ class Mock():
         # Mas facil, pasar todo vacio, generar un objeto mock incompleto y ya esta
         return(mock.reads_generation())
     
-    
     @classmethod
     def init_from_enviro(cls, enviro, prefix, Nsamples, shannon, alignment = [0, 50000, '16S'], alpha = 0.9,  smallest_coef = 0.1, largest_coef = 0.9, reads = 20000, pstr0 = 0.2, size = 1, errormodel = 'perfect', figsize = (20,20), cpus = 12, inSilicoparams = (150,200)):
         """ Creating a mock from scratch. A set of Samples objects"""
@@ -110,7 +107,8 @@ class Mock():
             abunTable = cls.ZINBD(nASVs = len(enviro.Seqs), nSamples = Nsamples, CorrMatrix = CorrMatrix, shannon = shannon, reads = reads, pstr0 = pstr0, size = size)
             df =  pd.DataFrame(abunTable.reshape(Nsamples, len(enviro.Seqs)), index = ['S_' + str(i) for i in range(Nsamples)] , columns = [s.header for s in enviro.Seqs]) 
             write_logfile('info', 'CREATE MOCK', 'Plotting abundance correlation')
-            plot_heatmap(df.corr(method ='spearman'), outputDir = os.getcwd(), title = '{}.correlationMatrix_fromAbunTable'.format(prefix), vmin = -1, vmax = 1, center = 0, legendtitle = 'Correlation', text = None, symmetric = True, figsize = (20, 20))
+        #    plot_heatmap(df.corr(method ='spearman'), outputDir = os.getcwd(), title = '{}.correlationMatrix_fromAbunTable'.format(prefix), vmin = -1, vmax = 1, center = 0, legendtitle = 'Correlation', text = None, symmetric = True, figsize = (20, 20))
+            plot_heatmap(df.corr(method ='spearman'), outputDir = os.getcwd(), title = '{}.correlationMatrix_fromAbunTable'.format(prefix), zmin = -1, zmax = 1, legendtitle = 'Correlation', symmetric = True)
         # To each sequence, add they global abundance in all the samples
         for s in enviro.Seqs:
             s.abun = df[s.header].sum()
@@ -123,9 +121,10 @@ class Mock():
         write_logfile('info', 'CREATE MOCK', 'Writing output abundance tables')
         write_table(self.df, title = 'checkDB/{}.raw.abundances_original'.format(self.prefix), rows = list(self.df.index) , columns = list(self.df.columns), dataframe = None)
         abunTablePercent = make_percent(self.df, outputDir = 'checkDB/', write = True, fileName = '{}.abundances_original'.format(self.prefix), T = False)
-        write_logfile('info', 'CREATE MOCK', 'This is the real shannon index diversity in all the mock: {}'.format(str(shannonCalc(self.df.sum()))))
-        barplot(self.df, outputDir = os.getcwd(), title = '{}.sampleDistribution'.format(self.prefix),  ylab = 'Abundances', xlab = 'Species', T = False, figsize = (30, 30)) # Plot asvs distribution by sample: lognormal
-        barplot(self.df, outputDir = os.getcwd(), title = '{}.asvsDistribution'.format(self.prefix), ylab = 'Abundances', xlab = 'Samples', T = True, figsize = (30, 30))  # Plot distribution of one asvs in the different samples: ZINBD
+        write_logfile('info', 'CREATE MOCK', 'This is the real shannon index diversity in all the mock: {}'.format(str(shannonIndexCalc(self.df.sum()))))
+        barplot(self.df, outputDir = os.getcwd(), title = '{}.sampleDistribution'.format(self.prefix),  ylab = 'Abundances', xlab = 'Species') # Plot asvs distribution by sample: lognormal
+        if len(self.samples) > 1:
+            barplot(self.df.T, outputDir = os.getcwd(), title = '{}.asvsDistribution'.format(self.prefix), ylab = 'Abundances', xlab = 'Samples')  # Plot distribution of one asvs in the different samples: ZINBD
         write_logfile('info', 'CREATE MOCK', 'Preparing samples')
         self.multiprocessing_globals_samples = self.samples
         if self.cpus == 1:

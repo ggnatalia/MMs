@@ -199,7 +199,7 @@ def main(args):
                 rank = 5
                 env = Enviro.init_from_enviro(nASVs = nASVs, prefix = projectPrefix, rank = rank, enviro = enviro, refEnviro = refEnviro, refTax = refTax, ref = ref, nTaxa = 10000)
             elif taxa: 
-                env = Enviro.init_from_taxa(nASVs = nASVs, prefix = projectPrefix, rank = rank, taxa = taxa, taxa_abundances = taxaAbund, refTax =  refTax, ref = ref)
+                Env = Enviro.init_from_taxa(nASVs = nASVs, prefix = projectPrefix, rank = rank, taxa = taxa, taxa_abundances = taxaAbund, refTax =  refTax, ref = ref)
             else: # seqs
                 env = Enviro.init_from_seqs(nASVs = nASVs, prefix = projectPrefix, rank = rank, seqs = seqs,  minseqs = minseqs, refTax =  refTax, ref = ref)
             
@@ -228,8 +228,13 @@ def main(args):
         mock = Mock.init_from_enviro(enviro = env, prefix = mockPrefix, nSamples = S, shannon = shannon, alignment = alignment, alpha = alpha, smallest_coef = smallest_coef, largest_coef = largest_coef, reads = reads, pstr0 = pstr0, size = size, figsize = figsize, inSilicoparams = inSilicoparams)
         os.chdir(path)
         command = ['python3', '{}/utils/shannonIndex_sweep.py'.format(MMs_home), '-o', projectPrefix, '-m', mockName, '--align', '{}.align'.format(projectPrefix)]
+        print(' '.join(command))
         runCommand(command)
         
+        # Taxonomy subset check 
+        if enviro:
+            command = ['Rscript', '{}/check_scripts/checkTaxonomy.R'.format(os.path.dirname(os.path.abspath(__file__))), projectPrefix, projectPath, mockPrefix, mockPath, enviro, rank, 15 ]
+            #runCommand(command)
 ################################################################################################################
     
 if __name__ == '__main__':

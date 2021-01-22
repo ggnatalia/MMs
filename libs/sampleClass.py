@@ -81,7 +81,7 @@ class Sample():
         write_logfile('info', 'PROCESSING SAMPLE', 'This is the real shannon index diversity in this sample: {}'.format(str(shannonIndexCalc([v[1] for v in plotData])))) 
         plotDataDF = pd.DataFrame(plotData, columns = ['seqName', 'Percentage'])
         plotDataDF = plotDataDF.set_index('seqName')
-        barplot(plotDataDF, outputDir = outputDir, title = '{}.abundances'.format(prefix), T=True, ylab = 'Percentage reads', xlab = 'Sequences', textSize=8, figsize = self.figsize)
+        barplot(plotDataDF.T, outputDir = outputDir, title = '{}.abundances'.format(prefix), ylab = 'Percentage reads', xlab = 'Sequences')
             
     @classmethod
     def init_from_df(cls, prefix, sample, Seqs, alignment, figsize):
