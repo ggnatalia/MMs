@@ -64,7 +64,7 @@ def barplot(df, title, outputDir, T = False, rowfig = None, colfig = None, ylab 
             colfig = math.floor(df.shape[0]/rowfig)  #Dividendo = Divisor * Cociente + Resto -> Cociente = (Dividendo - R)/Divisor; colfig = (nSpecies - nSpecies%sqrt(nSpecies))/sqrt(nSpecies)
         else:
             colfig = math.floor(df.shape[0]/rowfig + 1 )
-    if subtitle:
+    if not subtitle:
         fig = make_subplots(rows = rowfig, cols = colfig)
     else:
         fig = make_subplots(rows = rowfig, cols = colfig, subplot_titles= tuple(df.index))

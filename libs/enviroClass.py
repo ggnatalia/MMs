@@ -93,9 +93,9 @@ class Enviro():
         """ Create an environment from a list of user taxa or from random taxa at the selected rank """
         enviro = 'taxas'
         write_logfile('info', 'SUBSET SEQUENCES', 'You have pass a list of taxa {} from which take sequences and make ASVs'.format(taxa))
-        if len(taxa_abundances) > 0 :
+        if taxa_abundances:
             taxa_abundances = [i*100 for i in  taxa_abundances]  # To subset 10000 sequences from SILVA
-        elif len(taxa_abundances) == 0 :
+        else:
             # Recreate the list taxa_abundances but with random values
             write_logfile('critical', 'init_from_taxa', 'NOT WORKING when using ESTMATE ABUNDANCES FUNCTION!!!')
             taxa_abundances = estimate_abundances(len(taxa), 100) # Do % of each taxa
