@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 import pandas as pd
 import numpy as np
@@ -10,7 +10,7 @@ import daiquiri
 
 ########################### WORK WITH FASTA/ ALIGN FILES
 
-def simplifyString(string, splitChar = '\t', conservative = False):
+def simplifyString(string, splitChar = '\t', conservative = False): # TESTED!
     """ For a string: change splitChar by '_' or split by it """
     if conservative:# Replace splitChar by '_' and remove blank spaces
         string = string.replace(splitChar, '_').replace(' ','')
@@ -42,6 +42,7 @@ def fastq2fasta(fastq, fasta):
             coment= fastqfile.readline().rstrip('\n')
             qual = fastqfile.readline().rstrip('\n')
             fastafile.write('>{}\n{}\n'.format(header, seq))
+
 
 ########################### LIST
 
@@ -93,24 +94,27 @@ def load_table(filepath, rows = None , cols = None, path = '.', sep = ','):
     return(data)
 
 ########################### MUTATIONS
-def mutate(string, N, start = None, end = None, randomly = True): 
+def mutate(string, N, start = None, end = None, randomly = True): # WORK
     """ Generate a mutate string from original one in N positions """
     bases = ['A','T','C','G','-']
     strings_list = np.array(list(string), dtype ='U1')
-    if not start: start = 0
-    if not end: end = len(string)-1
+    if not start:
+        start = 0
+    if not end:
+        end = len(string)-1
     # If mutation site includes '.' sample another mutation site. No repeat positions
     # List of possible positions without '.'
-    possiblePos = [i for i, nt in enumerate(strings_list) if nt != '.']
-    mutation_sites = list(np.random.choice(possiblePos, N, replace = False))
-    for pos in mutation_sites: # Avoid cases in which the mutated base is identical to the original
-        strings_list[pos] = random.sample(list(filter(lambda x: x != string[pos], bases)), 1)[0]
-    
+    possiblePos = [i for i,nt in enumerate(strings_list) if nt != '.']
+    mutation_sites = list(np.random.choice(possiblePos, N, replace=False))
+    #print(mutation_sites)
+    if randomly == True:
+        for pos in mutation_sites: # Avoid cases in which the mutated base is identical to the original
+            strings_list[pos] = random.sample(list(filter(lambda x: x != string[pos], bases)), 1)[0]
     return (''.join(strings_list.tolist()))
 
 ########################### TAXONOMY
 def rank2number(rank): 
-    """ Convert taxonomic ranks into numerical factors 0 based """
+    """ Convert taxonomic ranks into numerical factors 0 based"""
     if rank == 'kingdom':
         return(0)
     elif rank == 'phylum':
@@ -124,33 +128,34 @@ def rank2number(rank):
     elif rank == 'genus':
         return(5)
     else:
-        write_logfile('error', 'LIBS: rank2number' , '{} is not a valid taxonomic rank. Valid taxonomic ranks are: phylum, class, order, family, genus'.format(rank))
-        exit(0)
+        write_logfile('error', 'LIBS: convertTaxlevel' , '{} is not a valid taxlevel. Valid taxlevel are: kingdom, phylum, order, class, family, genus'.format(rank))
+        exit(-3)
 
 
 def estimate_mutations(rank, length = 1500): #1500 bp approximately 16S rRNA
     if rank == 1: #phylum
         cutoff =  1-0.75
-        write_logfile( 'info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff) )
+        write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
         return(cutoff * length)
     elif rank == 2: #class
         cutoff =  1-0.785
-        write_logfile( 'info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff) )
+        write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
         return(cutoff * length)
     elif rank == 3: #order
         cutoff =  1-0.82
-        write_logfile( 'info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff) )
+        write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
         return(cutoff * length)
     elif rank == 4: #family
         cutoff =  1-0.865
-        write_logfile( 'info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff) )
+        write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
         return(cutoff * length)
     elif rank == 5: #genus
         cutoff =  1-0.945
-        write_logfile( 'info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff) )
+        write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
         return(cutoff * length)
     else:
         return(100)
+
 
 
 def loadTaxa(refTax = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', rank = None):

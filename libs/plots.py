@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -17,6 +17,7 @@ import plotly.graph_objects as go
     
 def plot_heatmap(data, outputDir, title, zmin, zmax, legendtitle = 'z', symmetric = None):
     """ Plot a heatmap """
+    #palette = sns.diverging_palette(240, 10, n = 20, sep = 10, center = 'light') # n =21 [-1:1, 0.1]=> 21 breaks
     mask = np.ones(data.shape, dtype = bool)
     if zmin == 0 and zmax == 1:
          #color_continuous_scale = ['white', 'blue']
@@ -52,7 +53,7 @@ def barplotpc(df, title, outputDir, ylab = 'Axis y', xlab = 'Axis x'):
 
 
 
-def barplot(df, title, outputDir, T = False, rowfig = None, colfig = None, ylab = 'Axis y', xlab = 'Axis x'):
+def barplot(df, title, outputDir, T = False, rowfig = None, colfig = None, ylab = 'Axis y', xlab = 'Axis x', subtitle = True):
     """ Barplot by rows per default. If you want to plot it by columns, use T (transpose) option."""
     if T:
         df = df.T
@@ -63,7 +64,10 @@ def barplot(df, title, outputDir, T = False, rowfig = None, colfig = None, ylab 
             colfig = math.floor(df.shape[0]/rowfig)  #Dividendo = Divisor * Cociente + Resto -> Cociente = (Dividendo - R)/Divisor; colfig = (nSpecies - nSpecies%sqrt(nSpecies))/sqrt(nSpecies)
         else:
             colfig = math.floor(df.shape[0]/rowfig + 1 )
-    fig = make_subplots(rows = rowfig, cols = colfig, subplot_titles= tuple(df.index))
+    if subtitle:
+        fig = make_subplots(rows = rowfig, cols = colfig)
+    else:
+        fig = make_subplots(rows = rowfig, cols = colfig, subplot_titles= tuple(df.index))
     i = 1
     z = 0 
     while i <= colfig:
@@ -84,3 +88,6 @@ def barplot(df, title, outputDir, T = False, rowfig = None, colfig = None, ylab 
     fig.update_yaxes(title_text = ylab)
     fig.write_html('{}/{}.html'.format(outputDir, title))
     fig.show()
+
+
+

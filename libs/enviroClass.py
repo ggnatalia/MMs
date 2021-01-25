@@ -72,6 +72,9 @@ class Enviro():
                     seqs2fake[s] = basic 
                 privilegeSeq = random.sample(list(seqs2fake.keys()), 1)[0] # Add the rest of the division to one random sequence.
                 seqs2fake[privilegeSeq] = seqs2fake[privilegeSeq] + int(abun%len(seqsHeaders)) # Add the rest of the division to one random sequence.
+        #moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, degap = False, cleanHeader = True, splitChar = '\t', conservative = False, selected = list(seqs2fake.keys())) # Set pf sequences to make more sequences from them
+        #print('fake taxa ' + str(sum(seqs2fake.values())))
+        #print(seqs2fake)
         moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, cpus = cpus, rank = rank, selected = list(seqs2fake.keys()), degap = False)
         for s in moreSeqs:
             print(s.header)
@@ -200,7 +203,7 @@ class Enviro():
     @classmethod
     def calc_dist(cls, args): 
         """ args is a tuple of two index combinations with the index of the sequences between calculate distances """
-        d = calculate_distance(cls.multiprocessing_globals_seqs[args[0]], cls.multiprocessing_globals_seqs[args[1]])
+        d = calculate_distance_set(cls.multiprocessing_globals_seqs[args[0]], cls.multiprocessing_globals_seqs[args[1]])
         if d != 0:
             return(d)
         elif args[0] == args[1]: # Si es el mismo indice contra si mismo, d = 0 they are identical
@@ -389,6 +392,7 @@ class Enviro():
             nTaxa = random.randint(1, len(silvaTaxas))
         taxa = random.sample(silvaTaxas.keys(), nTaxa)
         return(taxa)
+
 
 
 

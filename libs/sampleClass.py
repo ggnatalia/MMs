@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -39,6 +39,7 @@ class Sample():
         #self.run_inSilicoSeq(prefix, reads, errormodel = errormodel, cpus = cpus ) #########33 A LO MEJOR LO SACO DE AQUI Y LO HAGO EN GENERAL
         write_logfile('info', 'PROCESSING SAMPLE {}'.format(self.sample_name), 'Plotting abundances')
         self.plot_abundances()
+        #write_logfile('info', 'PROCESSING SAMPLE {}'.format(self.sample_name), 'Plotting entropies')
         write_logfile('info', 'PROCESSING SAMPLE {}'.format(self.sample_name), 'Writing align file for the required region')       
         self.write_align_by_region()
         return('{}.{}.sequences16S.fasta'.format(self.prefix, self.sample_name), '{}.{}.abundances'.format(self.prefix, self.sample_name), self.sample_name) 
@@ -83,6 +84,7 @@ class Sample():
         plotDataDF = plotDataDF.set_index('seqName')
         barplot(plotDataDF.T, outputDir = outputDir, title = '{}.abundances'.format(prefix), ylab = 'Percentage reads', xlab = 'Sequences')
             
+            
     @classmethod
     def init_from_df(cls, prefix, sample, Seqs, alignment, figsize):
         """ Create a Sample object from pandas df 1D and alignSeqs"""
@@ -100,10 +102,10 @@ class Sample():
 
 
     @staticmethod
-    def run_inSilicoSeq(prefix, seqFile, abunFile, sampleName, reads = 10000, errormodel = 'perfect', cpus = 12, inSilicoparams = (150,200)):  
+    def run_inSilicoSeq(prefix, seqFile, abunFile, sampleName, reads = 10000, errormodel = 'perfect', cpus = 12, InSilicoparams = (150,200)):  
         """Run inSilicoSeq"""
         # Run inSilicoSeq in samples directory from command line to generate the fasta samples
-        command = ['iss', 'generate', '-g', seqFile, '--abundance_file', abunFile, '-o', '{}.{}.{}-{}-{}r-{}i.InSilicoSeq'.format(prefix, sampleName, reads, errormodel, inSilicoparams[0], inSilicoparams[1]), '--n_reads', reads, '--cpus', cpus, '--InSilicoparams', str(inSilicoparams[0]), str(inSilicoparams[1])] # Reads are the total count both pairs, to have the reads required by the user in each file
+        command = ['iss', 'generate', '-g', seqFile, '--abundance_file', abunFile, '-o', '{}.{}.{}-{}-{}r-{}i.InSilicoSeq'.format(prefix, sampleName, reads, errormodel, InSilicoparams[0], InSilicoparams[1]), '--n_reads', reads, '--cpus', cpus, '--InSilicoparams', str(InSilicoparams[0]), str(InSilicoparams[1])] # Reads are the total count both pairs, to have the reads required by the user in each file
         if errormodel == 'MiSeq' or errormodel == 'HiSeq' or errormodel == 'NovaSeq':
             command.append('--model')
             command.append(errormodel)
@@ -119,3 +121,4 @@ class Sample():
     
     
     
+
