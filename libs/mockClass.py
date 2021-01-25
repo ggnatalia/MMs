@@ -36,7 +36,7 @@ class Mock():
         self.cpus = cpus
         self.figsize = figsize
         self.alignment = alignment
-        self.InSilicoparams = InSilicoparams # seguramente desaparezca en un futuro cercano (readlength, insertsize)
+        self.InSilicoparams = InSilicoparams 
     
     def __repr__(self): 
         return(self.df)
@@ -45,7 +45,6 @@ class Mock():
     @classmethod
     def init_from_previous_mock(cls, Enviro, prefix, shannonIndex, alignment = [0, 50000, '16S'], reads = 20000, errormodel = 'perfect', figsize = (20,20), cpus = 12, InSilicoparams = (150,200)): # Esta es para corregir antiguas, pero se puede quitar
         """ Repat files from mock using a previous align and abundance distribution """
-        # Open abundance files and sequence files to rebuild Seqs and df
         Seqs = set()
         samples = []
         mock = Mock(prefix, set(), pd.DataFrame(index=[], columns=[]), [], reads, errormodel, alignment, figsize, cpus, InSilicoparams)
@@ -66,33 +65,14 @@ class Mock():
             for seq in samples.Seqs:
                 df.loc[s.sample_name, seq.seq] = seq.abun
         mock = Mock(prefix, Seqs, df, [], reads, errormodel, alignment, figsize, cpus, InSilicoparams)
-        # Mas facil, pasar todo vacio, generar un objeto mock incompleto y ya esta
         return(mock.run_mock())
     
     @classmethod    
     def init_and_run_InSilico(cls, prefix, sequence_files, abundance_files, reads = 20000, errormodel = 'perfect', alignment = [0, 50000, '16S'], InSilicoparams = (150, 200), figsize = (20, 20), cpus = 12):
-        # Open abundance files and sequence files to rebuild Seqs and df
-        #Seqs = set()
-        #samples = []
         mock = Mock(prefix, set(), pd.DataFrame(index=[], columns=[]), [], reads, errormodel, alignment, figsize, cpus, InSilicoparams)
         for i, (fasta, abun) in enumerate(zip(sequence_files, abundance_files)):
             sampleName = 'S_' + str(i)
             mock.inSilicoInput.append((fasta, abun, sampleName))
-            #SampleSeqs = set()
-            #with open(fasta) as f, open(abun) as a:
-            #    SeqsDic = fasta2dict(f)
-            #    for seq in a.read().rstrip('\n').split('\n'):
-            #        if not seq.split('\t')[0] in [s.header for s in Seqs]:
-            #            SampleSeqs.update(Sequence(seq.split('\t')[0], SeqsDic[seq.split('\t')[0]], 'taxa', seq.split('\t')[1]))
-            #            Seqs.update(Sequence(seq.split('\t')[0], SeqsDic[seq.split('\t')[0]], 'taxa', seq.split('\t')[1]))
-            #s = Sample(prefix, sampleName, SampleSeqs, alignment, figsize)
-        #samples.add(s) #en realidad podria pasar todo vacio, pero bueno, no tarda nada y queda completo
-        #df = pd.DataFrame(index = ['S_' + str(i) for i in enumerate(sequence_files)], columns = [s.header for s in Seqs])
-        #for s in samples:
-        #    for seq in samples.Seqs:
-        #        df.loc[s.sample_name, seq.seq] = seq.abun
-        #mock = Mock(prefix, Seqs, df, samples, reads, errormodel, alignment, figsize, cpus, InSilicoparams)
-        # Mas facil, pasar todo vacio, generar un objeto mock incompleto y ya esta
         return(mock.reads_generation())
     
     @classmethod
@@ -107,7 +87,6 @@ class Mock():
             abunTable = cls.ZINBD(nASVs = len(Enviro.Seqs), nSamples = Nsamples, CorrMatrix = CorrMatrix, shannonIndex = shannonIndex, reads = reads, pstr0 = pstr0, size = size)
             df =  pd.DataFrame(abunTable.reshape(Nsamples, len(Enviro.Seqs)), index = ['S_' + str(i) for i in range(Nsamples)] , columns = [s.header for s in Enviro.Seqs]) 
             write_logfile('info', 'CREATE MOCK', 'Plotting abundance correlation')
-        #    plot_heatmap(df.corr(method ='spearman'), outputDir = os.getcwd(), title = '{}.correlationMatrix_fromAbunTable'.format(prefix), vmin = -1, vmax = 1, center = 0, legendtitle = 'Correlation', text = None, symmetric = True, figsize = (20, 20))
             plot_heatmap(df.corr(method ='spearman'), outputDir = os.getcwd(), title = '{}.correlationMatrix_fromAbunTable'.format(prefix), zmin = -1, zmax = 1, legendtitle = 'Correlation', symmetric = True)
         # To each sequence, add they global abundance in all the samples
         for s in Enviro.Seqs:
@@ -122,9 +101,9 @@ class Mock():
         write_table(self.df, title = 'checkDB/{}.raw.abundances_original'.format(self.prefix), rows = list(self.df.index) , columns = list(self.df.columns), dataframe = None)
         abunTablePercent = make_percent(self.df, outputDir = 'checkDB/', write = True, fileName = '{}.abundances_original'.format(self.prefix), T = False)
         write_logfile('info', 'CREATE MOCK', 'This is the real shannon index diversity in all the mock: {}'.format(str(shannonIndexCalc(self.df.sum()))))
-        barplot(self.df, outputDir = os.getcwd(), title = '{}.sampleDistribution'.format(self.prefix),  ylab = 'Abundances', xlab = 'Species') # Plot asvs distribution by sample: lognormal
+        barplot(self.df, outputDir = os.getcwd(), title = '{}.sampleDistribution'.format(self.prefix),  ylab = 'Abundances', xlab = 'Species', subtitle = True) # Plot asvs distribution by sample: lognormal
         if len(self.samples) > 1:
-            barplot(self.df.T, outputDir = os.getcwd(), title = '{}.asvsDistribution'.format(self.prefix), ylab = 'Abundances', xlab = 'Samples')  # Plot distribution of one asvs in the different samples: ZINBD
+            barplot(self.df.T, outputDir = os.getcwd(), title = '{}.asvsDistribution'.format(self.prefix), ylab = 'Abundances', xlab = 'Samples', subtitle = False)  # Plot distribution of one asvs in the different samples: ZINBD
         write_logfile('info', 'CREATE MOCK', 'Preparing samples')
         self.multiprocessing_globals_samples = self.samples
         if self.cpus == 1:
@@ -139,7 +118,6 @@ class Mock():
         self.clear_multiprocessing_globals()
         return(self)
                
-    #@classmethod
     def reads_generation(self): 
         """ Call Sample.run_inSilicoSeq for each sample or sequence/abundance files """
         for s in self.inSilicoInput:
@@ -147,7 +125,6 @@ class Mock():
         write_logfile('info', 'MOCK REPEAT', 'Writing InSilicoSeqs output files')
         self.merge_samples(samplesDir = 'samples')
 
-    #@classmethod    
     def merge_samples(self, samplesDir = 'samples'): ## TESTED!
         """ Merge samples from InSilicoSeqs and rename them (in this case it would not be necessary, but for coherence with the previous procedure) """
         outputFastq = '{}/{}.allsamples.{}-{}-{}r-{}i.fastq'.format(samplesDir, self.prefix, self.reads, self.errormodel, self.InSilicoparams[0], self.InSilicoparams[1])

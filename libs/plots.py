@@ -53,7 +53,7 @@ def barplotpc(df, title, outputDir, ylab = 'Axis y', xlab = 'Axis x'):
 
 
 
-def barplot(df, title, outputDir, T = False, rowfig = None, colfig = None, ylab = 'Axis y', xlab = 'Axis x'):
+def barplot(df, title, outputDir, T = False, rowfig = None, colfig = None, ylab = 'Axis y', xlab = 'Axis x', subtitle = True):
     """ Barplot by rows per default. If you want to plot it by columns, use T (transpose) option."""
     if T:
         df = df.T
@@ -64,7 +64,10 @@ def barplot(df, title, outputDir, T = False, rowfig = None, colfig = None, ylab 
             colfig = math.floor(df.shape[0]/rowfig)  #Dividendo = Divisor * Cociente + Resto -> Cociente = (Dividendo - R)/Divisor; colfig = (nSpecies - nSpecies%sqrt(nSpecies))/sqrt(nSpecies)
         else:
             colfig = math.floor(df.shape[0]/rowfig + 1 )
-    fig = make_subplots(rows = rowfig, cols = colfig, subplot_titles= tuple(df.index))
+    if subtitle:
+        fig = make_subplots(rows = rowfig, cols = colfig)
+    else:
+        fig = make_subplots(rows = rowfig, cols = colfig, subplot_titles= tuple(df.index))
     i = 1
     z = 0 
     while i <= colfig:
