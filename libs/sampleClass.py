@@ -18,14 +18,13 @@ from libs.seqsClass import Sequence
 class Sample():
     
     
-    def __init__(self, prefix, sampleName, Seqs, alignment, figsize):
+    def __init__(self, prefix, sampleName, Seqs, alignment):
         
         self.prefix = prefix
         self.sample_name = sampleName
         self.Seqs = Seqs
         self.pwd = os.getcwd()
         self.alignment = alignment # list [start, end, region]
-        self.figsize = figsize
         
         
         
@@ -86,7 +85,7 @@ class Sample():
             
             
     @classmethod
-    def init_from_df(cls, prefix, sample, Seqs, alignment, figsize):
+    def init_from_df(cls, prefix, sample, Seqs, alignment):
         """ Create a Sample object from pandas df 1D and alignSeqs"""
         #sample = row of the df, name = 'S_0'
         sampleName = sample.name
@@ -97,7 +96,7 @@ class Sample():
             if s.abun == 0:
                 seqsNull.add(s.header)
         SeqsSample = {s for s in Seqscopy if s.header not in seqsNull}
-        return(Sample(prefix, sampleName, SeqsSample, alignment, figsize))
+        return(Sample(prefix, sampleName, SeqsSample, alignment))
 
 
 

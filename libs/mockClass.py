@@ -26,7 +26,7 @@ class Mock():
         cls.multiprocessing_globals_samples = []
         cls.inSilicoInput = []
         
-    def __init__(self, prefix, Seqs, df, samples, reads, errormodel, alignment, figsize, cpus, InSilicoparams):
+    def __init__(self, prefix, Seqs, df, samples, reads, errormodel, alignment, cpus, InSilicoparams):
         self.prefix = prefix
         self.samples = samples
         self.df = df # row: samples, col: species
@@ -34,7 +34,6 @@ class Mock():
         self.reads = reads
         self.errormodel = errormodel
         self.cpus = cpus
-        self.figsize = figsize
         self.alignment = alignment
         self.InSilicoparams = InSilicoparams 
     
@@ -43,11 +42,11 @@ class Mock():
     
     
     @classmethod
-    def init_from_previous_mock(cls, Enviro, prefix, shannonIndex, alignment = [0, 50000, '16S'], reads = 20000, errormodel = 'perfect', figsize = (20,20), cpus = 12, InSilicoparams = (150,200)): # Esta es para corregir antiguas, pero se puede quitar
+    def init_from_previous_mock(cls, Enviro, prefix, shannonIndex, alignment = [0, 50000, '16S'], reads = 20000, errormodel = 'perfect', cpus = 12, InSilicoparams = (150,200)): # Esta es para corregir antiguas, pero se puede quitar
         """ Repat files from mock using a previous align and abundance distribution """
         Seqs = set()
         samples = []
-        mock = Mock(prefix, set(), pd.DataFrame(index=[], columns=[]), [], reads, errormodel, alignment, figsize, cpus, InSilicoparams)
+        mock = Mock(prefix, set(), pd.DataFrame(index=[], columns=[]), [], reads, errormodel, alignment, cpus, InSilicoparams)
         for i, (fasta, abun) in enumerate(zip(sequence_files, abundance_files)):
             sampleName = 'S_' + str(i)
             mock.inSilicoInput.append((fasta, abun, sampleName))
@@ -58,25 +57,25 @@ class Mock():
                     if not seq.split('\t')[0] in [s.header for s in Seqs] and seq.split('\t')[1] != 0 :
                         SampleSeqs.update(Sequence(seq.split('\t')[0], SeqsDic[seq.split('\t')[0]], 'taxa', seq.split('\t')[1]))
                         Seqs.update(Sequence(seq.split('\t')[0], SeqsDic[seq.split('\t')[0]], 'taxa', seq.split('\t')[1]))
-            s = Sample(prefix, sampleName, SampleSeqs, alignment, figsize)
+            s = Sample(prefix, sampleName, SampleSeqs, alignment)
         samples.add(s) #en realidad podria pasar todo vacio, pero bueno, no tarda nada y queda completo
         df = pd.DataFrame(index = ['S_' + str(i) for i in enumerate(sequence_files)], columns = [s.header for s in Seqs])
         for s in samples:
             for seq in samples.Seqs:
                 df.loc[s.sample_name, seq.seq] = seq.abun
-        mock = Mock(prefix, Seqs, df, [], reads, errormodel, alignment, figsize, cpus, InSilicoparams)
+        mock = Mock(prefix, Seqs, df, [], reads, errormodel, alignment, cpus, InSilicoparams)
         return(mock.run_mock())
     
     @classmethod    
-    def init_and_run_InSilico(cls, prefix, sequence_files, abundance_files, reads = 20000, errormodel = 'perfect', alignment = [0, 50000, '16S'], InSilicoparams = (150, 200), figsize = (20, 20), cpus = 12):
-        mock = Mock(prefix, set(), pd.DataFrame(index=[], columns=[]), [], reads, errormodel, alignment, figsize, cpus, InSilicoparams)
+    def init_and_run_InSilico(cls, prefix, sequence_files, abundance_files, reads = 20000, errormodel = 'perfect', alignment = [0, 50000, '16S'], InSilicoparams = (150, 200), cpus = 12):
+        mock = Mock(prefix, set(), pd.DataFrame(index=[], columns=[]), [], reads, errormodel, alignment, cpus, InSilicoparams)
         for i, (fasta, abun) in enumerate(zip(sequence_files, abundance_files)):
             sampleName = 'S_' + str(i)
             mock.inSilicoInput.append((fasta, abun, sampleName))
         return(mock.reads_generation())
     
     @classmethod
-    def init_from_enviro(cls, Enviro, prefix, Nsamples, shannonIndex, alignment = [0, 50000, '16S'], alpha = 0.9,  smallest_coef = 0.1, largest_coef = 0.9, reads = 20000, pstr0 = 0.2, size = 1, errormodel = 'perfect', figsize = (20,20), cpus = 12, InSilicoparams = (150,200)):
+    def init_from_enviro(cls, Enviro, prefix, Nsamples, shannonIndex, alignment = [0, 50000, '16S'], alpha = 0.9,  smallest_coef = 0.1, largest_coef = 0.9, reads = 20000, pstr0 = 0.2, size = 1, errormodel = 'perfect', cpus = 12, InSilicoparams = (150,200)):
         """ Creating a mock from scratch. A set of Samples objects"""
         write_logfile('info', 'CREATE MOCK', 'Estimating abundances')
         if Nsamples == 1:
@@ -91,12 +90,12 @@ class Mock():
         # To each sequence, add they global abundance in all the samples
         for s in Enviro.Seqs:
             s.abun = df[s.header].sum()
-        mock = Mock(prefix, Enviro.Seqs, df, [], reads, errormodel, alignment, figsize, cpus, InSilicoparams)
+        mock = Mock(prefix, Enviro.Seqs, df, [], reads, errormodel, alignment, cpus, InSilicoparams)
         return(mock.run_mock()) #samples is empty, in run samples, it will be filled
         
     def run_mock(self):
         """ Work sample by sample: create input files for InSilicoSeqs, plots and run InSilicoSeqs """
-        self.samples = [Sample.init_from_df(prefix = self.prefix, sample = self.df.loc[sample], Seqs = self.gSeqs, alignment = self.alignment, figsize = self.figsize) for sample in list(self.df.index.values)] # List of sample objects
+        self.samples = [Sample.init_from_df(prefix = self.prefix, sample = self.df.loc[sample], Seqs = self.gSeqs, alignment = self.alignment) for sample in list(self.df.index.values)] # List of sample objects
         write_logfile('info', 'CREATE MOCK', 'Writing output abundance tables')
         write_table(self.df, title = 'checkDB/{}.raw.abundances_original'.format(self.prefix), rows = list(self.df.index) , columns = list(self.df.columns), dataframe = None)
         abunTablePercent = make_percent(self.df, outputDir = 'checkDB/', write = True, fileName = '{}.abundances_original'.format(self.prefix), T = False)
@@ -183,12 +182,12 @@ class Mock():
         corrMatrix = make_sparse_spd_matrix(len(asvs), alpha = alpha, norm_diag = norm_diag, smallest_coef = smallest_coef, largest_coef = largest_coef)
         #corrDf = pd.DataFrame(corrMatrix, index = rows, columns = columns)
         CorrMatrixDF = write_table(corrMatrix, outputDir = os.getcwd(), title = '{}.correlationMatrix'.format(prefix), rows = asvs , columns = asvs, dataframe = True)
-        #plot_heatmap(CorrMatrixDF, outputDir = os.getcwd(), vmin = -1, vmax = 1, center = 0, title = '{}.correlationMatrix'.format(prefix), legendtitle = 'Correlation', text = None, symmetric = True, figsize = (20, 20))
+        #plot_heatmap(CorrMatrixDF, outputDir = os.getcwd(), vmin = -1, vmax = 1, center = 0, title = '{}.correlationMatrix'.format(prefix), legendtitle = 'Correlation', text = None, symmetric = True)
         return(corrMatrix)
     
     @staticmethod
     def make_global_samples_distribution(shannonIndex, nASVs, reads = 20000):
-        """Calculate the abundances distribution based on a shannon Index (H). Formula approach (Edden 1971)"""  
+        """Calculate the abundances distribution based on a shannon Index (H). Formula approach"""  
         if (-2*(shannonIndex - np.log(nASVs))) < 0:
             write_logfile('warning', 'ABUNDANCE ESTIMATION SHANNON', -2*(shannonIndex - np.log(nASVs)))
             exit(-5)

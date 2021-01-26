@@ -35,7 +35,7 @@ class Enviro():
         self.nASVs = nASVs
     
     @classmethod
-    def init_from_enviro(cls, nASVs, prefix, enviro, refEnviro = '/home/natalia/Projects/natalia/opt/makemocks/utils/speciesperEnviro.check.collapse.tsv', refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', nTaxa = 10000, rank = 5, figsize = (20, 20), cpus = 20):
+    def init_from_enviro(cls, nASVs, prefix, enviro, refEnviro = '/home/natalia/Projects/natalia/opt/makemocks/utils/speciesperEnviro.check.collapse.tsv', refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', nTaxa = 10000, rank = 5, cpus = 20):
         """ Return a Environment object from a given environment """
         print('Environment: \'{}\''.format(enviro))
         taxa = cls.subset_taxa_from_environment( enviro, refEnviro = refEnviro, nTaxa = nTaxa ) 
@@ -89,7 +89,7 @@ class Enviro():
              
     
     @classmethod
-    def init_from_taxa(cls, nASVs, prefix, rank, taxa, taxa_abundances = [], refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', figsize = (20, 20), cpus = 20):
+    def init_from_taxa(cls, nASVs, prefix, rank, taxa, taxa_abundances = [], refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', cpus = 20):
         """ Create an environment from a list of user taxa or from random taxa at the selected rank """
         enviro = 'taxas'
         write_logfile('info', 'SUBSET SEQUENCES', 'You have pass a list of taxa {} from which take sequences and make ASVs'.format(taxa))
@@ -212,7 +212,7 @@ class Enviro():
             return(-1.0) # Return -1 to filter by this value after and remove those sequences which are identical
 
     # Methods for Enviro objects
-    def makeASVs(self, region, start, end, ASVsmean, cutoff , cpus, figsize = (20,20)): # ADD ASV/OTU calculation
+    def makeASVs(self, region, start, end, ASVsmean, cutoff , cpus ): # ADD ASV/OTU calculation
         """ Create fake ASVs from sequences """
         # Subset Seqs, do ASVs, until complete nASVs
         ASVs = set()
@@ -243,12 +243,12 @@ class Enviro():
         #self.Seqs = SeqsSilvaselected.union(ASVsdiffselected) # No matter if original sequences are included or not
         self.Seqs = ASVsdiffselected # I REALLY WANT TO MODIFY IT, I want to remove extra Sequences
         write_logfile('info', 'ENVIRONMENT', 'Plotting distances heatmap')
-        self.plot_distances(df = distdf, region = region, cutoff = cutoff, text = None, symmetric = True, figsize = (20, 20))
+        self.plot_distances(df = distdf, region = region, cutoff = cutoff, text = None, symmetric = True)
         return(self)# I really want to modify it
     
     
     #### PLOTS & OUTPUTS
-    def plot_distances(self, df, region = '16S', cutoff = 0.03, text = None, symmetric = None, figsize = (20, 20)):
+    def plot_distances(self, df, region = '16S', cutoff = 0.03, text = None, symmetric = None):
         """ Plot distances among selected sequences """
         # Update df with the final sequences that finally have been included:
         Seqs_headers = [s.header for s in self.Seqs]
@@ -262,7 +262,7 @@ class Enviro():
         taxAbun =  dict(Counter(taxa))
         # Create a df of taxonomy and counts
         df = pd.DataFrame.from_dict(taxAbun, orient='index', columns=['counts']).transpose()
-        #barplotpc(df, outputDir = os.getcwd(), title = '{}.pctax'.format(self.prefix), figsize = (20, 20), ylab = 'taxon pc %', xlab = 'Mock', textSize = 8 )
+        #barplotpc(df, outputDir = os.getcwd(), title = '{}.pctax'.format(self.prefix),  ylab = 'taxon pc %', xlab = 'Mock', textSize = 8 )
         # Sort by value
         df.sort_values(by = 'counts', axis = 1, ascending = False, inplace = True)
         barplotpc(df, outputDir = os.getcwd(), title = '{}.pctax'.format(self.prefix), ylab = 'taxon pc %', xlab = 'Taxonomy at the rank level')
