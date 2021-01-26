@@ -3,8 +3,8 @@ package:
   version: '0.0.1'
 
 source:
-  git_url: git@github.com:ggnatalia/MMs.git
-  #git_url: https://github.com/ggnatalia/MMs 
+  #git_url: git@github.com:ggnatalia/MMs.git
+  git_url: https://github.com/ggnatalia/MMs 
   #md5: 
 
 requirements:
