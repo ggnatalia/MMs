@@ -39,17 +39,31 @@ def calculate_distance_set(a, b):
 
 def estimate_abundances(Nfeatures, total = 100): 
     """ Create a random vector with percentages """
+    print('enter')
     abun = random.sample(range(1, total + 1), Nfeatures)
     # NOTE: https://stackoverflow.com/questions/8064629/random-numbers-that-add-to-100-matlab/8068956#8068956  ### FUTURE: No best method, after renormalizing, numbers are not uniformally distributed
     normalizedAbun = [round((i*total/sum(abun))) for i in abun]
+    print(str(total))
+    print(str(Nfeatures))
+    print(str(normalizedAbun))
     if sum(normalizedAbun) == total:
         return(normalizedAbun)
     else: # Si no suma el total o se pasa, quitarle/add la diferencia al primer elemento.
         diff = total-sum(normalizedAbun) #que pasa si se queda negativo el elemento [0] al hacerlo
-        #print(str(diff))
+        print(str(diff))
+        if diff > 0:
+            print('pos')
+            normalizedAbun[np.argmin(normalizedAbun)] = normalizedAbun[np.argmin(normalizedAbun)] + diff
+        elif diff < 0:
+            print('neg')
+            normalizedAbun[np.argmax(normalizedAbun)] = normalizedAbun[np.argmax(normalizedAbun)] - diff
+        else:
+            print(str(diff))
+            print(normalizedAbun)
         #print(str(normalizedAbun[0]))
-        normalizedAbun[0] = normalizedAbun[0] + diff
-        return(normalizedAbun)
+            normalizedAbun[0] = normalizedAbun[0] + diff
+    print(' '.join(map(str,normalizedAbun)))
+    return(normalizedAbun)
 
 
 def sample_from_multivariate_normal(CorrMatrix, nSamples, mu = 0):

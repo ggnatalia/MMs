@@ -29,8 +29,8 @@ requirements:
       #- collections
       #- itertools
       #- multiprocessing  
-    - matplotlib
-    - seaborn  
+      #- matplotlib
+      #- seaborn  
     - mothur=1.44
     - biopython
     - joblib
@@ -47,8 +47,6 @@ test:
     - scipy
     - sklearn
     - daiquiri
-    - matplotlib
-    - seaborn
     - pysam
     - plotly
   command: "pwd"
