@@ -227,7 +227,7 @@ def main(args):
         os.chdir(path)
         # ShannonIndex correspondence (mothur is REQUIRED : CHECK)
         write_logfile('info', 'SHANNON INDEX', 'To know the correspondence of Shannon Index in the different taxonomic ranks, mothur is required')
-        command = ['python3', '{}/utils/shannonIndex_sweep.py'.format(os.path.dirname(os.path.abspath(__file__))), '-o', projectPrefix, '-m', mockName, '--align', '{}.align'.format(projectPrefix)]
+        command = ['shannonIndex_sweep.py', '-o', projectPrefix, '-m', mockName, '--align', '{}.align'.format(projectPrefix)] # in path in conda. Within utils in the github repo
         runCommand(command)
         # Taxonomy subset check 
         if enviro:
