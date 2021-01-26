@@ -105,7 +105,7 @@ class Sample():
     def run_inSilicoSeq(prefix, seqFile, abunFile, sampleName, reads = 10000, errormodel = 'perfect', cpus = 12, InSilicoparams = (150,200)):  
         """Run inSilicoSeq"""
         # Run inSilicoSeq in samples directory from command line to generate the fasta samples
-        command = ['iss', 'generate', '-g', seqFile, '--abundance_file', abunFile, '-o', '{}.{}.{}-{}-{}r-{}i.InSilicoSeq'.format(prefix, sampleName, reads, errormodel, InSilicoparams[0], InSilicoparams[1]), '--n_reads', reads, '--cpus', cpus, '--InSilicoparams', str(InSilicoparams[0]), str(InSilicoparams[1])] # Reads are the total count both pairs, to have the reads required by the user in each file
+        command = ['iss', 'generate', '-g', seqFile, '--abundance_file', abunFile, '-o', '{}.{}.{}-{}-{}r-{}i.InSilicoSeq'.format(prefix, sampleName, reads, errormodel, InSilicoparams[0], InSilicoparams[1]), '--n_reads', reads, '--cpus', cpus, '--inSilicoparams', str(InSilicoparams[0]), str(InSilicoparams[1])] # Reads are the total count both pairs, to have the reads required by the user in each file
         if errormodel == 'MiSeq' or errormodel == 'HiSeq' or errormodel == 'NovaSeq':
             command.append('--model')
             command.append(errormodel)

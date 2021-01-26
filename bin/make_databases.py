@@ -48,9 +48,9 @@ def main(args):
         with tarfile.open(silva_version, 'r') as tar_ref:
             tar_ref.extractall()
     else:
-        os.symlink(args.ref, '.')
-        os.symlink(args.refTax, '.')
-        
+       os.symlink(args.ref, '{}/{}'.format(DB, args.ref.split('/')[-1]))
+       os.symlink(args.refTax, '{}/{}'.format(DB, args.refTax.split('/')[-1]))
+ 
         
     #if not args.refEnviro:
         # Species per Enviro: always download!
