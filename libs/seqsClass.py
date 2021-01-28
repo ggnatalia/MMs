@@ -1,4 +1,4 @@
-#!/usr/python3
+#!/usr/bin/env python
 
 #import sys
 #sys.path.append('/media/natalia/Linux/natalia/opt/makemocks/')

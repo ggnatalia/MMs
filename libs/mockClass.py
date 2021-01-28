@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 from libs.libs import *#Library with general functions
 from libs.maths import *
 from libs.plots import *
