@@ -29,7 +29,7 @@ requirements:
       #- collections
       #- itertools
       #- multiprocessing  
-      #- matplotlib
+    - matplotlib
       #- seaborn  
     - mothur=1.44
     - biopython
