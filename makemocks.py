@@ -95,7 +95,10 @@ def main(args):
     mockName = args.mockName
     # SET LOGGING
     if args.force_overwrite:
-        os.remove('{}.log'.format(mockPrefix))
+        if os.path.isfile('{}.log'.format(mockPrefix)):
+            os.remove('{}.log'.format(mockPrefix))
+        else:
+            write_logfile('info', 'GENERAL', 'Not found a previous logfile, maybe you\'re using --force-overwrite but it\'s the first time you run it?')
     daiquiri.setup(level = logging.INFO, outputs = (daiquiri.output.STDERR, daiquiri.output.File('{}.log'.format(mockPrefix))))
 
     write_logfile('info', 'GENERAL: script launch ', os.path.abspath(__file__) + ' ' + ' '.join(sys.argv[1:]))
