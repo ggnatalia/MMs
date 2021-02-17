@@ -63,16 +63,15 @@ p
 
 ggsave(file = paste0(projectName , '.', 'scatter_lm_taxonomy_subset_comparisons2.svg'), plot = p, width = 10, height = 8)
 
-dfnorm_sort$tax = rownames(dfnorm_sort)
-data2plot2 = melt(dfnorm_sort, id.vars = c('origin', 'tax'))
+#dfnorm_sort$tax = rownames(dfnorm_sort)
+#data2plot2 = melt(dfnorm_sort, id.vars = c('origin', 'tax'))
 
-p = ggplot(data2plot2, aes(x = as.factor(origin), y = value, label = tax, color = variable)) + theme_classic()
+#p = ggplot(data2plot2, aes(x = as.factor(origin), y = value, label = tax, color = variable)) + theme_classic()
 #p = p + geom_point() + geom_text(aes(label=tax),hjust=0, vjust=0)
-p = p + geom_boxplot() 
-p = p + labs(title = 'Subsetting taxa for an specific environment: \'Aquatic Freshwaters\'', x = 'Frequency of the different taxa in the reference of \'Aquatic Freshwaters\'', y = 'Mean of taxa abundance in 100 mocks of \'Aquatic Freshwaters\'')
-p = p + theme(plot.title = element_text(hjust = 0.5))
-p
+#p = p + geom_boxplot() 
+#p = p + labs(title = 'Subsetting taxa for an specific environment: \'Aquatic Freshwaters\'', x = 'Frequency of the different taxa in the reference of \'Aquatic Freshwaters\'', y = 'Mean of taxa abundance in 100 mocks of \'Aquatic Freshwaters\'')
+#p = p + theme(plot.title = element_text(hjust = 0.5))
+#p
 
 
 
-plot()

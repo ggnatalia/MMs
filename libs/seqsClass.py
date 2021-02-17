@@ -45,7 +45,7 @@ class Sequence():
     def generatemutantASVs(self, Nstrains = None, Nmean = 2, Nposmax = 45, start = 0, end = 50000, include_original = True): # Nmax: numero de cepas maximas por specie, Nposmax: max n? de posiciones que pueden ser mutadas #WORK
         """ For a given Sequence object, return a set of Sequence objects with one object per 'fake' Nstrains """
         if not Nstrains: #Numero de cepas exactas
-            Nstrains = np.random.random_integers(0, Nmean*2) #  to be exact with ASVmean: (Nmean-1)*2??
+            Nstrains = np.random.random_integers(0, (Nmean-1)*2) #  to be exact with ASVmean: (Nmean-1)*2??
         originalSeqName = self.header
         #  Create a set with different Seq objects, the Seq original object, and the strains if it is not the same
         Npos = random.randint(1, Nposmax)
