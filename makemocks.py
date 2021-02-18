@@ -57,10 +57,10 @@ def parse_arguments():
     general.add_argument( '-txAbund', '--taxaAbund', type = int, nargs = '+', default = [], help = 'List of abundances of taxa')
     general.add_argument( '--inputfile', type = str, help = 'The user can provide an align file without creating it from scratch.')
     
-    # Reference files: harcode PATHS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    general.add_argument( '-ref','--ref', type = str, default = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', help = 'SILVA alignment reference')
-    general.add_argument( '-refTax','--refTax', type = str, default = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', help = 'SILVA alignment TAX reference')    
-    general.add_argument('-refEnv', '--refEnviro', type = str , default = '/home/natalia/Projects/natalia/opt/makemocks/utils/speciesperEnviro.check.collapse.tsv', help = 'Environment reference')
+    # Reference files: 
+    general.add_argument( '-ref','--ref', type = str, default = '', help = 'SILVA alignment reference')
+    general.add_argument( '-refTax','--refTax', type = str, default = '', help = 'SILVA alignment TAX reference')    
+    general.add_argument('-refEnv', '--refEnviro', type = str , default = '', help = 'Environment reference')
 
     # Extra features:
     general.add_argument('--cutoff', type = float, default = 0.03, help = 'Make & filter strains using distances. Without this flag, sequences can be identical in the studied region')
@@ -78,7 +78,9 @@ def parse_arguments():
     general.add_argument('--alpha', default = 0.9, type = float, help = 'Correlation Matrix: Probability that a coefficient is zero. Larger values enforce more sparsity.')
     general.add_argument('--pstr0', default = 0.2, type = float, help = 'ZINBD: Probability of structure 0')
     general.add_argument('--size', default = 1, type = int, help = 'ZINBD: Size - dispersion of ZINBD')
-
+    
+    # For testing
+    general.add_argument( '--just_taxa_selection', action = 'store_true', help = 'If True: do the selection of the sequences and stop.')
     
     args = general.parse_args()
     return(args)
@@ -124,13 +126,19 @@ def main(args):
     taxaAbund = args.taxaAbund
     inputfile = args.inputfile
 
-    # DB-------------------------------------------------------------------------------------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>< CHANGE IN FUTURE
-    #ref  =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align'
-    #refTax = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax'    
-    #refEnviro = '/home/natalia/Projects/natalia/opt/makemocks/utils/speciesperEnviro.check.collapse.tsv'
-    ref  =  args.ref
-    refTax = args.refTax
-    refEnviro = args.refEnviro
+    
+    
+    
+    if not args.ref or not args.refTax:
+        makemocks_home = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+        DB = makemocks_home + '/DB/'
+        ref  = DB + '/' + 'silva.nr_v138.align'
+        refTax = DB + '/' + 'silva.nr_v138.tax'
+        refEnviro = DB + '/' + 'SpeciesperEnviro.tsv'
+    else:    
+        ref  =  args.ref
+        refTax = args.refTax
+        refEnviro = args.refEnviro
 
     # Extra features:
     cutoff = args.cutoff
@@ -167,7 +175,6 @@ def main(args):
         if not os.path.isdir(mockPath + '/samples/'):
             write_logfile('error', 'MOCK REPEAT', '{} does not exist. Please be sure you are running this script outside your output directory.'.format(mockPath + '/samples/'))
             exit(-2) # Exit -2: dir not found
-        #Mock.reads_generation(prefix = mockPrefix, sequences_files = sequences_files, abundance_files = abundance_files, errormodel = errormodel, reads = reads, cpus = cpus)
         Mock.init_and_run_InSilico(  mockPrefix, sequences_files, abundance_files, errormodel = errormodel, alignment = alignment, reads = reads, InSilicoparams = InSilicoparams, cpus = cpus)
     else: 
         
@@ -200,50 +207,43 @@ def main(args):
             elif taxa: 
                 Env = Enviro.init_from_taxa(nASVs = nASVs, prefix = projectPrefix, rank = rank, taxa = taxa, taxa_abundances = taxaAbund, refTax =  refTax, ref = ref)
             else: # seqs
-                Env = Enviro.init_from_seqs(prefix = projectPrefix, rank = rank, seqs = seqs, nASVs = nASVs, minseqs = minseqs, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align')
+                Env = Enviro.init_from_seqs(prefix = projectPrefix, rank = rank, seqs = seqs, nASVs = nASVs, minseqs = minseqs, refTax =  refTax, ref = ref)
             Env.makeASVs(region, start, end, ASVsmean, cutoff , cpus)   # Only with sequences that are not in the align file. Assume align file provided by the user is ok!
             write_logfile('info', 'ENVIRONMENT', 'Writing output files')
             Env.write_output()
             write_logfile('info', 'ENVIRONMENT', 'Plotting taxa')
             Env.plot_taxonomy(rank = rank)
-            #write_logfile('warning', 'ENVIRONMENT', 'Plotting taxon entropies: USE A LOT OF RAM')
-            #Env.plot_taxon_entropy(ref = ref, refTax = refTax, rank = rank)
         
-        # 2_CREATE THE MOCK!!
-        write_logfile('info', 'MOCK GENERATION', os.getcwd())
-        try:
-            os.mkdir(mockPath)
-        except OSError as e: #[Errno 17] File exists: 'mockDir'
-            if e.errno != 17:
-                raise
-            else:    
-                write_logfile('warning', 'MOCK GENERATION', 'The directory {}/{} already exists. Please, remove it or choose other name for the output directory'.format(mockPath, mockPrefix))
-                write_logfile('info', 'MOCK GENERATION', 'To avoid repeating the environment generation, provide a align with the align flag and repeat only the mock generation with othe mock name')
-                exit(-17)
+        if not just_taxa_selection:
+            # 2_CREATE THE MOCK!!
+            write_logfile('info', 'MOCK GENERATION', os.getcwd())
+            try:
+                os.mkdir(mockPath)
+            except OSError as e: #[Errno 17] File exists: 'mockDir'
+                if e.errno != 17:
+                    raise
+                else:    
+                    write_logfile('warning', 'MOCK GENERATION', 'The directory {}/{} already exists. Please, remove it or choose other name for the output directory'.format(mockPath, mockPrefix))
+                    write_logfile('info', 'MOCK GENERATION', 'To avoid repeating the environment generation, provide a align with the align flag and repeat only the mock generation with othe mock name')
+                    exit(-17)
+            
+            os.chdir(mockPath)
+            os.mkdir('{}/samples'.format(mockPath))
+            os.mkdir('{}/checkDB'.format(mockPath))
+            #Define mock abundances
+            mock = Mock.init_from_enviro(Env, mockPrefix, S, shannon, alignment = alignment, alpha = alpha,  smallest_coef = 0.1, largest_coef = 0.9, reads = reads, pstr0 = pstr0, size = size, InSilicoparams = InSilicoparams)
+            os.chdir(path)
+            # ShannonIndex correspondence (mothur is REQUIRED : CHECK)
+            write_logfile('info', 'SHANNON INDEX', 'To know the correspondence of Shannon Index in the different taxonomic ranks, mothur is required')
+            command = ['shannonIndex_sweep.py', '-o', projectPrefix, '-m', mockName, '--align', '{}.align'.format(projectPrefix)] # in path in conda. Within utils in the github repo
+            runCommand(command)
         
-        os.chdir(mockPath)
-        os.mkdir('{}/samples'.format(mockPath))
-        os.mkdir('{}/checkDB'.format(mockPath))
-        #Define mock abundances
-        mock = Mock.init_from_enviro(Env, mockPrefix, S, shannon, alignment = alignment, alpha = alpha,  smallest_coef = 0.1, largest_coef = 0.9, reads = reads, pstr0 = pstr0, size = size, InSilicoparams = InSilicoparams)
-        #mock.run_mock()
-        os.chdir(path)
-        # ShannonIndex correspondence (mothur is REQUIRED : CHECK)
-        write_logfile('info', 'SHANNON INDEX', 'To know the correspondence of Shannon Index in the different taxonomic ranks, mothur is required')
-        command = ['shannonIndex_sweep.py', '-o', projectPrefix, '-m', mockName, '--align', '{}.align'.format(projectPrefix)] # in path in conda. Within utils in the github repo
-        runCommand(command)
-        # Taxonomy subset check 
-        if enviro:
-            command = ['Rscript', '{}/check_scripts/checkTaxonomy.R'.format(os.path.dirname(os.path.abspath(__file__))), projectPrefix, projectPath, mockPrefix, mockPath, enviro, rank, 15 ]
-            #runCommand(command)
 ################################################################################################################
     
 if __name__ == '__main__':
     main(parse_arguments())
 
 
-#refTax = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax'
-#newSeqs = Sequence.set_sequences(fastaFile = 'test/Saline/Saline.align', refTax = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', degap = False, cleanHeader = False, splitChar = '\t', conservative = False)
 
 
 

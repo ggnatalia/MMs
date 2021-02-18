@@ -2,17 +2,17 @@
 library('reshape2')
 library('ggplot2')
 library('dplyr')
-library(data.table)
+library('data.table')
 
 
 
 data2plot = list()
-d2plot_basic = as.data.frame(matrix(0, nrow = 10, ncol = 3))
+d2plot_basic = as.data.frame(matrix(0, nrow = 100, ncol = 3))
 colnames(d2plot_basic) = c('R','meanASVs', 'sdASVs')
 projectName = 'Freshwaters_master'
-ASVsmean = 2.5
+ASVsmean = 2
 
-for (i in 1:10){ ###### trial
+for (i in 1:100){ ###### trial
     R = paste0('R_', i)
     finalFile = paste0(projectName , i, '.distances.tsv')
     distances = read.table(finalFile, row.names = 1, header = T, stringsAsFactors = F,  sep = '\t', check.names = F)
@@ -47,13 +47,13 @@ for (i in 1:10){ ###### trial
         df[sp, 'Sp'] = sp
         df[sp,'max_distance'] = max_distance
         df[sp, 'min_distance'] = min_distance
-        df[sp, 'nASVsperSp'] = nASVsperSp - 1 #not count the original reference 
+        df[sp, 'nASVsperSp'] = as.numeric(nASVsperSp) - 1 #not count the original reference 
         df[sp, 'ASVs'] = paste(unique(c(dumb$seq1, dumb$seq2)), collapse = ',')
         }
-        else{df[sp,] = c(sp,NA,NA,NA, NA)}
+        else{df[sp,] = c(sp, 0, 0, 1,sp)}
     }
     data2plot[[R]] = df
-    d2plot_basic[i, ] = c(R, mean(df$nASVsperSp), sd(df$nASVsperSp))
+    d2plot_basic[i, ] = c(R, mean(as.numeric(df$nASVsperSp), na.rm=TRUE), sd(as.numeric(df$nASVsperSp), na.rm=TRUE))
 }
 
 
