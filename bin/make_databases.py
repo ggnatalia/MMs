@@ -15,7 +15,6 @@ def parse_arguments():
     #general.add_argument('-refEnv', '--refEnviro', type = str, help = 'Path to species per Environment reference')
     general.add_argument( '-ref','--ref', type = str, help = 'Path to SILVA alignment reference')
     general.add_argument( '-refTax','--refTax', type = str, help = 'Path to SILVA alignment TAX reference')
-    general.add_argument('--force-overwrite', action = 'store_true', help = 'Force overwrite if the output directory already exists')
     args = general.parse_args()
     return(args)
 
@@ -37,7 +36,7 @@ def main(args):
     #        os.mkdir(DB)
     os.chdir(DB)
     
-    if (not args.refTax) and (not args.ref):
+    if (not args.refTax) or (not args.ref):
         silva_version = 'silva.nr_v138.tgz'
         silva_url = 'https://mothur.s3.us-east-2.amazonaws.com/wiki/' + silva_version
         silva = requests.get(silva_url, stream = True)
