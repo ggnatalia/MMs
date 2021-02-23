@@ -47,7 +47,7 @@ for (i in 1:100){ ###### trial
         df[sp, 'Sp'] = sp
         df[sp,'max_distance'] = max_distance
         df[sp, 'min_distance'] = min_distance
-        df[sp, 'nASVsperSp'] = as.numeric(nASVsperSp) - 1 #not count the original reference 
+        df[sp, 'nASVsperSp'] = as.numeric(nASVsperSp)  #not count the original reference 
         df[sp, 'ASVs'] = paste(unique(c(dumb$seq1, dumb$seq2)), collapse = ',')
         }
         else{df[sp,] = c(sp, 0, 0, 1,sp)}
@@ -59,7 +59,10 @@ for (i in 1:100){ ###### trial
 
 d2plot = rbindlist(data2plot)
 d2plot = data.frame(lapply(data2plot, "length<-", max(lengths(data2plot))))
+svg('Mean of ASVs')
 boxplot(as.numeric(d2plot_basic$meanASVs))
+dev.off()
 #t.test(as.numeric(d2plot_basic$meanASVs), mu = 0, alternative = "one.sided")
 #mean_of_ASVs = mean(df$nASVsperSp)
+
 error = abs(ASVsmean - mean(as.numeric(d2plot_basic$meanASVs)))/ASVsmean

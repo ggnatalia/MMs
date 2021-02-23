@@ -61,7 +61,7 @@ p = p + theme(plot.title = element_text(hjust = 0.5))
 p
 
 
-ggsave(file = paste0(projectName , '.', 'scatter_lm_taxonomy_subset_comparisons2.svg'), plot = p, width = 10, height = 8)
+ggsave(file = paste0(projectName , '.', 'scatter_lm_taxonomy_subset_comparisons2.svg'), plot = p, width = 12, height = 8)
 
 #dfnorm_sort$tax = rownames(dfnorm_sort)
 #data2plot2 = melt(dfnorm_sort, id.vars = c('origin', 'tax'))
