@@ -40,8 +40,8 @@ def parse_arguments():
     general.add_argument( '-o', '--output', type = str, required = True, help = 'Output directory. Preferably, name of the environment. Ex: Aquatic')
     general.add_argument( '-s','--start', default = 1, type = int, help = 'SILVA alignment reference positions-START. Default 1. 1-based') 
     general.add_argument( '-e','--end', default = 50000, type = int, help = 'SILVA alignment reference positions-END. Default 50000. 1-based') 
-    general.add_argument( '--region', default = '16S', help = 'Name of the studied region')    # Plot distances
-    general.add_argument( '-H','--shannonIndex', default = 2,type = float, help = 'ShannonIndex') ################################################# Ofrecer en un futuro una lista de posibles H según ambiente? Vincular a nS?
+    general.add_argument( '--region', default = '16S', help = 'Name of the studied region')    
+    general.add_argument( '-H','--shannonIndex', default = 2,type = float, help = 'ShannonIndex') 
     general.add_argument( '-N', '--nSamples', default = 5, type = int, help = 'Number of samples')
     
     # Options for making your mock randomly
@@ -64,7 +64,7 @@ def parse_arguments():
 
     # Extra features:
     general.add_argument('--cutoff', type = float, default = 0.03, help = 'Make & filter strains using distances. Without this flag, sequences can be identical in the studied region')
-    general.add_argument('--cpus', default = 12, type = int, help = 'Number of threads')   ########## HACER MÁS COSAS EN MULTITAREA, DEBERÍA SER POSIBLE FACILMENTE DEDICAR UN PROCESADOR A CADA MUESTRA
+    general.add_argument('--cpus', default = 12, type = int, help = 'Number of threads')   
     general.add_argument('--force-overwrite', action = 'store_true', help = 'Force overwrite if the output directory already exists')
     # InSilicoSeqs parameters: add insert size & read length?
     general.add_argument('--errormodel', default = 'perfect', type = str, help = 'Mode to generate InSilicoSeqs')
