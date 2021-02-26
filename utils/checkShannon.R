@@ -146,6 +146,10 @@ filled.contour(d2plot_H,
                }
 )
 
-
-
-
+ggmelt = melt(gg, id.var = c('H','S'), measure.vars = c('Herror'))
+p = ggplot(ggmelt, aes(H, S)) + theme_light()
+p = p + geom_raster(aes(fill = value), interpolate = T)
+p = p + labs(title = 'Shannon reference values', x = 'H', y = 'S', fill = 'H relative error')
+p = p + theme(plot.title = element_text(hjust = 0.5))
+p = p + scale_fill_gradient2(low = 'firebrick', mid = 'lemonchiffon', high = 'tan1', na.value = 'white')
+p
