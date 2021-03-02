@@ -8,11 +8,11 @@ library(vegan)
 library(reshape2)
 library(dplyr)
 
-Hvalues = seq(1, 10, 0.1) #x # Shannon 0 makes no sense => 1 species
-Svalues = seq(100, 5000, 100)  #y                 
+Hvalues = seq(1, 10,2) #x # Shannon 0 makes no sense => 1 species
+Svalues = seq(100, 5000, 1000)  #y                 
 reads = c(1000, 10000, 100000, 1000000)
 
-summary_fun = function(H, S, reads, meanlog = 0, replicas = 100) {
+summary_fun = function(H, S, reads, meanlog = 0, replicas = 5) {
     if ((log(S) - H) < 0 ){
         print(S)
         print(H)
@@ -126,16 +126,15 @@ ggsave(file = paste0(projectName , '.', 'relativeError.svg'), plot = p, width = 
 
 rr = dd
 
-
-
 gg2 = expand.grid(H = Hvalues, S = Svalues)
 gg2$ValidH = rep(NA, nrow(gg2))
 gg2$ValidS = rep(NA, nrow(gg2))
+gg2$Best = rep(NA, nrow(gg2))
 rownames(gg2) = paste0(gg2$H, '_', gg2$S)
 
+cutoff = 0.1
 
 for (r in sort(reads)){
-    print(r)
     srr = rr[rr$reads == r, ]
     # Fix a relative error to be considered acceptable: Ex: 0.10
     for (i in c(1:nrow(srr))) {
@@ -143,27 +142,46 @@ for (r in sort(reads)){
         #print(srr[i,])
         #print(gg2[paste0(srr$H[i], '_', srr$S[i]),])
         if (is.na(srr$Herror[i])){
-            print(1)
             next()
-        } else if(gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidH'] != 0){
-            print(2)
+        } else if(gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidH'] != 0 & !is.na(gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidH'])){
             next()
         } else {
-            print(3)
-            if (abs(srr$Herror[i]) < 0.1){
-                print('fff')
+            if (abs(srr$Herror[i]) < cutoff){
                 gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidH'] = r # save minimun number of reads to satisfy this criteria
-            }else if (abs(srr$Herror[i]) > 0.1){
-                print('gg')
+            }else if (abs(srr$Herror[i]) > cutoff){
                 gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidH'] = 0
             }else{next()}
         }
-        print(gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidH'])
+        
+        if (is.na(srr$Serror[i])){
+            next()
+        } else if(gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidS'] != 0 & !is.na(gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidS'])){
+            next()
+        } else {
+            if (abs(srr$Serror[i]) < cutoff){
+                gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidS'] = r # save minimun number of reads to satisfy this criteria
+            }else if (abs(srr$Serror[i]) > cutoff){
+                gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidS'] = 0
+            }else{next()}
+        }
+        
+        if (is.na(srr$Herror[i]) |  is.na(srr$Serror[i]) ){
+            next()
+        } else if(gg2[paste0(srr$H[i], '_', srr$S[i]), 'Best'] != 0 & !is.na(gg2[paste0(srr$H[i], '_', srr$S[i]), 'Best']) ) {
+            next()
+        } else {
+            if (abs(srr$Herror[i]) < cutoff & abs(srr$Serror[i]) < cutoff){
+                gg2[paste0(srr$H[i], '_', srr$S[i]), 'Best'] = r # save minimun number of reads to satisfy this criteria
+            }else if (abs(srr$Herror[i]) > cutoff | abs(srr$Serror[i]) > cutoff){
+                gg2[paste0(srr$H[i], '_', srr$S[i]), 'Best'] = 0
+            }else{next()}
+        }
+        
     }
 }
     
 
-    ggplot(gg2, aes(x = H, y = S, fill = ValidH)) + geom_tile()
+    ggplot(gg2, aes(x = H, y = S, fill = Best)) + geom_tile()
 
 
 
