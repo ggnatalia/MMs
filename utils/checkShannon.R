@@ -8,11 +8,11 @@ library(vegan)
 library(reshape2)
 library(dplyr)
 
-Hvalues = seq(1, 10,2) #x # Shannon 0 makes no sense => 1 species
-Svalues = seq(100, 5000, 1000)  #y                 
+Hvalues = seq(1, 10, 0.1) #x # Shannon 0 makes no sense => 1 species
+Svalues = seq(100, 5000, 100)  #y                 
 reads = c(1000, 10000, 100000, 1000000)
 
-summary_fun = function(H, S, reads, meanlog = 0, replicas = 5) {
+summary_fun = function(H, S, reads, meanlog = 0, replicas = 100) {
     if ((log(S) - H) < 0 ){
         print(S)
         print(H)
@@ -129,18 +129,16 @@ rr = dd
 gg2 = expand.grid(H = Hvalues, S = Svalues)
 gg2$ValidH = rep(NA, nrow(gg2))
 gg2$ValidS = rep(NA, nrow(gg2))
-gg2$Best = rep(NA, nrow(gg2))
+gg2$Reads = rep(NA, nrow(gg2))
 rownames(gg2) = paste0(gg2$H, '_', gg2$S)
 
 cutoff = 0.1
-
+#H
 for (r in sort(reads)){
     srr = rr[rr$reads == r, ]
     # Fix a relative error to be considered acceptable: Ex: 0.10
     for (i in c(1:nrow(srr))) {
         print(r)
-        #print(srr[i,])
-        #print(gg2[paste0(srr$H[i], '_', srr$S[i]),])
         if (is.na(srr$Herror[i])){
             next()
         } else if(gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidH'] != 0 & !is.na(gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidH'])){
@@ -152,7 +150,16 @@ for (r in sort(reads)){
                 gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidH'] = 0
             }else{next()}
         }
-        
+      
+    }
+}
+    
+#S
+for (r in sort(reads)){
+    srr = rr[rr$reads == r, ]
+    # Fix a relative error to be considered acceptable: Ex: 0.10
+    for (i in c(1:nrow(srr))) {
+        print(r)
         if (is.na(srr$Serror[i])){
             next()
         } else if(gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidS'] != 0 & !is.na(gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidS'])){
@@ -164,24 +171,44 @@ for (r in sort(reads)){
                 gg2[paste0(srr$H[i], '_', srr$S[i]), 'ValidS'] = 0
             }else{next()}
         }
-        
-        if (is.na(srr$Herror[i]) |  is.na(srr$Serror[i]) ){
-            next()
-        } else if(gg2[paste0(srr$H[i], '_', srr$S[i]), 'Best'] != 0 & !is.na(gg2[paste0(srr$H[i], '_', srr$S[i]), 'Best']) ) {
-            next()
-        } else {
-            if (abs(srr$Herror[i]) < cutoff & abs(srr$Serror[i]) < cutoff){
-                gg2[paste0(srr$H[i], '_', srr$S[i]), 'Best'] = r # save minimun number of reads to satisfy this criteria
-            }else if (abs(srr$Herror[i]) > cutoff | abs(srr$Serror[i]) > cutoff){
-                gg2[paste0(srr$H[i], '_', srr$S[i]), 'Best'] = 0
-            }else{next()}
-        }
-        
     }
 }
-    
 
-    ggplot(gg2, aes(x = H, y = S, fill = Best)) + geom_tile()
+# BEST
+for (i in c(1:nrow(gg2))){
+    if (!is.na(gg2[i, 'ValidH']) & !is.na(gg2[i, 'ValidS'])){
+        gg2[i, 'Reads'] = max(gg2[i, 'ValidH'], gg2[i, 'ValidS'])
+    }
+}
+
+
+
+
+gg2$Reads[gg2$Reads == 0] = 'Higher relative error'
+
+gg2$Reads = factor(gg2$Reads, levels = c('Higher relative error', as.character(reads)))
+
+#Plots
+# H
+p = ggplot(gg2, aes(x = H, y = S, fill = ValidH)) + geom_tile()
+p = p + labs(title = 'Best values of H', x = 'Shannon entropy (H)', y = 'Minimun number of reads to adjust H')
+p = p + theme(plot.title = element_text(hjust = 0.5))
+p
+ggsave(file = paste0(projectName , '.', 'Haccuracy.svg'), plot = p, width = 10, height = 8)
+
+# S
+p = ggplot(gg2, aes(x = H, y = S, fill = ValidS)) + geom_tile()
+p = p + labs(title = 'Best values of S', x = 'Shannon entropy (H)', y = 'Number of Species (S)', fill = 'Minimun number of reads to adjust S')
+p = p + theme(plot.title = element_text(hjust = 0.5))
+p
+ggsave(file = paste0(projectName , '.', 'Saccuracy.svg'), plot = p, width = 10, height = 8)
+
+# Best
+p = ggplot(gg2, aes(x = H, y = S, fill = Reads)) + geom_tile(colour = 'white') + scale_fill_brewer(palette = 'Blues', direction = 1)
+p = p + labs(title = 'Choosing the minimun number of reads', x = 'Shannon entropy (H)', y = 'Number of Species (S)', fill = 'Minimun number of reads to adjust S and H')
+p = p + theme(plot.title = element_text(hjust = 0.5))
+p
+ggsave(file = paste0(projectName , '.', 'READS.svg'), plot = p, width = 10, height = 8)
 
 
 
