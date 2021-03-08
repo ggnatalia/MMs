@@ -116,7 +116,7 @@ p = p + theme(plot.title = element_text(hjust = 0.5))
 p = p + scale_fill_gradient2(low = 'firebrick', mid = 'yellowgreen', high = 'firebrick', na.value = 'white')
 p
 
-ggsave(file = paste0(projectName , '.', 'relativeError.svg'), plot = p, width = 10, height = 8)
+ggsave(file = paste0('SHANNON.relativeError.svg'), plot = p, width = 10, height = 8)
 
 
 
@@ -132,7 +132,7 @@ gg2$ValidS = rep(NA, nrow(gg2))
 gg2$Reads = rep(NA, nrow(gg2))
 rownames(gg2) = paste0(gg2$H, '_', gg2$S)
 
-cutoff = 0.1
+cutoff = 0.10
 #H
 for (r in sort(reads)){
     srr = rr[rr$reads == r, ]
@@ -176,8 +176,11 @@ for (r in sort(reads)){
 
 # BEST
 for (i in c(1:nrow(gg2))){
-    if (!is.na(gg2[i, 'ValidH']) & !is.na(gg2[i, 'ValidS'])){
+    if ((!is.na(gg2[i, 'ValidH']) & !is.na(gg2[i, 'ValidS']) & (gg2[i, 'ValidH'] != 0 & gg2[i, 'ValidS'] != 0 ))){
+        #print(gg2[i, ])
         gg2[i, 'Reads'] = max(gg2[i, 'ValidH'], gg2[i, 'ValidS'])
+    } else if ((!is.na(gg2[i, 'ValidH']) & !is.na(gg2[i, 'ValidS']) & (gg2[i, 'ValidH'] == 0 | gg2[i, 'ValidS'] == 0 ))){
+      gg2[i, 'Reads'] = 'Higher relative error'
     }
 }
 
@@ -194,21 +197,21 @@ p = ggplot(gg2, aes(x = H, y = S, fill = ValidH)) + geom_tile()
 p = p + labs(title = 'Best values of H', x = 'Shannon entropy (H)', y = 'Minimun number of reads to adjust H')
 p = p + theme(plot.title = element_text(hjust = 0.5))
 p
-ggsave(file = paste0(projectName , '.', 'Haccuracy.svg'), plot = p, width = 10, height = 8)
+#ggsave(file = paste0('Haccuracy.svg'), plot = p, width = 10, height = 8)
 
 # S
 p = ggplot(gg2, aes(x = H, y = S, fill = ValidS)) + geom_tile()
 p = p + labs(title = 'Best values of S', x = 'Shannon entropy (H)', y = 'Number of Species (S)', fill = 'Minimun number of reads to adjust S')
 p = p + theme(plot.title = element_text(hjust = 0.5))
 p
-ggsave(file = paste0(projectName , '.', 'Saccuracy.svg'), plot = p, width = 10, height = 8)
+#ggsave(file = paste0('Saccuracy.svg'), plot = p, width = 10, height = 8)
 
 # Best
 p = ggplot(gg2, aes(x = H, y = S, fill = Reads)) + geom_tile(colour = 'white') + scale_fill_brewer(palette = 'Blues', direction = 1)
 p = p + labs(title = 'Choosing the minimun number of reads', x = 'Shannon entropy (H)', y = 'Number of Species (S)', fill = 'Minimun number of reads to adjust S and H')
 p = p + theme(plot.title = element_text(hjust = 0.5))
 p
-ggsave(file = paste0(projectName , '.', 'READS.svg'), plot = p, width = 10, height = 8)
+#ggsave(file = paste0('READS.svg'), plot = p)
 
 
 
