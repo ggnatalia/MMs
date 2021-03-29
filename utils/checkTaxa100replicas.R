@@ -50,18 +50,18 @@ print(summary(lm(data2plot$origin ~ data2plot$sd)))
 sink()
 
 
-p = ggplot(data2plot, aes(origin, mean)) + theme_classic()
+p = ggplot(data2plot, aes(origin, mean)) + theme_light()
 #p = p + geom_point() + geom_text(aes(label=tax),hjust=0, vjust=0)
-p = p + geom_point() + geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd))
-p = p + geom_text(data = data2plot[data2plot$mean > 1,], aes(origin, mean, label = tax), hjust = 0, vjust = 0)
+p = p + geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), col = 'gray') + geom_point()
 # Add regression line
 p = p + geom_smooth(method = lm, formula = y ~ x)
+p = p + geom_text(data = data2plot[data2plot$mean > 1,], aes(origin, mean, label = tax), hjust = 0, vjust = 0, size = 3)
 p = p + labs(title = 'Subsetting taxa for an specific environment: \'Aquatic Freshwaters\'', x = 'Frequency of the different taxa in the reference of \'Aquatic Freshwaters\'', y = 'Mean of taxa abundance in 100 mocks of \'Aquatic Freshwaters\'')
 p = p + theme(plot.title = element_text(hjust = 0.5))
 p
 
 
-ggsave(file = paste0(projectName , '.', 'scatter_lm_taxonomy_subset_comparisons2.svg'), plot = p, width = 12, height = 8)
+ggsave(file = paste0(projectName , '.', 'scatter_lm_taxonomy_subset_comparisons2.svg'), plot = p, width = 10, height = 8)
 
 #dfnorm_sort$tax = rownames(dfnorm_sort)
 #data2plot2 = melt(dfnorm_sort, id.vars = c('origin', 'tax'))

@@ -8,11 +8,11 @@ library(vegan)
 library(reshape2)
 library(dplyr)
 
-Hvalues = seq(1, 10, 0.1) #x # Shannon 0 makes no sense => 1 species
+Hvalues = seq(1, 9, 0.1) #x # Shannon 0 makes no sense => 1 species
 Svalues = seq(100, 5000, 100)  #y                 
-reads = c(1000, 10000, 100000, 1000000)
+reads = c(10000, 50000, 100000, 500000, 1000000, 5000000, 10000000)
 
-summary_fun = function(H, S, reads, meanlog = 0, replicas = 100) {
+summary_fun = function(H, S, reads, meanlog = 0, replicas = 1000) {
     if ((log(S) - H) < 0 ){
         print(S)
         print(H)
@@ -50,6 +50,7 @@ summary_fun = function(H, S, reads, meanlog = 0, replicas = 100) {
 data2plot = list()
 
 for (r in reads){
+  print(r)
     gg = expand.grid(H=Hvalues, S=Svalues)
     gg$H_real_mean = rep(NA,nrow(gg))
     gg$H_real_sd = rep(NA,nrow(gg))
@@ -116,7 +117,7 @@ p = p + theme(plot.title = element_text(hjust = 0.5))
 p = p + scale_fill_gradient2(low = 'firebrick', mid = 'yellowgreen', high = 'firebrick', na.value = 'white')
 p
 
-ggsave(file = paste0('SHANNON.relativeError.svg'), plot = p, width = 10, height = 8)
+ggsave(file = paste0('SHANNON2.relativeError.svg'), plot = p, width = 10, height = 8)
 
 
 
