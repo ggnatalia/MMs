@@ -1,6 +1,54 @@
 # MMs
 Software for generating Metagenomic samples of realistic Microbial Mock communities
 
+1. What is M&Ms?  
+
+M&Ms is a user-friendly open-source bioinformatic tool to produce realistic amplicon datasets from reference sequences, based on pragmatic ecological parameters.   
+It creates sequence libraries for ‘in silico’ microbial communities with user-controlled richness, evenness, microdiversity, and source environment. It also provides additional figures and files with extensive details on how each synthetic community is composed.
+M&Ms allows the user to generate simple to complex read datasets based on real parameters that can be used in developing bioinformatic software or in benchmarking current tools.  
+
+2. Installation
+
+M&Ms is intended to be run in a x86_64 Linux OS (tested in Ubuntu and CentOS). The easiest way to install it is by using conda.
+
+    1.-Create the enviroment
+    
+    conda create -y --name MMs python=3.7
+
+    This will create a new conda environment named MMsa, which must then be activated.
+
+    2.-Activate it
+    conda activate MMs
+
+    3.-Install M&Ms package and its dependencies
+    conda install -c anaconda -c bioconda -c conda-forge mms
+
+    Once you have run M&Ms, to deactivate the environment:
+    conda deactivate
+
+    If you want to remove the M&Ms enviroment
+    conda remove --name MMs --all
+
+When using conda, all the scripts from the M&Ms distribution will be available on $PATH.
+
+
+3. Downloading the databases or using the user database
+
+M&Ms uses two databases: the mothur formatted SILVA database (Yilmaz et al., 2014) and a genus per environment matrix (Tamames et al., 2016). The script make_databases.py can be run to download from source the databases or link user's databases to M&Ms. 
+Databases will be in the /path/to/MMs/DB
+    
+    # Usage
+    # Downloading SILVA databases:
+    /path/to/MMs/bin/make_databases.py
+    # Using a previous downloaded SILVA databases
+    /path/to/MMs/bin/make_databases.py -ref /path/to/silva.nr_v138/silva.nr_v138.align -refTax /path/to/silva.nr_v138/silva.nr_v138.tax
+
+
+
+
+
+
+
 usage: makemocks.py [-h] -m MOCKNAME -o OUTPUT -N NSAMPLES -nASVs NASVS [-H SHANNON] [-r RANK] [-env ENVIRO] [--cpus CPUS] [--force-overwrite] 
 
 Process input files
@@ -32,7 +80,7 @@ optional arguments:
   
   --taxaAbund: List of taxa abundances in percentages.    
   
-  --input-file: Provide a previous fasta/align file.    
+  --inputfile: Provide a previous fasta/align file.    
   
   -ref, --ref: SILVA alignment reference formatted for using mothur e.g. silva.nr_v138.align.   
   
@@ -72,5 +120,4 @@ optional arguments:
   
   --size : ZINBD: Size - dispersion of ZINBD.    
   
-  --figsize : Size of plots.    
 
