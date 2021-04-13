@@ -37,7 +37,7 @@ def parse_arguments():
     # Required
     general = argparse.ArgumentParser(description = 'Process input files')
     general.add_argument('-sd','--sdP', type = float, nargs = '+', default = [0.1, 3, 0.1], help = 'Standard deviation Parameters: start, end, step')
-    general.add_argument('-N','--nSpeciesset', type = int, nargs = '+', default = [20, 50, 100, 500, 1000, 5000, 10000], help = 'Number of different species')
+    general.add_argument('-N','--nSpeciesset', type = int, nargs = '+', default = [50, 100, 500, 1000, 5000, 10000], help = 'Number of different species')
     general.add_argument('--reads', default = 10000, type = int, help = 'Number of counts of each sample approximately')
     general.add_argument('--figsize', default = (18,10), type = tuple, help = 'Figure size')
     args = general.parse_args()
@@ -56,7 +56,7 @@ def shannonindex(sample):
     """Calculate shannon index of the sample"""
     #p = species/sum(abunlognormal)
     total_abun = sum([x[1] for x in sample])
-    H = -sum([(abun/total_abun) * np.log(abun/total_abun) for seq, abun in sample])
+    H = -sum([(abun/total_abun) * np.log(abun/total_abun) for seq, abun in sample if abun != 0.0])
     return(H)
         
 def plotAbundances(sample):
