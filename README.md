@@ -133,7 +133,7 @@ M&Ms accepts one of the following five independent types of inputs depending on 
 
  - InSilicoSeqs parameters:    
 
-       --errormodel: Mode to generate InSilicoSeqs (see InSilicoSeqs documentation: https://insilicoseq.readthedocs.io/en/latest/index.html): basic, perfect,                          MiSeq, HiSeq, NovaSeq
+       --errormodel: Mode to generate InSilicoSeqs (see InSilicoSeqs documentation: https://insilicoseq.readthedocs.io/en/latest/index.html): basic, perfect,    MiSeq, HiSeq, NovaSeq
        --InSilicoparams: List of two elements in the following order: Read length, insert size. Default = [150, 200]. 
   
   - Region of the 16S to consider: 
@@ -154,6 +154,6 @@ M&Ms accepts one of the following five independent types of inputs depending on 
     
    - Other customizable parameters
     
-         --alpha: Correlation Matrix: Probability that a coefficient is zero. Larger values enforce more sparsity. Default 0.9
+         --alpha: Correlation Matrix: Probability for a coefficient to be zero. Larger values enforce more sparsity. Default 0.9
          --pstr0: ZINBD: Probability of structure 0. Default 0.2
          --size: 'ZINBD: Size - dispersion of ZINBD. Default 1
