@@ -77,11 +77,11 @@ class Enviro():
         #print(seqs2fake)
         moreSeqs = cls.set_sequences( fastaFile = ref, refTax = refTax, cpus = cpus, rank = rank, selected = list(seqs2fake.keys()), degap = False)
         for s in moreSeqs:
-            print(s.header)
+            #print(s.header)
             Nposmax = int(estimate_mutations(rank, length = len(s.seq.replace('.','').replace('-',''))))
             #print('Nposmax ' , str(Nposmax))
             Nstrains = int(seqs2fake[s.header]) 
-            print('mutant seqs I want ' + s.header + ' ' + str(Nstrains))
+            #print('mutant seqs I want ' + s.header + ' ' + str(Nstrains))
             newS = s.generatemutantASVs(Nstrains = Nstrains, Nposmax = Nposmax, start = 0, end = 50000, include_original = False)
             #print('newS ' + str(len(newS)))
             fakeSeqs.update(newS)                
