@@ -8,6 +8,8 @@ It creates sequence libraries for 'in silico' microbial communities with user-co
 M&Ms allows the user to generate simple to complex read datasets based on real parameters that can be used in developing bioinformatic software or in benchmarking current tools.  
 
 Simulation with M&Ms has four stages (Fig.1):  
+![](https://github.com/ggnatalia/MMs/blob/images/Figure_1.png)
+*Basic workflow of M&Ms.*  
 
   1.- Selection of the community members  
   2.- Microdiversity simulation  
