@@ -158,7 +158,7 @@ class Enviro():
             #write_logfile('info', 'CONVERT SEQS', 'Start multiprocessing')
             with Pool(cpus) as pool:
                 cls.multiprocessing_globals_seqs = tuple(pool.map(Sequence.nt2dict, cls.multiprocessing_globals, chunksize = 50))
-        write_logfile('info', 'CONVERT SEQS', 'Finish')
+        #write_logfile('info', 'CONVERT SEQS', 'Finish')
         cls.multiprocessing_globals = tuple()
         cls.multiprocessing_globals_combinations = tuple(combinations_with_replacement(list(range(len(cls.multiprocessing_globals_seqs))),2))
         if cpus == 1 or len(Seqs) < 100:
@@ -176,7 +176,7 @@ class Enviro():
         
         fill = list(range(0, len(equivalence)))
         # Prepare 0 to complete the df as a matrix
-        write_logfile('info', 'DISTANCE CALCULATIONS', 'Finish')
+        #write_logfile('info', 'DISTANCE CALCULATIONS', 'Finish')
         arr = np.array(list(map(lambda x, y: x*[0] + y, fill, dist_trian)))
         # Make a df with distance calcs for all the sequences
         df = pd.DataFrame(arr, columns = equivalence, index = equivalence)
