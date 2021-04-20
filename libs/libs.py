@@ -135,23 +135,23 @@ def rank2number(rank):
 def estimate_mutations(rank, length = 1500): #1500 bp approximately 16S rRNA
     if rank == 1: #phylum
         cutoff =  1-0.75
-        write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
+        #write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
         return(cutoff * length)
     elif rank == 2: #class
         cutoff =  1-0.785
-        write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
+        #write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
         return(cutoff * length)
     elif rank == 3: #order
         cutoff =  1-0.82
-        write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
+        #write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
         return(cutoff * length)
     elif rank == 4: #family
         cutoff =  1-0.865
-        write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
+        #write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
         return(cutoff * length)
     elif rank == 5: #genus
         cutoff =  1-0.945
-        write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
+        #write_logfile('info', 'FAKE TAXA', '{} cutoff {}'.format(rank, cutoff))
         return(cutoff * length)
     else:
         return(100)
