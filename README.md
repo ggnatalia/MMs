@@ -1,4 +1,4 @@
-# MMs
+# M&Ms
 Software for generating Metagenomic samples of realistic Microbial Mock communities
 
 ## 1. What is M&Ms?  
