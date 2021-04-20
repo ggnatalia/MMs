@@ -116,7 +116,7 @@ class Enviro():
         return( Enviro(prefix, enviro, TotalSeqs, nASVs) ) 
     
     @classmethod   
-    def init_from_seqs(cls, prefix, rank, seqs, nASVs, minseqs = 1, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align'):
+    def init_from_seqs(cls, prefix, rank, seqs, nASVs, minseqs = 1, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', cpus = 20):
         enviro = 'seqs'
         write_logfile('info', 'SEQUENCES PROVIDED', 'Sequences {} are treated as OTUs, mutant ASVs will be generated until complete {} ASVs'.format(seqs, nASVs))
         if seqs:
@@ -126,9 +126,9 @@ class Enviro():
                     print('You want less total ASVs ({}) than provided sequences ({})'.format(nASVs, len(seqs)))
                     print('Reduce your sequences, rise the number of ASVs and if you do not want strains, fix ASVmean = 0')
                     Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, selected = seqs, degap = False)
-                else:
-                    write_logfile('info', 'RANDOM SEQUENCES', 'You have not pass any align, environment, list of sequences or taxas, random sequences will be subsetted to make ASVs')
-                    Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, Nrandom = random.randint(minseqs, nASVs), degap = False)
+        else:
+            write_logfile('info', 'RANDOM SEQUENCES', 'You have not pass any align, environment, list of sequences or taxas, random sequences will be subsetted to make ASVs')
+            Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, Nrandom = random.randint(minseqs, nASVs), degap = False)
         return( Enviro(prefix, enviro, Seqs, nASVs) ) 
     
     @classmethod

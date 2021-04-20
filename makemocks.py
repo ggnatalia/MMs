@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 # Basic
@@ -41,18 +41,19 @@ def parse_arguments():
     general.add_argument( '-s','--start', default = 1, type = int, help = 'SILVA alignment reference positions-START. Default 1. 1-based') 
     general.add_argument( '-e','--end', default = 50000, type = int, help = 'SILVA alignment reference positions-END. Default 50000. 1-based') 
     general.add_argument( '--region', default = '16S', help = 'Name of the studied region')    
-    general.add_argument( '-H','--shannonIndex', default = 2,type = float, help = 'ShannonIndex') 
-    general.add_argument( '-N', '--nSamples', default = 5, type = int, help = 'Number of samples')
-    
+    general.add_argument( '-H','--shannonIndex', required=True, type = float, help = 'ShannonIndex') 
+    general.add_argument( '-N', '--nSamples', required=True, type = int, help = 'Number of samples')
+    general.add_argument( '-r', '--reads', required = True, type = int, help = 'Number of reads')
+
     # Options for making your mock randomly
-    general.add_argument( '-r','--rank', type = str, default = 'phylum', help = 'Rank to subset taxa: phlyum, order, class, family, genus')
-    general.add_argument( '-ASVsmean','--ASVsmean',type = int, default = 2, help = 'Mean of mutant ASV per silva sequence')
+    general.add_argument( '--rank', type = str, default = 'phylum', help = 'Rank to subset taxa: phlyum, order, class, family, genus')
+    general.add_argument( '-ASVsmean','--ASVsmean',type = int, default = 5, help = 'Mean of mutant ASV per silva sequence')
     general.add_argument( '-nASVs','--nASVs', type = int, required = False, help = 'Number of ASVs') 
-    general.add_argument( '-env', '--enviro', type = str, default = False, help = 'Let the user to simulate an environmental mock. Look refEnv for options')
+    general.add_argument( '-env', '--enviro', type = str, default = False, help = 'Let the user simulate an environmental mock. Look refEnv for options')
 
     # Options for customizing more your mock community
     general.add_argument( '-tx', '--taxa', type = str, nargs = '+', default = [], help = 'List of taxa')
-    general.add_argument( '-seqs', '--seqs', type = str, nargs = '+', default = [], help = 'List of sequences\' header or fasta file') 
+    general.add_argument( '-seqs', '--seqs', type = str, nargs = '+', default = [], help = 'List of sequences\' names') 
     general.add_argument( '--minseqs', type = int, default = 5, help = 'Minimun number of sequences to extract from DB') # Subsettting random from silva means that you can subset 1 seq, produce, two strains and you'll want 5, no possibility to reach that number. Repeat strain generation
     general.add_argument( '-txAbund', '--taxaAbund', type = int, nargs = '+', default = [], help = 'List of abundances of taxa')
     general.add_argument( '--inputfile', type = str, help = 'The user can provide an align file without creating it from scratch.')
@@ -74,7 +75,6 @@ def parse_arguments():
     general.add_argument( '--repeat_InSilicoSeqs_autocomplete', action = 'store_true', help = 'If True use mock and samples directly from the directory, without writing one by one the files')
     
     # Other customizable parameters
-    general.add_argument('--reads', default = 20000, type = int, help = 'Number of reads approximately in total, counting both pairs')
     general.add_argument('--alpha', default = 0.9, type = float, help = 'Correlation Matrix: Probability that a coefficient is zero. Larger values enforce more sparsity.')
     general.add_argument('--pstr0', default = 0.2, type = float, help = 'ZINBD: Probability of structure 0')
     general.add_argument('--size', default = 1, type = int, help = 'ZINBD: Size - dispersion of ZINBD')
@@ -197,24 +197,24 @@ def main(args):
     
         os.chdir(projectPath)
         if inputfile:
-            Env = Enviro.init_from_file(prefix = projectPrefix, path = projectPath, inputfile = inputfile, refTax = refTax)
+            Env = Enviro.init_from_file(prefix = projectPrefix, path = projectPath, inputfile = inputfile, refTax = refTax, cpus = cpus)
             alignment = [] # No tengo las secuencias alineadas
         else: # No align, do mutant ASVs
             nASVs = int(args.nASVs)
             if enviro:
-                Env = Enviro.init_from_enviro(nASVs = nASVs, prefix = projectPrefix, enviro = enviro, refEnviro = refEnviro, refTax = refTax, ref = ref, nTaxa = 10000, rank = 5)
+                Env = Enviro.init_from_enviro(nASVs = nASVs, prefix = projectPrefix, enviro = enviro, refEnviro = refEnviro, refTax = refTax, ref = ref, nTaxa = 10000, rank = 5, cpus = cpus)
                 rank = 5
             elif taxa: 
-                Env = Enviro.init_from_taxa(nASVs = nASVs, prefix = projectPrefix, rank = rank, taxa = taxa, taxa_abundances = taxaAbund, refTax =  refTax, ref = ref)
+                Env = Enviro.init_from_taxa(nASVs = nASVs, prefix = projectPrefix, rank = rank, taxa = taxa, taxa_abundances = taxaAbund, refTax =  refTax, ref = ref, cpus = cpus)
             else: # seqs
-                Env = Enviro.init_from_seqs(prefix = projectPrefix, rank = rank, seqs = seqs, nASVs = nASVs, minseqs = minseqs, refTax =  refTax, ref = ref)
+                Env = Enviro.init_from_seqs(prefix = projectPrefix, rank = rank, seqs = seqs, nASVs = nASVs, minseqs = minseqs, refTax =  refTax, ref = ref, cpus = cpus)
             Env.makeASVs(region, start, end, ASVsmean, cutoff , cpus)   # Only with sequences that are not in the align file. Assume align file provided by the user is ok!
             write_logfile('info', 'ENVIRONMENT', 'Writing output files')
             Env.write_output()
             write_logfile('info', 'ENVIRONMENT', 'Plotting taxa')
             Env.plot_taxonomy(rank = rank)
         
-        if not just_taxa_selection:
+        if not args.just_taxa_selection:
             # 2_CREATE THE MOCK!!
             write_logfile('info', 'MOCK GENERATION', os.getcwd())
             try:
