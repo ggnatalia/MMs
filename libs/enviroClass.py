@@ -92,12 +92,11 @@ class Enviro():
     def init_from_taxa(cls, nASVs, prefix, rank, taxa, taxa_abundances = [], refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', cpus = 20):
         """ Create an environment from a list of user taxa or from random taxa at the selected rank """
         enviro = 'taxas'
-        write_logfile('info', 'SUBSET SEQUENCES', 'You have passed a list of taxa {} from which take sequences and make ASVs'.format(taxa))
+        #write_logfile('info', 'SUBSET SEQUENCES', 'You have passed a list of taxa {} from which take sequences and make ASVs'.format(taxa))
         if taxa_abundances:
             taxa_abundances = [i*100 for i in  taxa_abundances]  # To subset 10000 sequences from SILVA
         else:
             # Recreate the list taxa_abundances but with random values
-            write_logfile('critical', 'init_from_taxa', 'NOT WORKING when using ESTIMATE ABUNDANCES FUNCTION!!!')
             taxa_abundances = estimate_abundances(len(taxa), 100) # Do % of each taxa
         #else: # select random taxa instead of sequences from DB
         #    taxa = Enviro.subset_random_taxa(args.refTax, taxlevel, nTaxa = 0)
@@ -118,7 +117,7 @@ class Enviro():
     @classmethod   
     def init_from_seqs(cls, prefix, rank, seqs, nASVs, minseqs = 1, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', cpus = 20):
         enviro = 'seqs'
-        write_logfile('info', 'SEQUENCES PROVIDED', 'Sequences {} are treated as OTUs, mutant ASVs will be generated until complete {} ASVs'.format(seqs, nASVs))
+        #write_logfile('info', 'SEQUENCES PROVIDED', 'Sequences {} are treated as OTUs, mutant ASVs will be generated until complete {} ASVs'.format(seqs, nASVs))
         if seqs:
             if isinstance(seqs, list):
                 if nASVs < len(seqs) and seqs:
@@ -153,23 +152,23 @@ class Enviro():
         cls.multiprocessing_globals = {s.trimregion(start, end) for s in Seqs}
         equivalence = np.array([s.header for s in cls.multiprocessing_globals]) #"https://docs.python.org/2/library/stdtypes.html#mapping-types-dict: If keys, values and items views are iterated over with no intervening modifications to the dictionary, the order of items will directly correspond"
         if cpus == 1 or len(Seqs) < 100:
-            write_logfile('info', 'CONVERT SEQS', 'Start 1 cpu')
+            #write_logfile('info', 'CONVERT SEQS', 'Start 1 cpu')
             cls.multiprocessing_globals_seqs = tuple(map(Sequence.nt2dict, cls.multiprocessing_globals))
         else:
-            write_logfile('info', 'CONVERT SEQS', 'Start multiprocessing')
+            #write_logfile('info', 'CONVERT SEQS', 'Start multiprocessing')
             with Pool(cpus) as pool:
                 cls.multiprocessing_globals_seqs = tuple(pool.map(Sequence.nt2dict, cls.multiprocessing_globals, chunksize = 50))
         write_logfile('info', 'CONVERT SEQS', 'Finish')
         cls.multiprocessing_globals = tuple()
         cls.multiprocessing_globals_combinations = tuple(combinations_with_replacement(list(range(len(cls.multiprocessing_globals_seqs))),2))
         if cpus == 1 or len(Seqs) < 100:
-            write_logfile('info', 'DISTANCE CALCULATIONS', 'Start 1 cpu')
+            #write_logfile('info', 'DISTANCE CALCULATIONS', 'Start 1 cpu')
             distances = list(map(cls.calc_dist, cls.multiprocessing_globals_combinations))
         else:
-            write_logfile('info', 'DISTANCE CALCULATIONS', 'Start multiprocessing')
+            #write_logfile('info', 'DISTANCE CALCULATIONS', 'Start multiprocessing')
             with Pool(cpus) as pool:
                 distances = list(pool.map(cls.calc_dist, cls.multiprocessing_globals_combinations, chunksize = 50))
-        write_logfile('info', 'DISTANCE CALCULATIONS', 'Finish')
+        #write_logfile('info', 'DISTANCE CALCULATIONS', 'Finish')
         
         length2split = list(reversed(range(1, len(equivalence) + 1)))   # split the list into one row per original sequence: for 3 sequences: [(1,1),(1,2),(1,3)],[(2,2), (2,3)],[(3,3)]: split 3, 2, 1
         iterable_distances = iter(distances) 
@@ -371,7 +370,7 @@ class Enviro():
         for tx, abun in taxAbun.items(): # si taxAbun es una tupla: for tx, abun in taxAbun:
             if tx in list(taxonSeqs.keys()):
                 if abun > len(taxonSeqs[tx]):
-                    write_logfile('info', 'SUBSET RANDOM SEQS', '{} Ask for {}, but only {}. Mutant representative sequences will be created'.format(tx, abun, len(taxonSeqs[tx])))
+                    #write_logfile('info', 'SUBSET RANDOM SEQS', '{} Ask for {}, but only {}. Mutant representative sequences will be created'.format(tx, abun, len(taxonSeqs[tx])))
                     moreSeqs.add((abun - len(taxonSeqs[tx]) , tuple(taxonSeqs[tx])))
                     abun = len(taxonSeqs[tx])
                 # If there are not enough sequences, create more at  the given taxonomic level!!!!!!!!! MODIFY IN FUTURE
