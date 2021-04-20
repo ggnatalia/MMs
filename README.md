@@ -68,7 +68,7 @@ The command for running M&Ms has the following syntax:
 
     makemocks.py -m <mockname> -o <output> -N <samplesnumber> -nASVs <ASVsnumber> -H <Shannonindex> -r <reads> <options> 
 
-##### Arguments Mandatory parameters
+##### Mandatory parameters
     
     -m, --mockName: Name of the mock e.g. mock1    
     -o, --output: Name of the output directory e.g. aquatic    
