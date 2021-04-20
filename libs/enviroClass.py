@@ -92,7 +92,7 @@ class Enviro():
     def init_from_taxa(cls, nASVs, prefix, rank, taxa, taxa_abundances = [], refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', cpus = 20):
         """ Create an environment from a list of user taxa or from random taxa at the selected rank """
         enviro = 'taxas'
-        write_logfile('info', 'SUBSET SEQUENCES', 'You have pass a list of taxa {} from which take sequences and make ASVs'.format(taxa))
+        write_logfile('info', 'SUBSET SEQUENCES', 'You have passed a list of taxa {} from which take sequences and make ASVs'.format(taxa))
         if taxa_abundances:
             taxa_abundances = [i*100 for i in  taxa_abundances]  # To subset 10000 sequences from SILVA
         else:
@@ -122,12 +122,12 @@ class Enviro():
         if seqs:
             if isinstance(seqs, list):
                 if nASVs < len(seqs) and seqs:
-                    write_logfile('warning', 'SEQUENCES PROVIDED', 'You want less total ASVs ({}) than provided sequences ({})'.format(nASVs, len(seqs)))
-                    print('You want less total ASVs ({}) than provided sequences ({})'.format(nASVs, len(seqs)))
-                    print('Reduce your sequences, rise the number of ASVs and if you do not want strains, fix ASVmean = 0')
+                    write_logfile('warning', 'SEQUENCES PROVIDED', 'Less total ASVs ({}) than provided sequences ({})'.format(nASVs, len(seqs)))
+                    print('Less total ASVs ({}) than provided sequences ({})'.format(nASVs, len(seqs)))
+                    print('Reduce the number of sequences, rise the number of ASVs and if not microdiversity is needed: ASVmean = 0')
                     Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, selected = seqs, degap = False)
         else:
-            write_logfile('info', 'RANDOM SEQUENCES', 'You have not pass any align, environment, list of sequences or taxas, random sequences will be subsetted to make ASVs')
+            write_logfile('info', 'RANDOM SEQUENCES', 'No align, environment, list of sequences or taxas have been found, random sequences will be subsetted to make ASVs')
             Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, Nrandom = random.randint(minseqs, nASVs), degap = False)
         return( Enviro(prefix, enviro, Seqs, nASVs) ) 
     
@@ -371,7 +371,7 @@ class Enviro():
         for tx, abun in taxAbun.items(): # si taxAbun es una tupla: for tx, abun in taxAbun:
             if tx in list(taxonSeqs.keys()):
                 if abun > len(taxonSeqs[tx]):
-                    write_logfile('info', 'SUBSET RANDOM SEQS', '{} Ask for {}, but only {}. Fake representative sequences will be created to satisfy this number'.format(tx, abun, len(taxonSeqs[tx])))
+                    write_logfile('info', 'SUBSET RANDOM SEQS', '{} Ask for {}, but only {}. Mutant representative sequences will be created'.format(tx, abun, len(taxonSeqs[tx])))
                     moreSeqs.add((abun - len(taxonSeqs[tx]) , tuple(taxonSeqs[tx])))
                     abun = len(taxonSeqs[tx])
                 # If there are not enough sequences, create more at  the given taxonomic level!!!!!!!!! MODIFY IN FUTURE
