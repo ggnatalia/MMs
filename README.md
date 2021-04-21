@@ -18,7 +18,7 @@ Simulation with M&Ms has four stages (Fig.1):
 
 ## 2. Installation
 
-M&Ms is intended to be run in a x86_64 Linux OS (tested in Ubuntu and CentOS). The easiest way to install it is by using conda.
+M&Ms is intended to be run in a x86_64 Linux OS (tested in Ubuntu and CentOS). The easiest way to install it is by using conda (https://anaconda.org/ggnatalia/mms).
 
   1.-Create the enviroment:
     
