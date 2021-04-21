@@ -231,7 +231,7 @@ def main(args):
             os.mkdir('{}/samples'.format(mockPath))
             os.mkdir('{}/checkDB'.format(mockPath))
             #Define mock abundances
-            mock = Mock.init_from_enviro(Env, mockPrefix, S, shannon, alignment = alignment, alpha = alpha,  smallest_coef = 0.1, largest_coef = 0.9, reads = reads, pstr0 = pstr0, size = size, InSilicoparams = InSilicoparams)
+            mock = Mock.init_from_enviro(Env, mockPrefix, S, shannon, alignment = alignment, alpha = alpha,  smallest_coef = 0.1, largest_coef = 0.9, reads = reads, pstr0 = pstr0, size = size, cpus = cpus, InSilicoparams = InSilicoparams)
             os.chdir(path)
             # ShannonIndex correspondence (mothur is REQUIRED : CHECK)
             write_logfile('info', 'SHANNON INDEX', 'To know the correspondence of Shannon Index in the different taxonomic ranks, mothur is required')

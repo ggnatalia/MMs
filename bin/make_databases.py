@@ -39,6 +39,7 @@ def main(args):
     if (not args.refTax) or (not args.ref):
         silva_version = 'silva.nr_v138.tgz'
         silva_url = 'https://mothur.s3.us-east-2.amazonaws.com/wiki/' + silva_version
+        print('Please wait until the downloading has completely finished')
         silva = requests.get(silva_url, stream = True)
         #silva.status_code == requests.codes.ok # Be sure that the request is ok!
         silva.raise_for_status() # check the url is ok!

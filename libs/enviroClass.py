@@ -43,7 +43,7 @@ class Enviro():
         # Collapse abundances of equal taxa
         taxAbun =  dict(Counter(taxa)) # Sequences from most abundant taxa will have been selected more times
         #print('subsetSilvaproportions')
-        headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, rank = rank )
+        headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, ref = ref, rank = rank )
         #print('headers ' + str(len(headers)))
         #print('neededSeqs ' + str(len(neededSeqs)))
         Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, selected = list(headers), degap = False) # Original Seqs from Silva
