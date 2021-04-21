@@ -14,7 +14,7 @@ Simulation with M&Ms has four stages (Fig.1):
   1.- Selection of the community members  
   2.- Microdiversity simulation  
   3.- Microbial abundance distribution assignment    
-  4.- Sequencing data simulation using InSilicoSeqs (GourlÃ© *et al*., 2019) to produce realistic Illumina reads.    
+  4.- Sequencing data simulation using InSilicoSeqs (Gourlé *et al*., 2019) to produce realistic Illumina reads.    
 
 ## 2. Installation
 
