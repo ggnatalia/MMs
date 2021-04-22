@@ -32,7 +32,7 @@ M&Ms is intended to be run in a x86_64 Linux OS (tested in Ubuntu and CentOS). T
 
   3.-Install M&Ms package and its dependencies:
     
-    conda install -c anaconda -c bioconda -c conda-forge mms
+    conda install -c anaconda -c bioconda -c conda-forge -c ggnatalia mms
 
   Once M&Ms have finished, deactivate the environment:
     
