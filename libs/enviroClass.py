@@ -104,7 +104,7 @@ class Enviro():
         #    taxaAbund = estimate_abundances(nTaxa, args.nASVs)
         taxAbun = dict(zip(taxa, taxa_abundances))
         #taxAbun = tuple(zip(taxa, taxa_abundances))
-        headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, rank = rank )
+        headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, ref = ref, rank = rank )
         Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, selected = list(headers), degap = False)
         if neededSeqs:
             FakeSeqs = cls.make_fake_taxa(neededSeqs, rank = rank, cpus = cpus, ref = ref, refTax = refTax)
