@@ -111,7 +111,7 @@ class Enviro():
             TotalSeqs = Seqs|FakeSeqs
         else:
             TotalSeqs = Seqs
-        print('TotalSeqs' + str(len(TotalSeqs)))
+        #print('TotalSeqs' + str(len(TotalSeqs)))
         return( Enviro(prefix, enviro, TotalSeqs, nASVs) ) 
     
     @classmethod   
