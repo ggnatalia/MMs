@@ -97,7 +97,7 @@ class Enviro():
             taxa_abundances = [i*100 for i in  taxa_abundances]  # To subset 10000 sequences from SILVA
         else:
             # Recreate the list taxa_abundances but with random values
-            taxa_abundances = estimate_abundances(len(taxa), 100) # Do % of each taxa
+            taxa_abundances = estimate_abundances(len(taxa), 10000) # Do % of each taxa
         #else: # select random taxa instead of sequences from DB
         #    taxa = Enviro.subset_random_taxa(args.refTax, taxlevel, nTaxa = 0)
         #           nTaxa = len(taxa)
