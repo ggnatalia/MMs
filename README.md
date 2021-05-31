@@ -73,9 +73,11 @@ The command for running M&Ms has the following syntax:
     -m, --mockName: Name of the mock e.g. mock1    
     -o, --output: Name of the output directory e.g. aquatic    
     -N, --nSamples: Number of samples to generate        
-    -H, --shannon: Shannon diversity Index   
+    -H, --shannon: Shannon diversity Index    
     -r, --reads: Number of reads
-    
+   
+Please see Fig S5. (https://www.biorxiv.org/content/10.1101/2021.04.21.440404v1.supplementary-material) in the Supplementary, which is a guide to select values of Shannon entropy (H), unique sequences (S) and reads.
+
 M&Ms accepts one of the following five independent types of inputs depending on the step from which starts M&Ms:
 
 - To generate a mock microbial communitity from the taxa selection (step 1):
