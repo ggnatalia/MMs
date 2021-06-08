@@ -20,15 +20,14 @@ def simplifyString(string, splitChar = '\t', conservative = False): # TESTED!
     return(string)
 
 def fasta2dict(fasta):
-        SeqDic = {}
-        with open(fasta) as f:
-            for sequece in f.read().strip().lstrip('>').split('>'):
-                name, seq = sequece.split('\n',1)
-                #print(name)
-                name = name.split('\t')[0]
-                if not 'N' in seq:
-                    SeqDic[name] = seq.replace('\n','')
-        return(SeqDic)
+    SeqDic = {}
+    with open(fasta) as f:
+        for sequece in f.read().strip().lstrip('>').split('>'):
+            name, seq = sequece.split('\n',1)
+            name = name.split('\t')[0]
+            if not 'N' in seq:
+                SeqDic[name] = seq.replace('\n','')
+    return(SeqDic)
 
 
 def fastq2fasta(fastq, fasta):
