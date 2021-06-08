@@ -73,9 +73,11 @@ The command for running M&Ms has the following syntax:
     -m, --mockName: Name of the mock e.g. mock1    
     -o, --output: Name of the output directory e.g. aquatic    
     -N, --nSamples: Number of samples to generate        
-    -H, --shannon: Shannon diversity Index   
+    -H, --shannon: Shannon diversity Index    
     -r, --reads: Number of reads
-    
+   
+Please see Fig S5. (https://www.biorxiv.org/content/10.1101/2021.04.21.440404v1.supplementary-material) in the Supplementary, which is a guide to select values of Shannon entropy (H), unique sequences (S) and reads.
+
 M&Ms accepts one of the following five independent types of inputs depending on the step from which starts M&Ms:
 
 - To generate a mock microbial communitity from the taxa selection (step 1):
@@ -99,7 +101,9 @@ M&Ms accepts one of the following five independent types of inputs depending on 
    c) Select an environment   
 
       -env, --enviro: Let the user simulate an environmental mock by choosing species from a specific environment
-
+     
+     *List of possible environments: Aquatic.Freshwater.sediment, Aquatic.Freshwater.saline.waters.interfase, Aquatic.Freshwaters, Aquatic.Saline.waters, Aquatic.Soil.Freshwaters.interfase, Aquatic.Soil.Saline.waters.interfase, Host.associated.and.Organic.Animal.host, Host.associated.and.Organic.Gut, Host.associated.and.Organic.Oral, Host.associated.and.Organic.Organic, Host.associated.and.Organic.Other.tissue, Host.associated.and.Organic.Vagina, Other.Aerial, Other.Artificial, Other.Oil, Terrestrial.Plants, Terrestrial.Saline.soil, Terrestrial.Soil, Thermal.Geothermal, Thermal.Hydrothermal.*      
+          
 - To recreate microbial abundances and sequencing simulation (step 3):   
    d) Use a FASTA file  
     
@@ -157,3 +161,14 @@ M&Ms accepts one of the following five independent types of inputs depending on 
          --alpha: Correlation Matrix: Probability for a coefficient to be zero. Larger values enforce more sparsity. Default 0.9
          --pstr0: ZINBD: Probability of structure 0. Default 0.2
          --size: 'ZINBD: Size - dispersion of ZINBD. Default 1
+
+
+### Cite
+Please, if you use this software, do not forget to cite:   
+-M&Ms: Natalia García-García, Javier Tamames, Fernando Puente-Sánchez. (2021). M&Ms: A software for building realistic Microbial Mock communities. bioRxiv 2021.04.21.440404; doi: https://doi.org/10.1101/2021.04.21.440404    
+
+-InSilicoSeqs: Hadrien Gourlé, Oskar Karlsson-Lindsjö, Juliette Hayer, Erik Bongcam-Rudloff. (2019). Simulating Illumina metagenomic data with InSilicoSeq, Bioinformatics, 35(3): 521–522, https://doi.org/10.1093/bioinformatics/bty630    
+
+-Schloss PD, Westcott SL, Ryabin T, Hall JR, Hartmann M, Hollister EB, Lesniewski RA, Oakley BB, Parks DH, Robinson CJ, Sahl JW, Stres B, Thallinger GG, Van Horn DJ, Weber CF. (2009). Introducing mothur: open-source, platform-independent, community-supported software for describing and comparing microbial communities. Applied Environmental Microbiology, 75(23):7537-7541; doi: https://aem.asm.org/content/75/23/7537
+
+
