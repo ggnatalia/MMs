@@ -162,6 +162,8 @@ M&Ms accepts one of the following five independent types of inputs depending on 
          --pstr0: ZINBD: Probability of structure 0. Default 0.2
          --size: 'ZINBD: Size - dispersion of ZINBD. Default 1
 
+For more information, you can check the wiki: https://github.com/ggnatalia/MMs/wiki (still is under construction, but it's better than nothing!)
+
 
 ### Cite
 Please, if you use this software, do not forget to cite:   
