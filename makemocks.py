@@ -64,7 +64,7 @@ def parse_arguments():
     general.add_argument('-refEnv', '--refEnviro', type = str , default = '', help = 'Environment reference')
 
     # Extra features:
-    general.add_argument('--cutoff', type = float, default = 0.03, help = 'Make & filter strains using distances. Without this flag, sequences can be identical in the studied region')
+    general.add_argument('--threshold', type = float, default = 0.97, help = 'Make & filter strains using distances. Without this flag, sequences can be identical in the studied region')
     general.add_argument('--cpus', default = 12, type = int, help = 'Number of threads')   
     general.add_argument('--force-overwrite', action = 'store_true', help = 'Force overwrite if the output directory already exists')
     # InSilicoSeqs parameters: add insert size & read length?
@@ -139,9 +139,14 @@ def main(args):
         ref  =  args.ref
         refTax = args.refTax
         refEnviro = args.refEnviro
-
+    
+    # Check if DB are present
+    if not os.path.isfile(refTax) and not os.path.isfile(ref):
+        write_logfile('warning', 'DB:', 'DB {} has not been found. Please be sure to run /path/to/MMs/bin/make_databases.py to configure databases'.format(refTax.replace('.tax', '')))
+        exit(-1)
+    
     # Extra features:
-    cutoff = args.cutoff
+    threshold = 1-args.threshold
     cpus = args.cpus
     force_overwrite = args.force_overwrite
     errormodel = args.errormodel
@@ -200,6 +205,9 @@ def main(args):
             Env = Enviro.init_from_file(prefix = projectPrefix, path = projectPath, inputfile = inputfile, refTax = refTax, cpus = cpus)
             alignment = [] # No tengo las secuencias alineadas
         else: # No align, do mutant ASVs
+            if not args.nASVs:
+                write_logfile('warning', 'nASVs parameter', 'Please, as you\'re not using a previous input file, indicate the number of ASVs to be simulated')
+                exit(-1)
             nASVs = int(args.nASVs)
             if enviro:
                 Env = Enviro.init_from_enviro(nASVs = nASVs, prefix = projectPrefix, enviro = enviro, refEnviro = refEnviro, refTax = refTax, ref = ref, nTaxa = 10000, rank = 5, cpus = cpus)
@@ -208,7 +216,7 @@ def main(args):
                 Env = Enviro.init_from_taxa(nASVs = nASVs, prefix = projectPrefix, rank = rank, taxa = taxa, taxa_abundances = taxaAbund, refTax =  refTax, ref = ref, cpus = cpus)
             else: # seqs
                 Env = Enviro.init_from_seqs(prefix = projectPrefix, rank = rank, seqs = seqs, nASVs = nASVs, minseqs = minseqs, refTax =  refTax, ref = ref, cpus = cpus)
-            Env.makeASVs(region, start, end, ASVsmean, cutoff , cpus)   # Only with sequences that are not in the align file. Assume align file provided by the user is ok!
+            Env.makeASVs(region, start, end, ASVsmean, threshold , cpus)   # Only with sequences that are not in the align file. Assume align file provided by the user is ok!
             write_logfile('info', 'ENVIRONMENT', 'Writing output files')
             Env.write_output()
             write_logfile('info', 'ENVIRONMENT', 'Plotting taxa')
@@ -235,7 +243,7 @@ def main(args):
             os.chdir(path)
             # ShannonIndex correspondence (mothur is REQUIRED : CHECK)
             write_logfile('info', 'SHANNON INDEX', 'To know the correspondence of Shannon Index in the different taxonomic ranks, mothur is required')
-            command = ['shannonIndex_sweep.py', '-o', projectPrefix, '-m', mockName, '--align', '{}.align'.format(projectPrefix)] # in path in conda. Within utils in the github repo
+            command = ['{}/utils/shannonIndex_sweep.py'.format(makemocks_home), '-o', projectPrefix, '-m', mockName, '--align', '{}.align'.format(projectPrefix)] # in path in conda. Within utils in the github repo
             runCommand(command)
         
 ################################################################################################################
