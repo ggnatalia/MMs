@@ -39,7 +39,8 @@ def parse_arguments():
     general.add_argument( '-m', '--mockName', type = str, required = True, help = 'Mock name. Ex: mock1')
     general.add_argument( '-o', '--output', type = str, required = True, help = 'Output directory. Preferably, name of the environment. Ex: Aquatic')
     general.add_argument( '-s','--start', default = 1, type = int, help = 'SILVA alignment reference positions-START. Default 1. 1-based') 
-    general.add_argument( '-e','--end', default = 50000, type = int, help = 'SILVA alignment reference positions-END. Default 50000. 1-based') 
+    general.add_argument( '-e','--end', default = 50000, type = int, help = 'SILVA alignment reference positions-END. Default 50000. 1-based')
+    general.add_argument( '--by_region', default = None, type = str, help = 'File with defined regions to introduce point mutations') 
     general.add_argument( '--region', default = '16S', help = 'Name of the studied region')    
     general.add_argument( '-H','--shannonIndex', required=True, type = float, help = 'ShannonIndex') 
     general.add_argument( '-N', '--nSamples', required=True, type = int, help = 'Number of samples')
@@ -110,6 +111,7 @@ def main(args):
     # SET MORE VARIABLES
     start = int(args.start - 1) # user uses 1-based, convert to 0 based: a='12345' to select all the sequence: a[1-1:5]='12345'
     end = int(args.end)
+    by_region = read_mutation_regions(args.by_region)
     region = args.region
     alignment = [start, end, region]
     
@@ -210,13 +212,13 @@ def main(args):
                 exit(-1)
             nASVs = int(args.nASVs)
             if enviro:
-                Env = Enviro.init_from_enviro(nASVs = nASVs, prefix = projectPrefix, enviro = enviro, refEnviro = refEnviro, refTax = refTax, ref = ref, nTaxa = 10000, rank = 5, cpus = cpus)
+                Env = Enviro.init_from_enviro(nASVs = nASVs, prefix = projectPrefix, enviro = enviro, refEnviro = refEnviro, refTax = refTax, ref = ref, nTaxa = 10000, rank = 5, cpus = cpus, by_region = by_region)
                 rank = 5
             elif taxa: 
                 Env = Enviro.init_from_taxa(nASVs = nASVs, prefix = projectPrefix, rank = rank, taxa = taxa, taxa_abundances = taxaAbund, refTax =  refTax, ref = ref, cpus = cpus)
             else: # seqs
                 Env = Enviro.init_from_seqs(prefix = projectPrefix, rank = rank, seqs = seqs, nASVs = nASVs, minseqs = minseqs, refTax =  refTax, ref = ref, cpus = cpus)
-            Env.makeASVs(region, start, end, ASVsmean, threshold , cpus)   # Only with sequences that are not in the align file. Assume align file provided by the user is ok!
+            Env.makeASVs(region, start, end, ASVsmean, threshold , cpus, by_region = by_region)   # Only with sequences that are not in the align file. Assume align file provided by the user is ok!
             write_logfile('info', 'ENVIRONMENT', 'Writing output files')
             Env.write_output()
             write_logfile('info', 'ENVIRONMENT', 'Plotting taxa')

@@ -93,22 +93,47 @@ def load_table(filepath, rows = None , cols = None, path = '.', sep = ','):
     return(data)
 
 ########################### MUTATIONS
-def mutate(string, N, start = None, end = None, randomly = True): # WORK
+def mutate(string, N, start = None, end = None, regions = None): # WORK
     """ Generate a mutate string from original one in N positions """
     bases = ['A','T','C','G','-']
     strings_list = np.array(list(string), dtype ='U1')
     if not start:
         start = 0
     if not end:
-        end = len(string)-1
+        end = len(string) - 1
     # If mutation site includes '.' sample another mutation site. No repeat positions
     # List of possible positions without '.'
     possiblePos = [i for i,nt in enumerate(strings_list) if nt != '.']
-    mutation_sites = list(np.random.choice(possiblePos, N, replace=False))
-    #print(mutation_sites)
-    if randomly == True:
-        for pos in mutation_sites: # Avoid cases in which the mutated base is identical to the original
-            strings_list[pos] = random.sample(list(filter(lambda x: x != string[pos], bases)), 1)[0]
+    if not isinstance(regions, list):
+        mutation_sites = list(np.random.choice(possiblePos, N, replace=False))
+    else:
+        by_region = regions.copy()
+        # Change probability of positions to be muted. If sum 1, only introduce mutations in that regions, otherwise introduce mutations in any region
+        if sum([r[3] for r in by_region]) == 1:
+            prob_pos = [list(range(r[1], r[2])) for r in by_region] # First element is strict or not strict
+            prob_values = list(np.repeat(0, len(possiblePos)))
+            #prob_values = list(np.repeat(0, len(flattened(prob_pos))))
+            for j in range(len(prob_pos)):
+                for i in prob_pos[j]:
+                    prob_values[i] = by_region[j][3]/len(prob_pos[j])  # Probabilidad de que sea par 1/2: 50%, cual es la probabilidad de cada uno de los valores pares: 1/6==0.50/3
+            if N < sum([True if f>0 else False for f in prob_values]): # More mutations that possible positions
+                mutation_sites = list(np.random.choice(possiblePos, N, p = prob_values, replace = False))
+            else:
+                print('Warning: More mutation sites than possible options are requested. Please, select wider regions or disable strict mode to introduce point mutations in different regions although with less probability')
+                exit(-1)
+        else: # Introduce point mutations in any part of the sequence, but there are regions with a higher probability of accumulating mutations
+            prob_pos = [list(range(r[1], r[2])) for r in by_region] # First element is strict or not strict
+            prob_values = list(np.repeat(0, len(possiblePos)))
+            #prob_values = list(np.repeat(0, len(flattened(prob_pos))))
+            for j in range(len(prob_pos)):
+                for i in prob_pos[j]:
+                    prob_values[i] = by_region[j][3]/len(prob_pos[j])  # Probabilidad de que sea par 1/2: 50%, cual es la probabilidad de cada uno de los valores pares: 1/6==0.50/3
+            probdivide = (1 - sum(prob_values))/sum([True if v == 0 else False for v in prob_values]) # Calculate percentage for the rest of regions until sum 1
+            prob_values = [probdivide if v == 0 else v for v in prob_values]
+            mutation_sites = list(np.random.choice(possiblePos, N, p = prob_values, replace = False))
+    print(mutation_sites)
+    for pos in mutation_sites: # Avoid cases in which the mutated base is identical to the original
+        strings_list[pos] = random.sample(list(filter(lambda x: x != string[pos], bases)), 1)[0]
     return (''.join(strings_list.tolist()))
 
 ########################### TAXONOMY
@@ -196,7 +221,12 @@ def write_logfile(level, step, message):
         daiquiri.getLogger(step).critical(message)
 
 
-
+def read_mutation_regions(f):
+    """ Parse mutation regions and probabilities file: nameRegion\tstart\end\probability """ # Paper: PMC2562909: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2562909/
+    #strict = f.readline().rstrip('\n').lstrip('#') # First line indicating if the mutations only appear in the defined regions. If the user wants to just rise the probability of mutations in some regions select Strict/NoStrict
+    l = [(n, s, e, prob) for l in f.readline().rstrip('\n').split('\t')]
+    #l.insert(0, strict)
+    return(l) # this will be input of by_region
     
     
     
