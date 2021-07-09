@@ -2,6 +2,7 @@
 import random
 import pandas as pd
 import numpy as np
+import copy
 from scipy.stats import norm
 from scipy.stats import nbinom
 import scipy.stats as sp
@@ -21,8 +22,8 @@ def calculate_distance(s0, s1):
 
 def calculate_distance_set(a, b):
     """ s0 y s1 are dictionaries saving nt positions """
-    s0 = a.copy()
-    s1 = b.copy()
+    s0 = copy.deepcopy(a)
+    s1 = copy.deepcopy(b)
     dot_index = s1['.']|s0['.'] #to get any position with a '.'. We just can compare align positions: '.' vs. A is NOT an align position
     # Remove index of '.' positions in all nucleotides
     diff = set()

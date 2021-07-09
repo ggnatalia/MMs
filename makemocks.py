@@ -111,7 +111,10 @@ def main(args):
     # SET MORE VARIABLES
     start = int(args.start - 1) # user uses 1-based, convert to 0 based: a='12345' to select all the sequence: a[1-1:5]='12345'
     end = int(args.end)
-    by_region = read_mutation_regions(args.by_region)
+    if args.by_region:
+        by_region = read_mutation_regions(args.by_region)
+    else:
+        by_region = args.by_region
     region = args.region
     alignment = [start, end, region]
     

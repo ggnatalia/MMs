@@ -53,11 +53,11 @@ class Sequence():
         if include_original:
             clusterSeqs.add(Sequence(originalSeqName, self.seq, self.tax)) ##### NEW LINE TO ADD THE REAL STRAIN TO THE MOCK
             for i in range(0, Nstrains):   
-                newSequence = Sequence('{}.asv_{}'.format(originalSeqName, i+1),  mutate(string = self.seq, N = Npos, start = start, end = end, by_region = by_region), self.tax)
+                newSequence = Sequence('{}.asv_{}'.format(originalSeqName, i+1),  mutate(string = self.seq, N = Npos, start = start, end = end, regions = by_region), self.tax)
                 clusterSeqs.add(newSequence) # Add new Seq objects
         else:
             for i in range(0, Nstrains):   
-                newSequence = Sequence('{}-{}'.format(originalSeqName, i+1),  mutate(string = self.seq, N = Npos, start = start, end = end, by_region = by_region), self.tax)
+                newSequence = Sequence('{}-{}'.format(originalSeqName, i+1),  mutate(string = self.seq, N = Npos, start = start, end = end, regions = by_region), self.tax)
                 clusterSeqs.add(newSequence) # Add new Seq objects
         return(clusterSeqs)         # set with different Seq objects from a single Seq object
 

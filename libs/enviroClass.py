@@ -42,12 +42,13 @@ class Enviro():
         #print(len(taxa))
         # Collapse abundances of equal taxa
         taxAbun =  dict(Counter(taxa)) # Sequences from most abundant taxa will have been selected more times
-        #print('subsetSilvaproportions')
-        headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, ref = ref, rank = rank )
+        print('subsetSilvaproportions')
+        headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, ref = ref, rank = rank, cpus = cpus )
         #print('headers ' + str(len(headers)))
         #print('neededSeqs ' + str(len(neededSeqs)))
+        print('set_sequences')
         Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, selected = list(headers), degap = False) # Original Seqs from Silva
-        #print('fakeASVs')
+        print('fakeASVs')
         if neededSeqs:
             FakeSeqs = cls.make_fake_taxa(neededSeqs, rank = rank, cpus = cpus, ref = ref, refTax = refTax, by_region = by_region)
             TotalSeqs = Seqs|FakeSeqs
@@ -147,47 +148,67 @@ class Enviro():
         """ Calculate distances in an specific region (plot a heatmap) and filter sequences based on them. """
         cutoff = float(cutoff)
         cpus = int(cpus)
+        nSeqs = len(Seqs)
         # Trim sequences according to start end position. Return set of Seqs objects
         # https://www.geeksforgeeks.org/copy-python-deep-copy-shallow-copy
         cls.multiprocessing_globals = {s.trimregion(start, end) for s in Seqs}
         equivalence = np.array([s.header for s in cls.multiprocessing_globals]) #"https://docs.python.org/2/library/stdtypes.html#mapping-types-dict: If keys, values and items views are iterated over with no intervening modifications to the dictionary, the order of items will directly correspond"
-        if cpus == 1 or len(Seqs) < 100:
-            #write_logfile('info', 'CONVERT SEQS', 'Start 1 cpu')
-            cls.multiprocessing_globals_seqs = tuple(map(Sequence.nt2dict, cls.multiprocessing_globals))
+        if cpus == 1 or nSeqs < 100:
+            write_logfile('info', 'CONVERT SEQS', 'Start 1 cpu')
+            cls.multiprocessing_globals_seqs = list(map(Sequence.nt2dict, cls.multiprocessing_globals)) # Una vez use cls.multiprocessing_globals_seqs se vacía automáticamente el iterable
         else:
-            #write_logfile('info', 'CONVERT SEQS', 'Start multiprocessing')
+            write_logfile('info', 'CONVERT SEQS', 'Start multiprocessing')
             with Pool(cpus) as pool:
-                cls.multiprocessing_globals_seqs = tuple(pool.map(Sequence.nt2dict, cls.multiprocessing_globals, chunksize = 50))
-        #write_logfile('info', 'CONVERT SEQS', 'Finish')
+                cls.multiprocessing_globals_seqs = list(pool.map(Sequence.nt2dict, cls.multiprocessing_globals, chunksize = 50)) #iterable, imap consume iterable y devuelve iterable
+        write_logfile('info', 'CONVERT SEQS', 'Finish')
         cls.multiprocessing_globals = tuple()
-        cls.multiprocessing_globals_combinations = tuple(combinations_with_replacement(list(range(len(cls.multiprocessing_globals_seqs))),2))
-        if cpus == 1 or len(Seqs) < 100:
-            #write_logfile('info', 'DISTANCE CALCULATIONS', 'Start 1 cpu')
-            distances = list(map(cls.calc_dist, cls.multiprocessing_globals_combinations))
+        cls.multiprocessing_globals_combinations = combinations_with_replacement(list(range(nSeqs)),2)
+        if cpus == 1 or nSeqs < 100:
+            write_logfile('info', 'DISTANCE CALCULATIONS', 'Start 1 cpu')
+            arr = np.zeros(shape=(nSeqs, nSeqs), dtype = np.float16)
+            distances = map(cls.calc_dist, cls.multiprocessing_globals_combinations)
+            for (i, j, d) in pool.imap(cls.calc_dist, cls.multiprocessing_globals_combinations, chunksize = 50):
+                arr[i, j] = d 
         else:
-            #write_logfile('info', 'DISTANCE CALCULATIONS', 'Start multiprocessing')
+            write_logfile('info', 'DISTANCE CALCULATIONS', 'Start multiprocessing')
+            arr = np.zeros(shape=(nSeqs, nSeqs), dtype = np.float16)
             with Pool(cpus) as pool:
-                distances = list(pool.map(cls.calc_dist, cls.multiprocessing_globals_combinations, chunksize = 50))
-        #write_logfile('info', 'DISTANCE CALCULATIONS', 'Finish')
+                #print(list(distances))
+                for (i, j, d) in pool.imap(cls.calc_dist, cls.multiprocessing_globals_combinations, chunksize = 50):
+        #    print('i ' + str(i))
+        #    print('j ' + str(j))
+        #    print('d ' + str(d))
+                    arr[i, j] = d 
+        write_logfile('info', 'DISTANCE CALCULATIONS', 'Finish')
         
-        length2split = list(reversed(range(1, len(equivalence) + 1)))   # split the list into one row per original sequence: for 3 sequences: [(1,1),(1,2),(1,3)],[(2,2), (2,3)],[(3,3)]: split 3, 2, 1
-        iterable_distances = iter(distances) 
-        dist_trian = [list(itertools.islice(iterable_distances, elem)) for elem in length2split]
-        
-        fill = list(range(0, len(equivalence)))
+        #length2split = list(reversed(range(1, len(equivalence) + 1)))   # split the list into one row per original sequence: for 3 sequences: [(1,1),(1,2),(1,3)],[(2,2), (2,3)],[(3,3)]: split 3, 2, 1
+        #iterable_distances = iter(distances) 
+        #dist_trian = [list(itertools.islice(iterable_distances, elem)) for elem in length2split]
+        #dist_trian = [list(itertools.islice(distances, elem)) for elem in length2split]
+        #fill = list(range(0, len(equivalence)))
         # Prepare 0 to complete the df as a matrix
-        #write_logfile('info', 'DISTANCE CALCULATIONS', 'Finish')
-        arr = np.array(list(map(lambda x, y: x*[0] + y, fill, dist_trian)))
+        write_logfile('info', 'DISTANCE CALCULATIONS', 'Finish')
+        #arr = np.array(list(map(lambda x, y: x*[0] + y, fill, dist_trian)))
+        
+        
+        print(arr)
+        print('df')
         # Make a df with distance calcs for all the sequences
         df = pd.DataFrame(arr, columns = equivalence, index = equivalence)
         # Logical df with False when value ==-1, to remove this columns
+        print('mask')
         mask = df.values!=-1
         # Remove these columns and the corresponding rows
+        print('df filter')
         df = df.drop(index = list(np.where(mask==False)[1]), columns = list(np.where(mask==False)[1]))
+        print('1')
         seqstoremove = list(np.where(mask==False)[1])
+        print('2')
         SeqsFilteredheaders = list(np.delete(equivalence, seqstoremove))
+        print('3')
         SeqsFiltered = {s for s in Seqs if s.header in SeqsFilteredheaders}
         if complete:
+            print('writing')
             write_table(df, title = '{}.distances'.format(prefix), rows = list(df.index) , columns = list(df.columns), dataframe = None)
             return(SeqsFiltered, df)
         else:
@@ -204,12 +225,14 @@ class Enviro():
         """ args is a tuple of two index combinations with the index of the sequences between calculate distances """
         d = calculate_distance_set(cls.multiprocessing_globals_seqs[args[0]], cls.multiprocessing_globals_seqs[args[1]])
         if d != 0:
-            return(d)
+            return(args[0], args[1], d)
+            #return(d)
         elif args[0] == args[1]: # Si es el mismo indice contra si mismo, d = 0 they are identical
-            return(0.0)
+            return(args[0], args[1], 0.0)
+            #return(0.0)
         else:    
-            return(-1.0) # Return -1 to filter by this value after and remove those sequences which are identical
-
+            return(args[0], args[1], -1.0) # Return -1 to filter by this value after and remove those sequences which are identical
+            #return(-1.0)
     # Methods for Enviro objects
     def makeASVs(self, region, start, end, ASVsmean, cutoff , cpus, by_region = None ): # ADD ASV/OTU calculation
         """ Create fake ASVs from sequences """
@@ -351,12 +374,29 @@ class Enviro():
         #print(selectedTaxas)
         return(selectedTaxas)
 
-    @staticmethod
-    def subsetSilvaproportions(taxAbun, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', rank = 3):
+
+    @classmethod
+    def checkN(cls, combo):
+        header = combo[0]
+        seq = combo[1]
+        header = simplifyString(header.lstrip('>').rstrip('\n')) # assuming SILVA db
+        if not 'N' in seq: #checkpoint: some sequences from silva contain N, exclude those sequences
+            return(header)
+
+
+
+
+
+
+    @classmethod
+    def subsetSilvaproportions(cls, taxAbun, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', rank = 3, cpus = 12):
         """ From a dict of taxas {'tax':Abun} take, sequences from silva """
         rank = rank
         silva_taxa = loadTaxa(refTax = refTax, rank = rank)
-        silvaSeqs = list(fasta2dict(ref).keys())
+        #silvaSeqs = list(fasta2dict(ref).keys())
+        with Pool(cpus) as pool:
+            with open(ref, 'r') as fasta:
+                silvaSeqs = set(list(pool.map(cls.checkN, itertools.zip_longest(*[fasta]*2))))
         for seq in list(silva_taxa.keys()):
             if not seq in silvaSeqs:
                 silva_taxa.pop(seq)

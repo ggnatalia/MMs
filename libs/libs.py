@@ -19,7 +19,7 @@ def simplifyString(string, splitChar = '\t', conservative = False): # TESTED!
             string = string.split(splitChar)[0]
     return(string)
 
-def fasta2dict(fasta):
+def fasta2dict(fasta): # if fasta is huge, it consumes a lot of RAM memory
     SeqDic = {}
     with open(fasta) as f:
         for sequece in f.read().strip().lstrip('>').split('>'):
@@ -93,7 +93,7 @@ def load_table(filepath, rows = None , cols = None, path = '.', sep = ','):
     return(data)
 
 ########################### MUTATIONS
-def mutate(string, N, start = None, end = None, regions = None): # WORK
+def mutate(string, N, start = None, end = None, regions = None): # WORK HACER QUE FUNCIONE QUITANDO LOS GAPS A LA SECUENCIA 
     """ Generate a mutate string from original one in N positions """
     bases = ['A','T','C','G','-']
     strings_list = np.array(list(string), dtype ='U1')
@@ -131,7 +131,7 @@ def mutate(string, N, start = None, end = None, regions = None): # WORK
             probdivide = (1 - sum(prob_values))/sum([True if v == 0 else False for v in prob_values]) # Calculate percentage for the rest of regions until sum 1
             prob_values = [probdivide if v == 0 else v for v in prob_values]
             mutation_sites = list(np.random.choice(possiblePos, N, p = prob_values, replace = False))
-    print(mutation_sites)
+    #print(mutation_sites)
     for pos in mutation_sites: # Avoid cases in which the mutated base is identical to the original
         strings_list[pos] = random.sample(list(filter(lambda x: x != string[pos], bases)), 1)[0]
     return (''.join(strings_list.tolist()))
