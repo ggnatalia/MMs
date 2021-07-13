@@ -299,7 +299,7 @@ class Enviro():
             
         with Pool(cpus) as pool:
             with open(fastaFile, 'r') as fasta:
-                Seqs = set(list(filter(None, pool.map(cls.validate_Sequence, itertools.zip_longest(*[fasta]*2)))))
+                Seqs = set(list(filter(None, pool.imap(cls.validate_Sequence, itertools.zip_longest(*[fasta]*2)))))
             return(Seqs)
     
     @classmethod
