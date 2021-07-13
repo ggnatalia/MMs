@@ -8,3 +8,6 @@ ln -s $MMS_DIR/utils/* .
 #rm $PREFIX/lib/python3.7/site-packages/iss
 ln -s $MMS_DIR/extlibs/iss/ $PREFIX/lib/python3.7/site-packages/
 ln -s $MMS_DIR/bin/* $PREFIX/bin/
+cd $PREFIX/libs
+python setup.py build_ext --inplace
+cd ..

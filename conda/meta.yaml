@@ -1,6 +1,6 @@
 package:
   name: mms
-  version: '0.0.1'
+  version: '0.0.2'
 
 source:
   #git_url: git@github.com:ggnatalia/MMs.git
@@ -37,6 +37,7 @@ requirements:
     - pysam
     - requests
     - plotly
+    - cython
 
 build:
   noarch: generic
