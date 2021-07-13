@@ -25,7 +25,7 @@ class Sequence():
         seq2array = np.zeros((dim), dtype = np.uint8)
         for i, nt in enumerate(self.seq):
             seq2array[i] = equiv[nt]
-        return(seq2array)
+        return(seq2array) 
     
     
     

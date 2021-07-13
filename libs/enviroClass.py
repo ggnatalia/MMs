@@ -283,7 +283,7 @@ class Enviro():
                     align.write('>{}\n{}\n'.format(s.header, s.seq))
                     fasta.write('>{}\n{}\n'.format(s.header, s.deGap().seq))
                     taxonomy.write('{}\t{}\n'.format(s.header, s.tax))
-                return(True)
+                return(True) 
     
     @classmethod
     def set_sequences( cls, fastaFile, refTax, rank, cpus = 1, Nrandom = 0, selected = [], degap = False):

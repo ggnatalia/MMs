@@ -20,22 +20,22 @@ def calculate_distance(s0, s1):
     return(sum([nt0 != nt1 for nt0, nt1 in zip(s0, s1) if  nt0 != '.' and nt1 != '.'])/lengthmax)
 
 
-def calculate_distance_set(a, b):
-    """ s0 y s1 are dictionaries saving nt positions """
-    s0 = copy.deepcopy(a)
-    s1 = copy.deepcopy(b)
-    dot_index = s1['.']|s0['.'] #to get any position with a '.'. We just can compare align positions: '.' vs. A is NOT an align position
+#def calculate_distance_set(a, b):
+#    """ s0 y s1 are dictionaries saving nt positions """
+#    s0 = copy.deepcopy(a)
+#    s1 = copy.deepcopy(b)
+#    dot_index = s1['.']|s0['.'] #to get any position with a '.'. We just can compare align positions: '.' vs. A is NOT an align position
     # Remove index of '.' positions in all nucleotides
-    diff = set()
-    for nt in ['A','T','C','G','-']:
-        s0[nt] = s0[nt]-dot_index
-        s1[nt] = s1[nt]-dot_index
-        diff.add( len(s0[nt] - s1[nt] )) #a = set([1, 2, 3]), b = set([2, 3, 4]), a.symmetric_difference(b): {1, 4} no puedo hacer esto, porque en el fondo estar?a contando dos veces la misma diferencia
+#    diff = set()
+#    for nt in ['A','T','C','G','-']:
+#        s0[nt] = s0[nt]-dot_index
+#        s1[nt] = s1[nt]-dot_index
+#        diff.add( len(s0[nt] - s1[nt] )) #a = set([1, 2, 3]), b = set([2, 3, 4]), a.symmetric_difference(b): {1, 4} no puedo hacer esto, porque en el fondo estar?a contando dos veces la misma diferencia
     #print(diff)
-    lengthmax = max(len(s0['A']|s0['T']|s0['C']|s0['G']) , len(s1['A']|s1['T']|s1['C']|s1['G']))
+#    lengthmax = max(len(s0['A']|s0['T']|s0['C']|s0['G']) , len(s1['A']|s1['T']|s1['C']|s1['G']))
     #print(lengthmax)
     # Count diff except in dot positions * choose '.' vs '.' or any '.'
-    return(sum(diff)/lengthmax)
+#    return(sum(diff)/lengthmax)
 
 
 def estimate_abundances(Nfeatures, total = 100): 
