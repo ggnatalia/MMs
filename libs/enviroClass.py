@@ -169,7 +169,7 @@ class Enviro():
             write_logfile('info', 'DISTANCE CALCULATIONS', 'Start 1 cpu')
             arr = np.zeros(shape=(nSeqs, nSeqs), dtype = np.float32)
             distances = map(cls.calc_dist, cls.multiprocessing_globals_combinations)
-            for (i, j, d) in pool.imap(cls.calc_dist, cls.multiprocessing_globals_combinations, chunksize = 50):
+            for (i, j, d) in map(cls.calc_dist, cls.multiprocessing_globals_combinations):
                 arr[i, j] = d 
         else:
             write_logfile('info', 'DISTANCE CALCULATIONS', 'Start multiprocessing')
