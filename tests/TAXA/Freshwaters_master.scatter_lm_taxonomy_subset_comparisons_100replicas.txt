@@ -1,0 +1,19 @@
+
+Call:
+lm(formula = data2plot$origin ~ data2plot$sd)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.23181 -0.08997 -0.02006  0.12225  1.40647 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  -0.122182   0.007938  -15.39   <2e-16 ***
+data2plot$sd  2.072792   0.041535   49.91   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1419 on 634 degrees of freedom
+Multiple R-squared:  0.7971,	Adjusted R-squared:  0.7968 
+F-statistic:  2490 on 1 and 634 DF,  p-value: < 2.2e-16
+

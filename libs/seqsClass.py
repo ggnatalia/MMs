@@ -7,14 +7,27 @@ from libs.libs import *
 from libs.maths import *
 import re
 import random
+import numpy as np
+
+
 
 class Sequence():
     
-    def nt2dict(self):
-        positions = {'A':set(), 'T':set(), 'G':set(), 'C':set(), '-': set(), '.': set()}
+    #def nt2dict(self):
+    #    positions = {'A':set(), 'T':set(), 'G':set(), 'C':set(), '-': set(), '.': set()}
+    #    for i, nt in enumerate(self.seq):
+    #        positions[nt].add(i)
+    #    return(positions)
+    
+    def nt2array(self):
+        dim = len(self.seq)
+        equiv = {'A':1, 'T':2, 'G':3, 'C':4, '-':5, '.':0}
+        seq2array = np.zeros((dim), dtype = np.uint8)
         for i, nt in enumerate(self.seq):
-            positions[nt].add(i)
-        return(positions)
+            seq2array[i] = equiv[nt]
+        return(seq2array)
+    
+    
     
     def __init__(self, header, seq, tax = None, abun = 0):
         self.header = header

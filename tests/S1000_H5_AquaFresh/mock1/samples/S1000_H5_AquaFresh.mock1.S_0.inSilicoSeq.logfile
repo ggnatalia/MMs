@@ -1,0 +1,4 @@
+read_length: 150
+insert_size: 200
+quality_forward: 40
+quality_reverse: 40

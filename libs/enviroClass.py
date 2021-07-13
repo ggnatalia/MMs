@@ -5,6 +5,7 @@ from libs.maths import *
 from libs.plots import *
 from libs.seqsClass import Sequence
 from libs.mockClass import Mock
+from libs.distances import calculate_distances_cython
 
 import pandas as pd
 import numpy as np
@@ -14,6 +15,8 @@ import os
 from itertools import combinations, combinations_with_replacement
 import itertools
 from multiprocessing import Pool
+import cython
+
 
 class Enviro():
     
@@ -151,62 +154,44 @@ class Enviro():
         nSeqs = len(Seqs)
         # Trim sequences according to start end position. Return set of Seqs objects
         # https://www.geeksforgeeks.org/copy-python-deep-copy-shallow-copy
-        cls.multiprocessing_globals = {s.trimregion(start, end) for s in Seqs}
-        equivalence = np.array([s.header for s in cls.multiprocessing_globals]) #"https://docs.python.org/2/library/stdtypes.html#mapping-types-dict: If keys, values and items views are iterated over with no intervening modifications to the dictionary, the order of items will directly correspond"
+        cls.multiprocessing_globals = iter([s.trimregion(start, end) for s in Seqs])
+        equivalence = np.array([s.header for s in Seqs]) #"https://docs.python.org/2/library/stdtypes.html#mapping-types-dict: If keys, values and items views are iterated over with no intervening modifications to the dictionary, the order of items will directly correspond"
         if cpus == 1 or nSeqs < 100:
             write_logfile('info', 'CONVERT SEQS', 'Start 1 cpu')
-            cls.multiprocessing_globals_seqs = list(map(Sequence.nt2dict, cls.multiprocessing_globals)) # Una vez use cls.multiprocessing_globals_seqs se vacía automáticamente el iterable
+            cls.multiprocessing_globals_seqs = list(map(Sequence.nt2array, cls.multiprocessing_globals)) # Una vez use cls.multiprocessing_globals_seqs se vacía automáticamente el iterable
         else:
             write_logfile('info', 'CONVERT SEQS', 'Start multiprocessing')
             with Pool(cpus) as pool:
-                cls.multiprocessing_globals_seqs = list(pool.map(Sequence.nt2dict, cls.multiprocessing_globals, chunksize = 50)) #iterable, imap consume iterable y devuelve iterable
+                cls.multiprocessing_globals_seqs = list(pool.map(Sequence.nt2array, cls.multiprocessing_globals, chunksize = 50)) #iterable, imap consume iterable y devuelve iterable
         write_logfile('info', 'CONVERT SEQS', 'Finish')
-        cls.multiprocessing_globals = tuple()
         cls.multiprocessing_globals_combinations = combinations_with_replacement(list(range(nSeqs)),2)
         if cpus == 1 or nSeqs < 100:
             write_logfile('info', 'DISTANCE CALCULATIONS', 'Start 1 cpu')
-            arr = np.zeros(shape=(nSeqs, nSeqs), dtype = np.float16)
+            arr = np.zeros(shape=(nSeqs, nSeqs), dtype = np.float32)
             distances = map(cls.calc_dist, cls.multiprocessing_globals_combinations)
             for (i, j, d) in pool.imap(cls.calc_dist, cls.multiprocessing_globals_combinations, chunksize = 50):
                 arr[i, j] = d 
         else:
             write_logfile('info', 'DISTANCE CALCULATIONS', 'Start multiprocessing')
-            arr = np.zeros(shape=(nSeqs, nSeqs), dtype = np.float16)
+            arr = np.zeros(shape=(nSeqs, nSeqs), dtype = np.float32)
             with Pool(cpus) as pool:
                 #print(list(distances))
                 for (i, j, d) in pool.imap(cls.calc_dist, cls.multiprocessing_globals_combinations, chunksize = 50):
-        #    print('i ' + str(i))
-        #    print('j ' + str(j))
-        #    print('d ' + str(d))
                     arr[i, j] = d 
         write_logfile('info', 'DISTANCE CALCULATIONS', 'Finish')
-        
-        #length2split = list(reversed(range(1, len(equivalence) + 1)))   # split the list into one row per original sequence: for 3 sequences: [(1,1),(1,2),(1,3)],[(2,2), (2,3)],[(3,3)]: split 3, 2, 1
-        #iterable_distances = iter(distances) 
-        #dist_trian = [list(itertools.islice(iterable_distances, elem)) for elem in length2split]
-        #dist_trian = [list(itertools.islice(distances, elem)) for elem in length2split]
-        #fill = list(range(0, len(equivalence)))
-        # Prepare 0 to complete the df as a matrix
-        write_logfile('info', 'DISTANCE CALCULATIONS', 'Finish')
         #arr = np.array(list(map(lambda x, y: x*[0] + y, fill, dist_trian)))
-        
-        
         print(arr)
-        print('df')
         # Make a df with distance calcs for all the sequences
         df = pd.DataFrame(arr, columns = equivalence, index = equivalence)
         # Logical df with False when value ==-1, to remove this columns
         print('mask')
         mask = df.values!=-1
         # Remove these columns and the corresponding rows
-        print('df filter')
-        df = df.drop(index = list(np.where(mask==False)[1]), columns = list(np.where(mask==False)[1]))
-        print('1')
+        df = df.drop(index = equivalence[list(np.where(mask==False)[1])], columns = equivalence[list(np.where(mask==False)[1])])
         seqstoremove = list(np.where(mask==False)[1])
-        print('2')
         SeqsFilteredheaders = list(np.delete(equivalence, seqstoremove))
-        print('3')
         SeqsFiltered = {s for s in Seqs if s.header in SeqsFilteredheaders}
+        cls.clear_multiprocessing_globals()
         if complete:
             print('writing')
             write_table(df, title = '{}.distances'.format(prefix), rows = list(df.index) , columns = list(df.columns), dataframe = None)
@@ -216,14 +201,14 @@ class Enviro():
         
     @classmethod
     def clear_multiprocessing_globals(cls): # Clean class variable instead of overwrite it
-        cls.multiprocessing_globals_seqs = tuple()
-        cls.multiprocessing_globals_combinations = tuple()
-        cls.multiprocessing_globals = tuple()
+        cls.multiprocessing_globals_seqs = ''
+        cls.multiprocessing_globals_combinations = ''
+        cls.multiprocessing_globals = ''
     
     @classmethod
     def calc_dist(cls, args): 
         """ args is a tuple of two index combinations with the index of the sequences between calculate distances """
-        d = calculate_distance_set(cls.multiprocessing_globals_seqs[args[0]], cls.multiprocessing_globals_seqs[args[1]])
+        d = calculate_distances_cython(cls.multiprocessing_globals_seqs[args[0]], cls.multiprocessing_globals_seqs[args[1]])
         if d != 0:
             return(args[0], args[1], d)
             #return(d)
