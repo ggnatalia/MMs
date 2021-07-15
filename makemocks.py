@@ -207,7 +207,7 @@ def main(args):
     
         os.chdir(projectPath)
         if inputfile:
-            Env = Enviro.init_from_file(prefix = projectPrefix, path = projectPath, inputfile = inputfile, refTax = refTax, cpus = cpus)
+            Env = Enviro.init_from_file(prefix = projectPrefix, path = projectPath, inputfile = inputfile, cpus = cpus)
             alignment = [] # No tengo las secuencias alineadas
         else: # No align, do mutant ASVs
             if not args.nASVs:

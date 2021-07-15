@@ -28,7 +28,7 @@ class Enviro():
     silva_taxa = dict()
     rank = None
     degap = False
-    
+    notax = False # To avoid taxonomic annotation
     selected = []
     
     def __init__(self, prefix, enviro, Seqs, nASVs):
@@ -137,21 +137,20 @@ class Enviro():
         return( Enviro(prefix, enviro, Seqs, nASVs) ) 
     
     @classmethod
-    def init_from_file(cls, prefix, path, inputfile, refTax = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', cpus = 20, rank = 5):
+    def init_from_file(cls, prefix, path, inputfile, cpus = 20):
         """ Open and load an align file """
         if os.path.isfile('{}/{}'.format(path, inputfile)): 
             write_logfile('info', 'PREVIOUS ALIGN', 'The file {}/{} will be used as reference'.format(path, inputfile))
             enviro = 'inputfile'
-            Seqs = cls.set_sequences( fastaFile = '{}/{}'.format(path, inputfile), refTax = refTax , cpus = cpus, rank = rank, selected = [], degap = False)
+            Seqs = cls.set_sequences( fastaFile = '{}/{}'.format(path, inputfile), cpus = cpus, rank = rank, selected = [], degap = False)
         else:
             write_logfile('warning', 'INPUT ALIGN', '{} not found in {}.'.format(inputfile, path))
             exit(-2)
         return( Enviro(prefix, enviro, Seqs, len(Seqs)) )
     
     @classmethod 
-    def distances(cls, Seqs, prefix, region, start, end, cutoff, cpus, complete = False): # igual se puede combinar con makeASVs
+    def distances(cls, Seqs, prefix, region, start, end, cpus, complete = False): # igual se puede combinar con makeASVs
         """ Calculate distances in an specific region (plot a heatmap) and filter sequences based on them. """
-        cutoff = float(cutoff)
         cpus = int(cpus)
         nSeqs = len(Seqs)
         # Trim sequences according to start end position. Return set of Seqs objects
@@ -182,11 +181,11 @@ class Enviro():
                     arr[i, j] = d 
         write_logfile('info', 'DISTANCE CALCULATIONS', 'Finish')
         #arr = np.array(list(map(lambda x, y: x*[0] + y, fill, dist_trian)))
-        print(arr)
+        #print(arr)
         # Make a df with distance calcs for all the sequences
         df = pd.DataFrame(arr, columns = equivalence, index = equivalence)
         # Logical df with False when value ==-1, to remove this columns
-        print('mask')
+        #print('mask')
         mask = df.values!=-1
         # Remove these columns and the corresponding rows
         df = df.drop(index = equivalence[list(np.where(mask==False)[1])], columns = equivalence[list(np.where(mask==False)[1])])
@@ -230,15 +229,17 @@ class Enviro():
             newS = random.sample(self.Seqs, 1)[0] # Subset one sequence. Return a list with one element
             if newS.header not in [s.header for s in sampleSeqs]: # if that sequence has not been yet taken 
                 sampleSeqs.add(newS)
-                newSasvs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = 45, start = start, end = end, by_region = by_region)
+                Nposmax = cutoff * len(newS.seq.deGap())
+                print(newS.seq)
+                newSasvs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = Nposmax, start = start, end = end, by_region = by_region)
                 #Check distances
-                ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cutoff = cutoff, cpus = cpus)
+                ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus)
                 #write_logfile('warning', 'SUBSET RANDOM SEQS', 'len(ASVs) {}\tlen(ASVsdiff) {}'.format(len(newSavs), len(ASVsdiff)))
                 i=0
                 while len(ASVsdiff) < len(newSasvs): # If one sequence have been removed 'cause it is identical to another one, repeat to take ASVs from that sequence, otherwise some taxa can be minusvalorated
                     newSavs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = 45, start = start, end = end, by_region = by_region)
                     #Check distances
-                    ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cutoff = cutoff, cpus = cpus)
+                    ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus)
                     i = i+1
                     if i > 10:
                         #write_logfile('warning', 'SUBSET RANDOM SEQS2', 'len(ASVsdiff) {}\tlen(newSavs) {}'.format(len(newSavs), len(ASVsdiff)))
@@ -246,18 +247,18 @@ class Enviro():
                 ASVs.update(ASVsdiff)
             else:
                 continue
-        ASVsdiff, distdf = self.distances(Seqs = ASVs, prefix = self.prefix, region = region, start = start, end = end, cutoff = cutoff, cpus = cpus, complete = True) 
+        ASVsdiff, distdf = self.distances(Seqs = ASVs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus, complete = True) 
         #ASVsdiffselected = set(random.sample({s for s in ASVs if s.header not in [so.header for so in SeqsSilvaselected]}, args.nASVs-len(SeqsSilvaselected))) # No matter if original sequences are included or not
         ASVsdiffselected = set(random.sample(ASVsdiff, self.nASVs))
         #self.Seqs = SeqsSilvaselected.union(ASVsdiffselected) # No matter if original sequences are included or not
         self.Seqs = ASVsdiffselected # I REALLY WANT TO MODIFY IT, I want to remove extra Sequences
         write_logfile('info', 'ENVIRONMENT', 'Plotting distances heatmap')
-        self.plot_distances(df = distdf, region = region, cutoff = cutoff, text = None, symmetric = True)
+        self.plot_distances(df = distdf, region = region, text = None, symmetric = True)
         return(self)# I really want to modify it
     
     
     #### PLOTS & OUTPUTS
-    def plot_distances(self, df, region = '16S', cutoff = 0.03, text = None, symmetric = None):
+    def plot_distances(self, df, region = '16S',  text = None, symmetric = None):
         """ Plot distances among selected sequences """
         # Update df with the final sequences that finally have been included:
         Seqs_headers = [s.header for s in self.Seqs]
@@ -291,18 +292,19 @@ class Enviro():
     def set_sequences( cls, fastaFile, refTax, rank, cpus = 1, Nrandom = 0, selected = [], degap = False):
         """ Make a list of sequence objects (or select some based on the header) from fasta """
         cls.rank = rank
-        cls.silva_taxa = loadTaxa(refTax = refTax)
         cls.degap = degap
-        
-        if Nrandom != 0:
-            cls.selected = random.sample(cls.silva_taxa.keys(), Nrandom)
+        if not refTax:
+            cls.notax = True
         else:
-            cls.selected = selected
-            
+            cls.silva_taxa = loadTaxa(refTax = refTax)
+            if Nrandom != 0:
+                cls.selected = random.sample(cls.silva_taxa.keys(), Nrandom)
+            else:
+                cls.selected = selected
         with Pool(cpus) as pool:
             with open(fastaFile, 'r') as fasta:
                 Seqs = set(list(filter(None, pool.imap(cls.validate_Sequence, itertools.zip_longest(*[fasta]*2)))))
-            return(Seqs)
+        return(Seqs)
     
     @classmethod
     def validate_Sequence(cls, combo):
@@ -317,7 +319,10 @@ class Enviro():
             Seq = None
             if not cls.selected: # select all the sequences from the fasta file
                 #write_logfile('debug', 'Sequence.set_Sequences', cls.selected)
-                Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa), 0)
+                if not cls.notax:
+                    Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa), 0)
+                else:
+                    Seq = Sequence(header, seq.rstrip('\n'), None, 0) # No taxonomic annotation
                 #write_logfile('debug', 'Sequence.set_Sequences NOT selected ', Seq.header)
             else:
                 #write_logfile('debug', 'Sequence.set_Sequences', cls.selected)
@@ -406,7 +411,7 @@ class Enviro():
                 # If the sequence has been added in a previous loop, it does not matter 'cause it is a set, no duplicates
                 subsetSeqs = subsetSeqs.union(set(seq))
             else:
-                write_logfile('error', 'SUBSET RANDOM SEQS', '{} not present in the DB {} sequences'.format(tx, abun))
+                write_logfile('error', 'SUBSET RANDOM SEQS', '{} not present'.format(tx))
         return(subsetSeqs, moreSeqs)
 
     @staticmethod
