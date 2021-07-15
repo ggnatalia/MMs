@@ -229,7 +229,7 @@ class Enviro():
             newS = random.sample(self.Seqs, 1)[0] # Subset one sequence. Return a list with one element
             if newS.header not in [s.header for s in sampleSeqs]: # if that sequence has not been yet taken 
                 sampleSeqs.add(newS)
-                Nposmax = cutoff * len(newS.seq.deGap())
+                Nposmax = cutoff * len(newS.deGap())
                 print(newS.seq)
                 newSasvs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = Nposmax, start = start, end = end, by_region = by_region)
                 #Check distances
