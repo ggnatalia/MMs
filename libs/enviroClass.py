@@ -45,13 +45,15 @@ class Enviro():
         #print(len(taxa))
         # Collapse abundances of equal taxa
         taxAbun =  dict(Counter(taxa)) # Sequences from most abundant taxa will have been selected more times
-        print('subsetSilvaproportions')
+        #print('subsetSilvaproportions')
+        write_logfile('info', 'Enviro', 'Subset sequences')
         headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, ref = ref, rank = rank, cpus = cpus )
         #print('headers ' + str(len(headers)))
         #print('neededSeqs ' + str(len(neededSeqs)))
-        print('set_sequences')
+        write_logfile('info', 'Enviro', 'Select sequences')
         Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, selected = list(headers), degap = False) # Original Seqs from Silva
-        print('fakeASVs')
+        #print('fakeASVs')
+        write_logfile('info', 'Enviro', 'Complete sequences')
         if neededSeqs:
             FakeSeqs = cls.make_fake_taxa(neededSeqs, rank = rank, cpus = cpus, ref = ref, refTax = refTax, by_region = by_region)
             TotalSeqs = Seqs|FakeSeqs
