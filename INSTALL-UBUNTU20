@@ -1,0 +1,40 @@
+### To run M&Ms without conda, make sure that you have installed python3 (at least python 3.7) and the following python modules:
+# Example of command: python3 -m pip install pysam
+
+-numpy
+-scipy  
+-math
+-pandas
+-scikit-learn
+-random
+-re
+-glob
+-logging
+-daiquiri
+-collections
+-itertools
+-multiprocessing  
+-matplotlib
+-biopython
+-joblib
+-pysam
+-requests
+-plotly
+-cython
+
+### Moreover, you have to install mothur (https://mothur.org/wiki/installation/) and place it on your $PATH
+
+### Download M&Ms. You can clone the github repository:
+git clone http://github.com/ggnatalia/MMs
+
+### Download or configure SILVA databases by running the MMs/bin/make_databases.py script
+
+### This is not mandatory, but you can add to your $PATH the following scripts:
+$MMS_DIR is the path where the M&Ms folder has been downloaded.
+
+export PATH=$PATH:MMS_DIR/makemocks.py
+export PATH=$PATH:MMS_DIR/bin/make_databases.py
+
+### Within $MMS_DIR/libs, build the distances module:
+python3 setup.py build_ext --inplace
+

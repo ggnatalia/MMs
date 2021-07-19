@@ -121,7 +121,7 @@ class Enviro():
         return( Enviro(prefix, enviro, TotalSeqs, nASVs) ) 
     
     @classmethod   
-    def init_from_seqs(cls, prefix, rank, seqs, nASVs, minseqs = 1, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', cpus = 20):
+    def init_from_seqs(cls, prefix, rank, seqs, nASVs, minseqs = 100, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', cpus = 20):
         enviro = 'seqs'
         #write_logfile('info', 'SEQUENCES PROVIDED', 'Sequences {} are treated as OTUs, mutant ASVs will be generated until complete {} ASVs'.format(seqs, nASVs))
         if seqs:
@@ -229,8 +229,9 @@ class Enviro():
             newS = random.sample(self.Seqs, 1)[0] # Subset one sequence. Return a list with one element
             if newS.header not in [s.header for s in sampleSeqs]: # if that sequence has not been yet taken 
                 sampleSeqs.add(newS)
-                Nposmax = cutoff * len(newS.deGap())
-                print(newS.seq)
+                Nposmax = int(round(cutoff * len(newS.deGap().seq)))
+                #print(newS.seq)
+                #print(str(Nposmax))
                 newSasvs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = Nposmax, start = start, end = end, by_region = by_region)
                 #Check distances
                 ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus)
