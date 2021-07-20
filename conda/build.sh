@@ -5,6 +5,12 @@ cp -r $SRC_DIR/* $MMS_DIR
 cd $PREFIX/bin
 ln -s $MMS_DIR/makemocks.py .
 ln -s $MMS_DIR/utils/* .
+# Download NanoSim
+git clone https://github.com/bcgsc/NanoSim.git
+cd NanoSim/pre-trained_models
+# Extract metagenome model
+tar -xzvf metagenome_ERR3152364_Even.tar.gz
+cd ../..
 #rm $PREFIX/lib/python3.7/site-packages/iss
 #ln -s $MMS_DIR/extlibs/iss/ $PREFIX/lib/python3.7/site-packages/
 ln -s $MMS_DIR/bin/* $PREFIX/bin/

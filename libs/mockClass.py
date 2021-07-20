@@ -19,63 +19,49 @@ from multiprocessing import Pool
 class Mock():
     #CLASS VARIABLE
     multiprocessing_globals_samples = []
-    inSilicoInput = []
+    SimInput = []
     
     @classmethod
     def clear_multiprocessing_globals(cls): # Clean class variable instead of overwrite it
         cls.multiprocessing_globals_samples = []
-        cls.inSilicoInput = []
+        cls.SimInput = []
         
-    def __init__(self, prefix, Seqs, df, samples, reads, errormodel, alignment, cpus, InSilicoparams):
+    def __init__(self, prefix, Seqs, df, samples, alignment = [0, 50000, '16S'], cpus = 12, reads = 10000, Sim = 'InSilicoSeqs', ISSerrormodel = 'perfect', ISSparams = (150,200), NSerrormodel = 'perfect', NSparams = (500, 50)):
         self.prefix = prefix
         self.samples = samples
         self.df = df # row: samples, col: species
         self.gSeqs = Seqs
         self.reads = reads
-        self.errormodel = errormodel
         self.cpus = cpus
         self.alignment = alignment
-        self.InSilicoparams = InSilicoparams 
+        self.Sim = Sim
+        self.ISSerrormodel = ISSerrormodel
+        self.ISSparams = ISSparams
+        self.NSerrormodel = NSerrormodel
+        self.NSparams = NSparams
     
     def __repr__(self): 
         return(self.df)
     
-    
-    @classmethod
-    def init_from_previous_mock(cls, Enviro, prefix, shannonIndex, alignment = [0, 50000, '16S'], reads = 20000, errormodel = 'perfect', cpus = 12, InSilicoparams = (150,200)): # Esta es para corregir antiguas, pero se puede quitar
-        """ Repat files from mock using a previous align and abundance distribution """
-        Seqs = set()
-        samples = []
-        mock = Mock(prefix, set(), pd.DataFrame(index=[], columns=[]), [], reads, errormodel, alignment, cpus, InSilicoparams)
-        for i, (fasta, abun) in enumerate(zip(sequence_files, abundance_files)):
-            sampleName = 'S_' + str(i)
-            mock.inSilicoInput.append((fasta, abun, sampleName))
-            SampleSeqs = set()
-            SeqsDic = fasta2dict(fasta)
-            with open(abun) as a:
-                for seq in a.read().rstrip('\n').split('\n'):
-                    if not seq.split('\t')[0] in [s.header for s in Seqs] and seq.split('\t')[1] != 0 :
-                        SampleSeqs.update(Sequence(seq.split('\t')[0], SeqsDic[seq.split('\t')[0]], 'taxa', seq.split('\t')[1]))
-                        Seqs.update(Sequence(seq.split('\t')[0], SeqsDic[seq.split('\t')[0]], 'taxa', seq.split('\t')[1]))
-            s = Sample(prefix, sampleName, SampleSeqs, alignment)
-        samples.add(s) #en realidad podria pasar todo vacio, pero bueno, no tarda nada y queda completo
-        df = pd.DataFrame(index = ['S_' + str(i) for i in enumerate(sequence_files)], columns = [s.header for s in Seqs])
-        for s in samples:
-            for seq in samples.Seqs:
-                df.loc[s.sample_name, seq.seq] = seq.abun
-        mock = Mock(prefix, Seqs, df, [], reads, errormodel, alignment, cpus, InSilicoparams)
-        return(mock.run_mock())
-    
     @classmethod    
-    def init_and_run_InSilico(cls, prefix, sequence_files, abundance_files, reads = 20000, errormodel = 'perfect', alignment = [0, 50000, '16S'], InSilicoparams = (150, 200), cpus = 12):
-        mock = Mock(prefix, set(), pd.DataFrame(index=[], columns=[]), [], reads, errormodel, alignment, cpus, InSilicoparams)
+    def init_and_run_InSilico(cls, prefix, ISSsequence_files, ISSabundance_files,  reads = 20000, Sim = 'InSilicoSeqs', ISSerrormodel = 'perfect', ISSparams = (150, 200)):
+        mock = Mock(prefix, set(), pd.DataFrame(index=[], columns=[]), [], alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel,  ISSparams = ISSparams)
         for i, (fasta, abun) in enumerate(zip(sequence_files, abundance_files)):
             sampleName = 'S_' + str(i)
-            mock.inSilicoInput.append((fasta, abun, sampleName))
+            mock.SimInput.append((fasta, abun, sampleName))
         return(mock.reads_generation())
     
+    @classmethod    
+    def init_and_run_NanoSim(cls, prefix, NSsequence_files, NSabundance_files, NSdl_files, alignment = [0, 50000, '16S'], cpus = 12, reads = 10000, Sim = 'NanoSim', NSerrormodel = 'perfect', NSparams = (500, 50)):
+        mock = Mock(prefix, set(), pd.DataFrame(index=[], columns=[]), [], alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, NSerrormodel = NSerrormodel, NSparams = NSparams)
+        for i, (fasta, abun, dl) in enumerate(zip(NSsequence_files, NSabundance_files, NSdl_files)):
+            sampleName = 'S_' + str(i)
+            mock.SimInput.append((fasta, abun, dl, sampleName))
+        return(mock.reads_generation())
+    
+    
     @classmethod
-    def init_from_enviro(cls, Enviro, prefix, Nsamples, shannonIndex, alignment = [0, 50000, '16S'], alpha = 0.9,  smallest_coef = 0.1, largest_coef = 0.9, reads = 20000, pstr0 = 0.2, size = 1, errormodel = 'perfect', cpus = 12, InSilicoparams = (150,200)):
+    def init_from_enviro(cls, Enviro, prefix, Nsamples, shannonIndex, alignment = [0, 50000, '16S'], cpus = 12, alpha = 0.9,  smallest_coef = 0.1, largest_coef = 0.9, reads = 20000, pstr0 = 0.2, size = 1, Sim = 'InSilicoSeqs', ISSerrormodel = 'perfect',  ISSparams = (150,200), NSerrormodel = 'perfect',  NSparams = (500,50)):
         """ Creating a mock from scratch. A set of Samples objects"""
         write_logfile('info', 'CREATE MOCK', 'Estimating abundances')
         if Nsamples == 1:
@@ -90,12 +76,12 @@ class Mock():
         # To each sequence, add they global abundance in all the samples
         for s in Enviro.Seqs:
             s.abun = df[s.header].sum()
-        mock = Mock(prefix, Enviro.Seqs, df, [], reads, errormodel, alignment, cpus, InSilicoparams)
+        mock = Mock(prefix, Enviro.Seqs, df, [], alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel, ISSparams = ISSparams, NSerrormodel = NSerrormodel, NSparams = NSparams)
         return(mock.run_mock()) #samples is empty, in run samples, it will be filled
         
     def run_mock(self):
         """ Work sample by sample: create input files for InSilicoSeqs, plots and run InSilicoSeqs """
-        self.samples = [Sample.init_from_df(prefix = self.prefix, sample = self.df.loc[sample], Seqs = self.gSeqs, alignment = self.alignment) for sample in list(self.df.index.values)] # List of sample objects
+        self.samples = [Sample.init_from_df(prefix = self.prefix, sample = self.df.loc[sample], Seqs = self.gSeqs, alignment = self.alignment, reads = self.reads, Sim = self.Sim) for sample in list(self.df.index.values)] # List of sample objects
         write_logfile('info', 'CREATE MOCK', 'Writing output abundance tables')
         write_table(self.df, title = 'checkDB/{}.raw.abundances_original'.format(self.prefix), rows = list(self.df.index) , columns = list(self.df.columns), dataframe = None)
         abunTablePercent = make_percent(self.df, outputDir = 'checkDB/', write = True, fileName = '{}.abundances_original'.format(self.prefix), T = False)
@@ -107,37 +93,57 @@ class Mock():
         self.multiprocessing_globals_samples = self.samples
         if self.cpus == 1:
             write_logfile('info', 'CONVERT SEQS', 'Start 1 cpu')
-            self.inSilicoInput = list(map(Sample.run_sample, self.multiprocessing_globals_samples)) #[('seq', 'abun', sample_name),()]
+            self.SimInput = list(map(Sample.run_sample, self.multiprocessing_globals_samples)) #[('seq', 'abun', sample_name),()]
         else:
             write_logfile('info', 'CONVERT SEQS', 'Start multiprocessing')
             with Pool(self.cpus) as pool:
-                self.inSilicoInput = list(pool.map(Sample.run_sample, self.multiprocessing_globals_samples))
+                self.SimInput = list(pool.map(Sample.run_sample, self.multiprocessing_globals_samples))
         write_logfile('info', 'CREATE MOCK', 'Running InsilicoSeqs')
         self.reads_generation()
         self.clear_multiprocessing_globals()
         return(self)
                
     def reads_generation(self): 
-        """ Call Sample.run_inSilicoSeq for each sample or sequence/abundance files """
-        for s in self.inSilicoInput:
-            Sample.run_inSilicoSeq(prefix = 'samples/{}'.format(self.prefix), seqFile = 'samples/{}'.format(s[0]), abunFile = 'samples/{}'.format(s[1]), sampleName = s[2], errormodel = self.errormodel, reads = self.reads, cpus = self.cpus, InSilicoparams = self.InSilicoparams)
+        """ Call Sample.run_inSilicoSeq/Sample.run_NanoSim for each sample or sequence/abundance files """
+        if self.Sim == 'InSilicoSeqs':
+            for s in self.ISSInput:
+                Sample.run_inSilicoSeq(prefix = 'samples/{}'.format(self.prefix), seqFile = 'samples/{}'.format(s[0]), abunFile = 'samples/{}'.format(s[1]), sampleName = s[2], ISSerrormodel = self.ISSerrormodel, reads = self.reads, cpus = self.cpus, ISSparams = self.ISSparams)
+        elif self.Sim == 'NanoSim':
+            for s in self.NSInput:
+                Sample.run_NanoSim(prefix = 'samples/{}'.format(self.prefix), seqFile = 'samples/{}'.format(s[0]), abunFile = 'samples/{}'.format(s[1]), dlFile = sampleName[2], sampleName = s[3], NSerrormodel = self.NSerrormodel, reads = self.reads, cpus = self.cpus, NSparams = self.NSparams)
         write_logfile('info', 'MOCK REPEAT', 'Writing InSilicoSeqs output files')
         self.merge_samples(samplesDir = 'samples')
 
     def merge_samples(self, samplesDir = 'samples'): ## TESTED!
         """ Merge samples from InSilicoSeqs and rename them (in this case it would not be necessary, but for coherence with the previous procedure) """
-        outputFastq = '{}/{}.allsamples.{}-{}-{}r-{}i.fastq'.format(samplesDir, self.prefix, self.reads, self.errormodel, self.InSilicoparams[0], self.InSilicoparams[1])
-        outputFasta = '{}/{}.allsamples.{}-{}-{}r-{}i.fasta'.format(samplesDir, self.prefix, self.reads, self.errormodel, self.InSilicoparams[0], self.InSilicoparams[1])
-        outputGroups = '{}/{}.allsamples.{}-{}-{}r-{}i.groups'.format(samplesDir, self.prefix, self.reads, self.errormodel, self.InSilicoparams[0], self.InSilicoparams[1])
-        outputEquivalentNames = '{}/{}.allsamples.{}-{}-{}r-{}i.equivalence'.format(samplesDir, self.prefix, self.reads, self.errormodel, self.InSilicoparams[0], self.InSilicoparams[1])
+        
+        
+        if self.Sim == 'InSilicoSeqs':
+            outputFastq = '{}/{}.allsamples.{}-{}-{}r-{}i.fastq'.format(samplesDir, self.prefix, self.reads, self.ISSerrormodel, self.ISSparams[0], self.ISSparams[1])
+            outputFasta = '{}/{}.allsamples.{}-{}-{}r-{}i.fasta'.format(samplesDir, self.prefix, self.reads, self.ISSerrormodel, self.ISSparams[0], self.ISSparams[1])
+            outputGroups = '{}/{}.allsamples.{}-{}-{}r-{}i.groups'.format(samplesDir, self.prefix, self.reads, self.ISSerrormodel, self.ISSparams[0], self.ISSparams[1])
+            outputEquivalentNames = '{}/{}.allsamples.{}-{}-{}r-{}i.equivalence'.format(samplesDir, self.prefix, self.reads, self.ISSerrormodel, self.ISSparams[0], self.ISSparams[1])
+        elif self.Sim == 'NanoSim':
+            outputFastq = '{}/{}.allsamples.{}-{}-{}max-{}min.fastq'.format(samplesDir, self.prefix, self.reads, self.NSerrormodel, self.NSparams[0], self.NSparams[1])
+            outputFasta = '{}/{}.allsamples.{}-{}-{}max-{}min.fasta'.format(samplesDir, self.prefix, self.reads, self.NSerrormodel, self.NSparams[0], self.NSparams[1])
+            outputGroups = '{}/{}.allsamples.{}-{}-{}max-{}min.groups'.format(samplesDir, self.prefix, self.reads, self.NSerrormodel, self.NSparams[0], self.NSparams[1])
+            outputEquivalentNames = '{}/{}.allsamples.{}-{}-{}max-{}min.equivalence'.format(samplesDir, self.prefix, self.reads, self.NSerrormodel, self.NSparams[0], self.NSparams[1])
+        
         with open(outputFastq,'w') as outfastq, open(outputFasta, 'w') as outfasta, open(outputGroups,'w') as groups, open(outputEquivalentNames, 'w') as equivalence:
             parsedSeqs = []
             equivalences = {}
             for f in sorted(os.listdir(samplesDir)):
-                if '.{}-{}-{}r-{}i.InSilicoSeq'.format(self.reads, self.errormodel, self.InSilicoparams[0], self.InSilicoparams[1]) in f and f.endswith('.fastq'):
+                if self.Sim == 'InSilicoSeq':
+                    files_header = '.{}-{}-{}r-{}i.InSilicoSeq'.format(self.reads, self.ISSerrormodel, self.ISSparams[0], self.ISSparams[1])
+                elif self.Sim == 'NanoSim':
+                    files_header = '.{}-{}-{}max-{}min.NanoSim_sample0_aligned'.format(self.reads, self.NSerrormodel, self.NSparams[0], self.NSparams[1])
+                if files_header in f and f.endswith('.fastq'):
                     if '.'.join(f.split('.')[0:2]) == self.prefix:
                         sample = f.split('.')[2]
-                        pair = f.split('.')[4].split('_')[1]
+                        if self.Sim == 'InSilicoSeqs':
+                            pair = f.split('.')[4].split('_')[1]
+                        elif self.Sim == 'NanoSim':
+                            pair = 'no'
                         print(f)
                         with open('{}/{}'.format(samplesDir,f),'r') as infastq:
                             name = 1

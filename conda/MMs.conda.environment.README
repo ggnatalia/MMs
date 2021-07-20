@@ -1,0 +1,15 @@
+# Create an M&Ms environment!
+#1.Create the enviroment
+conda create -y --name MMs python=3.7
+
+#2. Activate it
+conda activate MMs
+
+#3.Install M&Ms package and its dependencies
+conda install -c anaconda -c bioconda -c conda-forge mms
+
+#4. Deactivate the enviroment
+conda deactivate
+
+#5. Remove the enviroment
+conda remove --name MMs --all

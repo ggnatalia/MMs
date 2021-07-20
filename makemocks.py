@@ -68,12 +68,23 @@ def parse_arguments():
     general.add_argument('--threshold', type = float, default = 0.97, help = 'Make & filter strains using distances. Without this flag, sequences can be identical in the studied region')
     general.add_argument('--cpus', default = 12, type = int, help = 'Number of threads')   
     general.add_argument('--force-overwrite', action = 'store_true', help = 'Force overwrite if the output directory already exists')
+        
+    
+    # NanoSim for long reads
+    general.add_argument( '--Sim', default = 'InSilicoSeqs', choices = ['InSilicoSeqs', 'NanoSim'], help = 'Choose read simulator: InSilicoSeqs or NanoSim')
+    
     # InSilicoSeqs parameters: add insert size & read length?
-    general.add_argument('--errormodel', default = 'perfect', type = str, help = 'Mode to generate InSilicoSeqs')
-    general.add_argument('--InSilicoparams', default = [150, 200], type = int, nargs = '+', help = '(Read length, insert size) NOTE: ONLY FOR NAMING FILES. CHANGE VALUES IN ~/.local/lib/python3.6/site-packages/iss/error_models/perfect.py ')
-    general.add_argument( '--sequences_files', type = str, nargs = '+', default = [], help = 'List of files to obtain reads: sequences <projectName><mockName>.<sampleName>.sequences16S.fasta. Same order that paired abundance files')
-    general.add_argument( '--abundance_files', type = str, nargs = '+', default = [], help = 'List of files to obtain reads: abundances<projectName><mockName>.<sampleName>.abundances. Same order that paired sequence files')
-    general.add_argument( '--repeat_InSilicoSeqs_autocomplete', action = 'store_true', help = 'If True use mock and samples directly from the directory, without writing one by one the files')
+    general.add_argument( '--ISSerrormodel', default = 'perfect', type = str, help = 'Mode to generate InSilicoSeqs')
+    general.add_argument( '--ISSparams', default = [150, 200], type = int, nargs = '+', help = '(Read length, insert size')
+    general.add_argument( '--ISSsequences_files', type = str, nargs = '+', default = [], help = 'List of files to obtain reads: sequences <projectName><mockName>.<sampleName>.sequences16S.fasta. Same order that paired abundance files')
+    general.add_argument( '--ISSabundance_files', type = str, nargs = '+', default = [], help = 'List of files to obtain reads: abundances<projectName><mockName>.<sampleName>.abundances. Same order that paired sequence files')
+    general.add_argument( '--repeat_ISS_autocomplete', action = 'store_true', help = 'If True use mock and samples directly from the directory, without writing one by one the files')
+    
+    # NanoSim
+    general.add_argument( '--NSerrormodel', default = 'perfect', choices = ['perfect', 'metagenome'], help = 'Mode to generate NanoSim')
+    general.add_argument( '--NSparams', default = [500, 50], type = int, nargs = '+', help = '(Maximum read length, Minimum read length')
+    general.add_argument( '--repeat_NS_autocomplete', action = 'store_true', help = 'If True use mock and samples directly from the directory, without writing one by one the files')
+
     
     # Other customizable parameters
     general.add_argument('--alpha', default = 0.9, type = float, help = 'Correlation Matrix: Probability that a coefficient is zero. Larger values enforce more sparsity.')
@@ -131,7 +142,7 @@ def main(args):
     taxaAbund = args.taxaAbund
     inputfile = args.inputfile
 
-    
+    Sim = args.Sim
     
     
     if not args.ref or not args.refTax:
@@ -154,16 +165,28 @@ def main(args):
     threshold = 1-args.threshold
     cpus = args.cpus
     force_overwrite = args.force_overwrite
-    errormodel = args.errormodel
-    InSilicoparams = tuple(args.InSilicoparams)
-    sequences_files  = args.sequences_files
-    abundance_files = args.abundance_files
+    # InSilicoSeqs options
+    ISSerrormodel = args.ISSerrormodel
+    ISSparams = tuple(args.ISSparams)
+    ISSsequences_files  = args.ISSsequences_files
+    ISSabundance_files = args.ISSabundance_files
+    # NanoSim options
+    NSparams = tuple(args.NSparams)
+    NSerrormodel = args.NSerrormodel
     
-    if args.repeat_InSilicoSeqs_autocomplete:
-        sequences_files = [f.split('/')[-1] for f in sorted(glob('{}/samples/{}.S_*.sequences16S.fasta'.format(mockPath, mockPrefix)))]
-        sequences_files.sort(key =lambda e : e.split('_')) # sort by sample name
-        abundance_files = [f.split('/')[-1] for f in sorted(glob('{}/samples/{}.S_*.abundances'.format(mockPath, mockPrefix)))]
-        abundance_files.sort(key =lambda e : e.split('_')) # sort by sample name
+    if args.repeat_ISS_autocomplete:
+        ISSsequences_files = [f.split('/')[-1] for f in sorted(glob('{}/samples/{}.S_*.sequences16S.fasta'.format(mockPath, mockPrefix)))]
+        ISSsequences_files.sort(key =lambda e : e.split('_')) # sort by sample name
+        ISSabundance_files = [f.split('/')[-1] for f in sorted(glob('{}/samples/{}.S_*.abundances'.format(mockPath, mockPrefix)))]
+        ISSabundance_files.sort(key =lambda e : e.split('_')) # sort by sample name
+    
+    if args.repeat_NS_autocomplete:
+        NSsequences_files = [f.split('/')[-1] for f in sorted(glob('{}/samples/{}.S_*.sequences16S.fasta'.format(mockPath, mockPrefix)))]
+        NSsequences_files.sort(key =lambda e : e.split('_')) # sort by sample name
+        NSabundance_files = [f.split('/')[-1] for f in sorted(glob('{}/samples/{}.S_*.NSabundances'.format(mockPath, mockPrefix)))]
+        NSabundance_files.sort(key =lambda e : e.split('_')) # sort by sample name
+        NSdl_files = [f.split('/')[-1] for f in sorted(glob('{}/samples/{}.S_*.NSdl'.format(mockPath, mockPrefix)))]
+        NSdl_files.sort(key =lambda e : e.split('_')) # sort by sample name
     
     
     
@@ -175,17 +198,30 @@ def main(args):
 
     # OPTION 1: REPEAT ONLY THE READ GENERATION: sequences and abundances files are provided, run Insilico, and prepare files to smiTE. 
     
-    if len(sequences_files) == len(abundance_files) and len(sequences_files) > 0: 
-        write_logfile('info', 'MOCK REPEAT', 'Assuming you have a previous mock and you ONLY want to repeat the reads generation')
-        if os.path.isdir(mockPath):
-            os.chdir(mockPath)
-        else:
-            write_logfile('error', 'MOCK REPEAT', '{} does not exist. Please be sure you are running this script outside your output directory.'.format(mockPath))
-            exit(-2) # Exit -2: dir not found
-        if not os.path.isdir(mockPath + '/samples/'):
-            write_logfile('error', 'MOCK REPEAT', '{} does not exist. Please be sure you are running this script outside your output directory.'.format(mockPath + '/samples/'))
-            exit(-2) # Exit -2: dir not found
-        Mock.init_and_run_InSilico(  mockPrefix, sequences_files, abundance_files, errormodel = errormodel, alignment = alignment, reads = reads, InSilicoparams = InSilicoparams, cpus = cpus)
+    if Sim == 'InSilicoSeqs': 
+        if len(ISSsequences_files) == len(ISSabundance_files) and len(ISSsequences_files) > 0: 
+            write_logfile('info', 'MOCK REPEAT', 'Assuming you have a previous mock and you ONLY want to repeat the reads generation')
+            if os.path.isdir(mockPath):
+                os.chdir(mockPath)
+            else:
+                write_logfile('error', 'MOCK REPEAT', '{} does not exist. Please be sure you are running this script outside your output directory.'.format(mockPath))
+                exit(-2) # Exit -2: dir not found
+            if not os.path.isdir(mockPath + '/samples/'):
+                write_logfile('error', 'MOCK REPEAT', '{} does not exist. Please be sure you are running this script outside your output directory.'.format(mockPath + '/samples/'))
+                exit(-2) # Exit -2: dir not found
+            Mock.init_and_run_InSilico(  mockPrefix, ISSsequences_files, ISSabundance_files, errormodel = ISSerrormodel, alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel, ISSparams = ISSparams )
+    elif Sim == 'NanoSim' and args.repeat_NS_autocomplete:
+        if len(NSsequences_files) == len(NSabundance_files) and len(NSsequences_files) > 0: 
+            write_logfile('info', 'MOCK REPEAT', 'Assuming you have a previous mock and you ONLY want to repeat the reads generation')
+            if os.path.isdir(mockPath):
+                os.chdir(mockPath)
+            else:
+                write_logfile('error', 'MOCK REPEAT', '{} does not exist. Please be sure you are running this script outside your output directory.'.format(mockPath))
+                exit(-2) # Exit -2: dir not found
+            if not os.path.isdir(mockPath + '/samples/'):
+                write_logfile('error', 'MOCK REPEAT', '{} does not exist. Please be sure you are running this script outside your output directory.'.format(mockPath + '/samples/'))
+                exit(-2) # Exit -2: dir not found
+            Mock.init_and_run_NanoSim(  mockPrefix, NSsequence_files = NSsequences_files, NSabundance_files = NSabundance_files, NSdl_files = NSdl_files, alignment = alignment, cpus = cpus, reads = reads, Sim =  Sim, NSerrormodel = 'perfect', NSparams = NSparams)
     else: 
         
         # Create the project directory:
@@ -244,7 +280,7 @@ def main(args):
             os.mkdir('{}/samples'.format(mockPath))
             os.mkdir('{}/checkDB'.format(mockPath))
             #Define mock abundances
-            mock = Mock.init_from_enviro(Env, mockPrefix, S, shannon, alignment = alignment, alpha = alpha,  smallest_coef = 0.1, largest_coef = 0.9, reads = reads, pstr0 = pstr0, size = size, cpus = cpus, InSilicoparams = InSilicoparams)
+            mock = Mock.init_from_enviro(Env, mockPrefix, S, shannon, alignment = alignment, cpus = cpus, alpha = alpha,  smallest_coef = 0.1, largest_coef = 0.9, reads = reads, pstr0 = pstr0, size = size, Sim = Sim, ISSerrormodel =ISSerrormodel, ISSparams = ISSparams, NSerrormodel = NSerrormodel, NSparams = NSparams)
             os.chdir(path)
             # ShannonIndex correspondence (mothur is REQUIRED : CHECK)
             write_logfile('info', 'SHANNON INDEX', 'To know the correspondence of Shannon Index in the different taxonomic ranks, mothur is required')
