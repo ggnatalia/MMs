@@ -6,6 +6,7 @@ cd $PREFIX/bin
 ln -s $MMS_DIR/makemocks.py .
 ln -s $MMS_DIR/utils/* .
 # Download NanoSim
+cd $PREFIX
 git clone https://github.com/bcgsc/NanoSim.git
 cd NanoSim/pre-trained_models
 # Extract metagenome model

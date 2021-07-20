@@ -44,9 +44,9 @@ class Mock():
         return(self.df)
     
     @classmethod    
-    def init_and_run_InSilico(cls, prefix, ISSsequence_files, ISSabundance_files,  reads = 20000, Sim = 'InSilicoSeqs', ISSerrormodel = 'perfect', ISSparams = (150, 200)):
+    def init_and_run_InSilico(cls, prefix, ISSsequence_files, ISSabundance_files, alignment = [0, 50000, '16S'], cpus = 12, reads = 20000, Sim = 'InSilicoSeqs', ISSerrormodel = 'perfect', ISSparams = (150, 200)):
         mock = Mock(prefix, set(), pd.DataFrame(index=[], columns=[]), [], alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel,  ISSparams = ISSparams)
-        for i, (fasta, abun) in enumerate(zip(sequence_files, abundance_files)):
+        for i, (fasta, abun) in enumerate(zip(ISSsequence_files, ISSabundance_files)):
             sampleName = 'S_' + str(i)
             mock.SimInput.append((fasta, abun, sampleName))
         return(mock.reads_generation())
@@ -98,7 +98,7 @@ class Mock():
             write_logfile('info', 'CONVERT SEQS', 'Start multiprocessing')
             with Pool(self.cpus) as pool:
                 self.SimInput = list(pool.map(Sample.run_sample, self.multiprocessing_globals_samples))
-        write_logfile('info', 'CREATE MOCK', 'Running InsilicoSeqs')
+        write_logfile('info', 'CREATE MOCK', 'Running Simulator')
         self.reads_generation()
         self.clear_multiprocessing_globals()
         return(self)
@@ -106,12 +106,12 @@ class Mock():
     def reads_generation(self): 
         """ Call Sample.run_inSilicoSeq/Sample.run_NanoSim for each sample or sequence/abundance files """
         if self.Sim == 'InSilicoSeqs':
-            for s in self.ISSInput:
+            for s in self.SimInput:
                 Sample.run_inSilicoSeq(prefix = 'samples/{}'.format(self.prefix), seqFile = 'samples/{}'.format(s[0]), abunFile = 'samples/{}'.format(s[1]), sampleName = s[2], ISSerrormodel = self.ISSerrormodel, reads = self.reads, cpus = self.cpus, ISSparams = self.ISSparams)
         elif self.Sim == 'NanoSim':
-            for s in self.NSInput:
-                Sample.run_NanoSim(prefix = 'samples/{}'.format(self.prefix), seqFile = 'samples/{}'.format(s[0]), abunFile = 'samples/{}'.format(s[1]), dlFile = sampleName[2], sampleName = s[3], NSerrormodel = self.NSerrormodel, reads = self.reads, cpus = self.cpus, NSparams = self.NSparams)
-        write_logfile('info', 'MOCK REPEAT', 'Writing InSilicoSeqs output files')
+            for s in self.SimInput:
+                Sample.run_NanoSim(prefix = 'samples/{}'.format(self.prefix), seqFile = 'samples/{}'.format(s[0]), abunFile = 'samples/{}'.format(s[1]), dlFile = 'samples/{}'.format(s[2]), sampleName = s[3], NSerrormodel = self.NSerrormodel, reads = self.reads, cpus = self.cpus, NSparams = self.NSparams)
+        write_logfile('info', 'MOCK REPEAT', 'Writing output files')
         self.merge_samples(samplesDir = 'samples')
 
     def merge_samples(self, samplesDir = 'samples'): ## TESTED!
@@ -133,7 +133,8 @@ class Mock():
             parsedSeqs = []
             equivalences = {}
             for f in sorted(os.listdir(samplesDir)):
-                if self.Sim == 'InSilicoSeq':
+                files_header = ''
+                if self.Sim == 'InSilicoSeqs':
                     files_header = '.{}-{}-{}r-{}i.InSilicoSeq'.format(self.reads, self.ISSerrormodel, self.ISSparams[0], self.ISSparams[1])
                 elif self.Sim == 'NanoSim':
                     files_header = '.{}-{}-{}max-{}min.NanoSim_sample0_aligned'.format(self.reads, self.NSerrormodel, self.NSparams[0], self.NSparams[1])

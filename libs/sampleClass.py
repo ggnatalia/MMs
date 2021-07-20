@@ -43,7 +43,10 @@ class Sample():
         #write_logfile('info', 'PROCESSING SAMPLE {}'.format(self.sample_name), 'Plotting entropies')
         write_logfile('info', 'PROCESSING SAMPLE {}'.format(self.sample_name), 'Writing align file for the required region')       
         self.write_align_by_region()
-        return('{}.{}.sequences16S.fasta'.format(self.prefix, self.sample_name), '{}.{}.abundances'.format(self.prefix, self.sample_name), self.sample_name) 
+        if self.Sim == 'InSilicoSeqs':
+            return('{}.{}.sequences16S.fasta'.format(self.prefix, self.sample_name), '{}.{}.abundances'.format(self.prefix, self.sample_name), self.sample_name)
+        elif self.Sim == 'NanoSim':
+            return('{}.{}.sequences16S.fasta'.format(self.prefix, self.sample_name), '{}.{}.NSabundances'.format(self.prefix, self.sample_name), '{}.{}.NSdl'.format(self.prefix, self.sample_name), self.sample_name)
     
     def write_align_by_region(self):
         """Write the alignment of the chosen region- for checking purposes"""

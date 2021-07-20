@@ -209,7 +209,7 @@ def main(args):
             if not os.path.isdir(mockPath + '/samples/'):
                 write_logfile('error', 'MOCK REPEAT', '{} does not exist. Please be sure you are running this script outside your output directory.'.format(mockPath + '/samples/'))
                 exit(-2) # Exit -2: dir not found
-            Mock.init_and_run_InSilico(  mockPrefix, ISSsequences_files, ISSabundance_files, errormodel = ISSerrormodel, alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel, ISSparams = ISSparams )
+            Mock.init_and_run_InSilico(  mockPrefix, ISSsequences_files, ISSabundance_files, alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel, ISSparams = ISSparams )
     elif Sim == 'NanoSim' and args.repeat_NS_autocomplete:
         if len(NSsequences_files) == len(NSabundance_files) and len(NSsequences_files) > 0: 
             write_logfile('info', 'MOCK REPEAT', 'Assuming you have a previous mock and you ONLY want to repeat the reads generation')
