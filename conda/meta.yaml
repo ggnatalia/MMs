@@ -20,10 +20,10 @@ requirements:
       #- os
       #- sys
       #- shutil
-    - numpy
+    - numpy=1.19
     - scipy  
       #- math
-    - pandas
+    - pandas=1.1
     - scikit-learn
       #- random
       #- re
@@ -38,10 +38,10 @@ requirements:
     - mothur=1.44
     - biopython
     - joblib
-    - pysam
+    - pysam=0.15
     - requests
     - plotly
-    - cython
+    - cython=0.29.21
     - htseq
     - pybedtools
     #- six

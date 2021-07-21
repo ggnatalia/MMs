@@ -121,7 +121,7 @@ class Enviro():
         return( Enviro(prefix, enviro, TotalSeqs, nASVs) ) 
     
     @classmethod   
-    def init_from_seqs(cls, prefix, rank, seqs, nASVs, minseqs = 100, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', cpus = 20):
+    def init_from_seqs(cls, prefix, rank, seqs, nASVs, minseqs = 10000, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', cpus = 20):
         enviro = 'seqs'
         #write_logfile('info', 'SEQUENCES PROVIDED', 'Sequences {} are treated as OTUs, mutant ASVs will be generated until complete {} ASVs'.format(seqs, nASVs))
         if seqs:

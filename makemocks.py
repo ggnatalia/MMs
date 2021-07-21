@@ -55,7 +55,7 @@ def parse_arguments():
     # Options for customizing more your mock community
     general.add_argument( '-tx', '--taxa', type = str, nargs = '+', default = [], help = 'List of taxa')
     general.add_argument( '-seqs', '--seqs', type = str, nargs = '+', default = [], help = 'List of sequences\' names') 
-    general.add_argument( '--minseqs', type = int, default = 100, help = 'Minimun number of sequences to extract from DB') # Subsettting random from silva means that you can subset 1 seq, produce, two strains and you'll want 5, no possibility to reach that number. Repeat strain generation
+    general.add_argument( '--minseqs', type = int, default = 10000, help = 'Minimun number of sequences to extract from DB') # Subsettting random from silva means that you can subset 1 seq, produce, two strains and you'll want 5, no possibility to reach that number. Repeat strain generation
     general.add_argument( '-txAbund', '--taxaAbund', type = int, nargs = '+', default = [], help = 'List of abundances of taxa')
     general.add_argument( '--inputfile', type = str, help = 'The user can provide an align file without creating it from scratch.')
     
@@ -181,7 +181,7 @@ def main(args):
         ISSabundance_files.sort(key =lambda e : e.split('_')) # sort by sample name
     
     if args.repeat_NS_autocomplete:
-        NSsequences_files = [f.split('/')[-1] for f in sorted(glob('{}/samples/{}.S_*.sequences16S.fasta'.format(mockPath, mockPrefix)))]
+        NSsequences_files = [f.split('/')[-1] for f in sorted(glob('{}/samples/{}.S_*.NSgenomes'.format(mockPath, mockPrefix)))]
         NSsequences_files.sort(key =lambda e : e.split('_')) # sort by sample name
         NSabundance_files = [f.split('/')[-1] for f in sorted(glob('{}/samples/{}.S_*.NSabundances'.format(mockPath, mockPrefix)))]
         NSabundance_files.sort(key =lambda e : e.split('_')) # sort by sample name

@@ -35,7 +35,7 @@ class Sample():
     
     def run_sample(self):
         """ Prepare each sample individually """
-        write_logfile('info', 'PROCESSING SAMPLE {}'.format(self.sample_name), 'Creating files to run InSilicoSeq')
+        write_logfile('info', 'PROCESSING SAMPLE {}'.format(self.sample_name), 'Creating files to run the sequencing simulator')
         self.generate_Simulator_input_files()
         #self.run_inSilicoSeq(prefix, reads, errormodel = errormodel, cpus = cpus ) #########33 A LO MEJOR LO SACO DE AQUI Y LO HAGO EN GENERAL
         write_logfile('info', 'PROCESSING SAMPLE {}'.format(self.sample_name), 'Plotting abundances')
@@ -46,7 +46,7 @@ class Sample():
         if self.Sim == 'InSilicoSeqs':
             return('{}.{}.sequences16S.fasta'.format(self.prefix, self.sample_name), '{}.{}.abundances'.format(self.prefix, self.sample_name), self.sample_name)
         elif self.Sim == 'NanoSim':
-            return('{}.{}.sequences16S.fasta'.format(self.prefix, self.sample_name), '{}.{}.NSabundances'.format(self.prefix, self.sample_name), '{}.{}.NSdl'.format(self.prefix, self.sample_name), self.sample_name)
+            return('{}.{}.NSgenomes'.format(self.prefix, self.sample_name), '{}.{}.NSabundances'.format(self.prefix, self.sample_name), '{}.{}.NSdl'.format(self.prefix, self.sample_name), self.sample_name)
     
     def write_align_by_region(self):
         """Write the alignment of the chosen region- for checking purposes"""
@@ -79,15 +79,17 @@ class Sample():
                     seqs.write('>{}\n{}{}{}\n'.format(s.header, 'N'*500, s.deGap().seq,'N'*500))
                     abundances.write('{}\t{}\n'.format(s.header, s.abun/sum([s.abun for s in self.Seqs]))) #remove round(,2)
         elif self.Sim == 'NanoSim':
+            sampleGL = '{}/samples/{}.{}.NSgenomes'.format(self.pwd, self.prefix, self.sample_name)
             sampleAbun = '{}/samples/{}.{}.NSabundances'.format(self.pwd, self.prefix, self.sample_name)
             sampleDL = '{}/samples/{}.{}.NSdl'.format(self.pwd, self.prefix, self.sample_name)
-            with open(sampleFasta, 'w') as seqs, open(sampleAbun, 'w') as abundances, open(sampleDL, 'w') as dlNS: # ADD NNNNNNNNNNNNNNNNNNNNN to simulate part of the reads that are no 16S
-                abundances.write('Size\t{}'.format(self.reads))
+            with open(sampleFasta, 'w') as seqs, open(sampleAbun, 'w') as abundances, open(sampleDL, 'w') as dlNS, open(sampleGL, 'w') as genomes: # ADD NNNNNNNNNNNNNNNNNNNNN to simulate part of the reads that are no 16S
+                abundances.write('Size\t{}\n'.format(self.reads))
                 for s in self.Seqs:
                     seqs.write('>{}\n{}{}{}\n'.format(s.header, 'N'*500, s.deGap().seq,'N'*500))
                     abundances.write('{}\t{}\n'.format(s.header, s.abun/sum([s.abun for s in self.Seqs]*100))) #remove round(,2)
                     dlNS.write('{}\t{}\tlinear\n'.format(s.header, s.header))      
- 
+                    genomes.write('{}\t{}\n'.format(s.header, sampleFasta))
+    
     def plot_abundances(self):
         """ Plot abundance distribution """
         prefix = '{}.{}'.format(self.prefix, self.sample_name)
@@ -133,14 +135,15 @@ class Sample():
     
     @staticmethod
     def run_NanoSim(prefix, seqFile, abunFile, dlFile, sampleName, NSerrormodel = 'perfect', reads = 10000, cpus = 12, NSparams = (1500,50)):
-        params = ['-max', NSparams[0], '-min', NSParams[1], '-c', '{}/../../NanoSim/pre-trained_models/metagenome_ERR3152364_Even/training'.format('/'.join(os.path.abspath(__file__).split('/')[:-1]))]
+        params = ['-max', NSparams[0], '-min', NSparams[1], '-c', '{}/../../NanoSim/pre-trained_models/metagenome_ERR3152364_Even/training'.format('/'.join(os.path.abspath(__file__).split('/')[:-1]))]
         command = ['python', '{}/../../NanoSim/src/simulator.py'.format('/'.join(os.path.abspath(__file__).split('/')[:-1])), 'metagenome', '-b', 'guppy', '--fastq', '-gl',  seqFile, '-a', abunFile, '-dl', dlFile, '-t', cpus]
-        command.append(params)
+        command = command + params
         if NSerrormodel == 'perfect':
             command.append('--perfect')
         else:
             NSerrormodel = 'metagenome'
-        command.append(['-o'])
+        command.append('-o')
         command.append('{}.{}.{}-{}-{}max-{}min.NanoSim'.format(prefix, sampleName, reads, NSerrormodel, NSparams[0], NSparams[1]))
-        
+        write_logfile('info', 'SAMPLE READS GENERATION', 'Read generation: {}'.format(' '.join(map(str, command))))
+        runCommand(command, open('{}.{}.NanoSim.logfile'.format(prefix, sampleName), 'w'))
 
