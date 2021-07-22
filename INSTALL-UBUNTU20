@@ -21,6 +21,8 @@
 -requests
 -plotly
 -cython
+-htseq
+-pybedtools
 
 ### Moreover, you have to install mothur (https://mothur.org/wiki/installation/) and place it on your $PATH
 

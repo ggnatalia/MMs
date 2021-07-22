@@ -55,7 +55,7 @@ def parse_arguments():
     # Options for customizing more your mock community
     general.add_argument( '-tx', '--taxa', type = str, nargs = '+', default = [], help = 'List of taxa')
     general.add_argument( '-seqs', '--seqs', type = str, nargs = '+', default = [], help = 'List of sequences\' names') 
-    general.add_argument( '--minseqs', type = int, default = 10000, help = 'Minimun number of sequences to extract from DB') # Subsettting random from silva means that you can subset 1 seq, produce, two strains and you'll want 5, no possibility to reach that number. Repeat strain generation
+    general.add_argument( '--minseqs', type = int, default = 100, help = 'Minimun number of sequences to extract from DB') # Subsettting random from silva means that you can subset 1 seq, produce, two strains and you'll want 5, no possibility to reach that number. Repeat strain generation
     general.add_argument( '-txAbund', '--taxaAbund', type = int, nargs = '+', default = [], help = 'List of abundances of taxa')
     general.add_argument( '--inputfile', type = str, help = 'The user can provide an align file without creating it from scratch.')
     
@@ -221,7 +221,7 @@ def main(args):
             if not os.path.isdir(mockPath + '/samples/'):
                 write_logfile('error', 'MOCK REPEAT', '{} does not exist. Please be sure you are running this script outside your output directory.'.format(mockPath + '/samples/'))
                 exit(-2) # Exit -2: dir not found
-            Mock.init_and_run_NanoSim(  mockPrefix, NSsequence_files = NSsequences_files, NSabundance_files = NSabundance_files, NSdl_files = NSdl_files, alignment = alignment, cpus = cpus, reads = reads, Sim =  Sim, NSerrormodel = 'perfect', NSparams = NSparams)
+            Mock.init_and_run_NanoSim(  mockPrefix, NSsequence_files = NSsequences_files, NSabundance_files = NSabundance_files, NSdl_files = NSdl_files, alignment = alignment, cpus = cpus, reads = reads, Sim =  Sim, NSerrormodel = NSerrormodel, NSparams = NSparams)
     else: 
         
         # Create the project directory:
