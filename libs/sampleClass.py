@@ -80,6 +80,7 @@ class Sample():
                     for s in self.Seqs:
                         seqs.write('>{}\n{}{}{}\n'.format(s.header, 'N'*500, s.deGap().seq,'N'*500))
                         abundances.write('{}\t{}\n'.format(s.header, s.abun/sum([s.abun for s in self.Seqs]))) #remove round(,2)
+            return('{}.{}.sequences16S.fasta'.format(self.prefix, self.sample_name), '{}.{}.abundances'.format(self.prefix, self.sample_name), self.sample_name)
         elif self.Sim == 'NanoSim':
             sampleGL = '{}/samples/{}.{}.NSgenomes'.format(self.pwd, self.prefix, self.sample_name)
             sampleAbun = '{}/samples/{}.{}.NSabundances'.format(self.pwd, self.prefix, self.sample_name)
@@ -92,6 +93,8 @@ class Sample():
                         abundances.write('{}\t{}\n'.format(s.header, s.abun/sum([s.abun for s in self.Seqs]*100))) #remove round(,2)
                         dlNS.write('{}\t{}\tlinear\n'.format(s.header, s.header))      
                         genomes.write('{}\t{}\n'.format(s.header, sampleFasta))
+            return('{}.{}.NSgenomes'.format(self.prefix, self.sample_name), '{}.{}.NSabundances'.format(self.prefix, self.sample_name), '{}.{}.NSdl'.format(self.prefix, self.sample_name), self.sample_name)
+
     
     def plot_abundances(self):
         """ Plot abundance distribution """
@@ -139,7 +142,7 @@ class Sample():
     @staticmethod
     def run_NanoSim(prefix, seqFile, abunFile, dlFile, sampleName, NSerrormodel = 'perfect', reads = 10000, cpus = 12, NSparams = (1500,50)):
         params = ['-max', NSparams[0], '-min', NSparams[1], '-c', '{}/../../NanoSim/pre-trained_models/metagenome_ERR3152364_Even/training'.format('/'.join(os.path.abspath(__file__).split('/')[:-1]))]
-        command = ['python', '{}/../../NanoSim/src/simulator.py'.format('/'.join(os.path.abspath(__file__).split('/')[:-1])), 'metagenome', '-b', 'guppy', '--fastq', '-gl',  seqFile, '-a', abunFile, '-dl', dlFile, '-t', cpus]
+        command = ['python3', '{}/../../NanoSim/src/simulator.py'.format('/'.join(os.path.abspath(__file__).split('/')[:-1])), 'metagenome', '-b', 'guppy', '--fastq', '-gl',  seqFile, '-a', abunFile, '-dl', dlFile, '-t', cpus]
         command = command + params
         if NSerrormodel == 'perfect':
             command.append('--perfect')

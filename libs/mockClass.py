@@ -63,27 +63,29 @@ class Mock():
     def init_from_previousmock(cls, prefix, sequence_file, abun_table, alignment = [0, 50000, '16S'], cpus = 12, reads = 20000, Sim = 'InSilicoSeqs', ISSerrormodel = 'perfect',  ISSparams = (150,200), NSerrormodel = 'perfect',  NSparams = (500,50)):
         write_logfile('info', 'LOADING A PREVIOUS MOCK', 'Loading sequence and abundance files')
         #Check if the files exists:
-        if not os.path.isfile(sequence_file) or not os.path.isfile(abun_table):
-            gSeqs = set()
-            df = read_table(abun_table)
-            with open(sequence_file, 'r') as fasta:
-                while True:
-                    header = fasta.readline().lstrip('>').rstrip('\n')
-                    seq = fasta.readline().rstrip('\n')
-                    if not 'N' in seq:
-                        Seq = Sequence(header, seq, None, 0)
-                        gSeqs.add(Seq)
+        gSeqs = set()
+        df = read_table(abun_table)
+        #print(df)
+        with open(sequence_file, 'r') as fasta:
+            print(sequence_file)
+            while True:
+                header = fasta.readline().lstrip('>').rstrip('\n')
+                if not header:
+                    break
+                seq = fasta.readline().rstrip('\n')
+                if not 'N' in seq:
+                    gSeqs.add(Sequence(header, seq, None, 0))
         mock = Mock(prefix, gSeqs, df, [], alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel, ISSparams = ISSparams, NSerrormodel = NSerrormodel, NSparams = NSparams)
-        mock.samples = [Sample.init_from_df(prefix = mock.prefix, sample = mock.df.loc[sample], Seqs = mock.gSeqs, alignment = mock.alignment, reads = mock.reads, Sim = mock.Sim) for sample in list(mock.df.index.values)] # List of sample objects
-        mock.multiprocessing_globals_samples = mock.samples
-        if mock.cpus == 1:
-            write_logfile('info', 'CONVERT SEQS', 'Start 1 cpu')
+        mock.multiprocessing_globals_samples = [Sample.init_from_df(prefix = prefix, sample = df.loc[sample], Seqs = gSeqs, alignment = alignment, reads = reads, Sim = Sim) for sample in list(df.index.values)] # List of sample objects
+        if cpus == 1:
+            write_logfile('info', 'Creating input files for squencing simulator', 'Start 1 cpu')
             mock.SimInput = list(map(Sample.generate_Simulator_input_files(), mock.multiprocessing_globals_samples)) #[('seq', 'abun', sample_name),()]
         else:
-            write_logfile('info', 'CONVERT SEQS', 'Start multiprocessing')
+            write_logfile('info', 'Creating input files for squencing simulator', 'Start multiprocessing')
             with Pool(mock.cpus) as pool:
-                mock.SimInput = list(pool.map(Sample.generate_Simulator_input_files(), mock.multiprocessing_globals_samples))
+                mock.SimInput = list(pool.map(Sample.generate_Simulator_input_files, mock.multiprocessing_globals_samples))
         write_logfile('info', 'CREATE MOCK', 'Running Simulator')
+        #print(mock.SimInput)
         mock.reads_generation()
         mock.clear_multiprocessing_globals()
         return(mock)

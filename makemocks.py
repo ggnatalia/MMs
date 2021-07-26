@@ -199,7 +199,7 @@ def main(args):
 
     # OPTION 1: REPEAT ONLY THE READ GENERATION: sequences and abundances files are provided, run Insilico, and prepare files to smiTE. 
     
-    if Sim == 'InSilicoSeqs': 
+    if (Sim == 'InSilicoSeqs' and args.repeat_ISS_autocomplete) or (ISSsequences_files and ISSabundance_files and args.repeat_ISS_autocomplete): 
         if len(ISSsequences_files) == len(ISSabundance_files) and len(ISSsequences_files) > 0: 
             write_logfile('info', 'MOCK REPEAT', 'Assuming you have a previous mock and you ONLY want to repeat the reads generation')
             if os.path.isdir(mockPath):
@@ -228,7 +228,7 @@ def main(args):
         if os.path.isdir(mockPath):
             os.chdir(mockPath)
             if not os.path.isfile('../{}.fasta'.format(projectPrefix)) or not os.path.isfile('checkDB/{}.raw.abundances_original.tsv'.format(mockPrefix)):
-                write_logfile('error', 'MOCK REPEAT', '{} and {} do not exist. Please be sure you are running this script outside your output directory and that you have these files from a previous mock community.'.format(mockPath + '/samples/'))
+                write_logfile('error', 'MOCK REPEAT', '../{}.fasta and checkDB/{}.raw.abundances_original.tsv do not exist. Please be sure you are running this script outside your output directory and that you have these files from a previous mock community.'.format(projectPrefix, mockPrefix))
             else:
                 Mock.init_from_previousmock(mockPrefix, sequence_file = '../{}.fasta'.format(projectPrefix), abun_table = 'checkDB/{}.raw.abundances_original.tsv'.format(mockPrefix), alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel,  ISSparams = ISSparams, NSerrormodel = NSerrormodel,  NSparams = NSparams)
         else:
@@ -287,7 +287,7 @@ def main(args):
                 if e.errno != 17:
                     raise
                 else:    
-                    write_logfile('warning', 'MOCK GENERATION', 'The directory {}/{} already exists. Please, remove it or choose other name for the output directory'.format(mockPath, mockPrefix))
+                    write_logfile('warning', 'MOCK GENERATION', 'The directory {} already exists. Please, remove it or choose other name for the output directory'.format(mockPath))
                     write_logfile('info', 'MOCK GENERATION', 'To avoid repeating the environment generation, provide a align with the align flag and repeat only the mock generation with othe mock name')
                     exit(-17)
             
