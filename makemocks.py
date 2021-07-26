@@ -93,7 +93,8 @@ def parse_arguments():
     
     # For testing
     general.add_argument( '--just_taxa_selection', action = 'store_true', help = 'If True: do the selection of the sequences and stop.')
-    
+    general.add_argument( '--repeat_previous_mock', action = 'store_true', help = 'If True: With a previous mock, repeat reads simulation using another sequencing simulator.')
+
     args = general.parse_args()
     return(args)
 
@@ -222,6 +223,20 @@ def main(args):
                 write_logfile('error', 'MOCK REPEAT', '{} does not exist. Please be sure you are running this script outside your output directory.'.format(mockPath + '/samples/'))
                 exit(-2) # Exit -2: dir not found
             Mock.init_and_run_NanoSim(  mockPrefix, NSsequence_files = NSsequences_files, NSabundance_files = NSabundance_files, NSdl_files = NSdl_files, alignment = alignment, cpus = cpus, reads = reads, Sim =  Sim, NSerrormodel = NSerrormodel, NSparams = NSparams)
+    elif args.repeat_previous_mock:
+        write_logfile('info', 'MOCK REPEAT', 'Assuming you have a previous mock and you ONLY want to repeat the reads generation but with a different simulator')
+        if os.path.isdir(mockPath):
+            os.chdir(mockPath)
+            if not os.path.isfile('../{}.fasta'.format(projectPrefix)) or not os.path.isfile('checkDB/{}.raw.abundances_original.tsv'.format(mockPrefix)):
+                write_logfile('error', 'MOCK REPEAT', '{} and {} do not exist. Please be sure you are running this script outside your output directory and that you have these files from a previous mock community.'.format(mockPath + '/samples/'))
+            else:
+                Mock.init_from_previousmock(mockPrefix, sequence_file = '../{}.fasta'.format(projectPrefix), abun_table = 'checkDB/{}.raw.abundances_original.tsv'.format(mockPrefix), alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel,  ISSparams = ISSparams, NSerrormodel = NSerrormodel,  NSparams = NSparams)
+        else:
+            write_logfile('error', 'MOCK REPEAT', '{} does not exist. Please be sure you are running this script outside your output directory.'.format(mockPath))
+            exit(-2) # Exit -2: dir not found
+            if not os.path.isdir(mockPath + '/samples/'):
+                write_logfile('error', 'MOCK REPEAT', '{} does not exist. Please be sure you are running this script outside your output directory.'.format(mockPath + '/samples/'))
+            
     else: 
         
         # Create the project directory:

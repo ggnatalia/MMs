@@ -142,7 +142,7 @@ class Enviro():
         if os.path.isfile('{}/{}'.format(path, inputfile)): 
             write_logfile('info', 'PREVIOUS ALIGN', 'The file {}/{} will be used as reference'.format(path, inputfile))
             enviro = 'inputfile'
-            Seqs = cls.set_sequences( fastaFile = '{}/{}'.format(path, inputfile), cpus = cpus, rank = rank, selected = [], degap = False)
+            Seqs = cls.set_sequences( fastaFile = '{}/{}'.format(path, inputfile), cpus = cpus, rank = None, refTax = '', selected = [], degap = False)
         else:
             write_logfile('warning', 'INPUT ALIGN', '{} not found in {}.'.format(inputfile, path))
             exit(-2)

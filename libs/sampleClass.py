@@ -16,6 +16,7 @@ from libs.maths import *
 from libs.libs import *
 from libs.seqsClass import Sequence
 
+
 class Sample():
     
     #print('{}/../extlibs/'.format('/'.join(os.path.abspath(__file__).split('/')[:-1])))
@@ -74,21 +75,23 @@ class Sample():
             sampleAbun = '{}/samples/{}.{}.abundances'.format(self.pwd, self.prefix, self.sample_name)
             #abundSeqs = sorted(tuple(self.abundSeqs.items()), key = lambda x: x[1], reverse=True)
         ## Write output files
-            with open(sampleFasta, 'w') as seqs, open(sampleAbun, 'w') as abundances: # ADD NNNNNNNNNNNNNNNNNNNNN to simulate part of the reads that are no 16S
-                for s in self.Seqs:
-                    seqs.write('>{}\n{}{}{}\n'.format(s.header, 'N'*500, s.deGap().seq,'N'*500))
-                    abundances.write('{}\t{}\n'.format(s.header, s.abun/sum([s.abun for s in self.Seqs]))) #remove round(,2)
+            if not os.path.isfile(sampleFasta) or not os.path.isfile(sampleAbun):
+                with open(sampleFasta, 'w') as seqs, open(sampleAbun, 'w') as abundances: # ADD NNNNNNNNNNNNNNNNNNNNN to simulate part of the reads that are no 16S
+                    for s in self.Seqs:
+                        seqs.write('>{}\n{}{}{}\n'.format(s.header, 'N'*500, s.deGap().seq,'N'*500))
+                        abundances.write('{}\t{}\n'.format(s.header, s.abun/sum([s.abun for s in self.Seqs]))) #remove round(,2)
         elif self.Sim == 'NanoSim':
             sampleGL = '{}/samples/{}.{}.NSgenomes'.format(self.pwd, self.prefix, self.sample_name)
             sampleAbun = '{}/samples/{}.{}.NSabundances'.format(self.pwd, self.prefix, self.sample_name)
             sampleDL = '{}/samples/{}.{}.NSdl'.format(self.pwd, self.prefix, self.sample_name)
-            with open(sampleFasta, 'w') as seqs, open(sampleAbun, 'w') as abundances, open(sampleDL, 'w') as dlNS, open(sampleGL, 'w') as genomes: # ADD NNNNNNNNNNNNNNNNNNNNN to simulate part of the reads that are no 16S
-                abundances.write('Size\t{}\n'.format(self.reads))
-                for s in self.Seqs:
-                    seqs.write('>{}\n{}{}{}\n'.format(s.header, 'N'*500, s.deGap().seq,'N'*500))
-                    abundances.write('{}\t{}\n'.format(s.header, s.abun/sum([s.abun for s in self.Seqs]*100))) #remove round(,2)
-                    dlNS.write('{}\t{}\tlinear\n'.format(s.header, s.header))      
-                    genomes.write('{}\t{}\n'.format(s.header, sampleFasta))
+            if not os.path.isfile(sampleFasta) or not os.path.isfile(sampleAbun) or not os.path.isfile(sampleGL) or not os.path.isfile(sampleDL):
+                with open(sampleFasta, 'w') as seqs, open(sampleAbun, 'w') as abundances, open(sampleDL, 'w') as dlNS, open(sampleGL, 'w') as genomes: # ADD NNNNNNNNNNNNNNNNNNNNN to simulate part of the reads that are no 16S
+                    abundances.write('Size\t{}\n'.format(self.reads))
+                    for s in self.Seqs:
+                        seqs.write('>{}\n{}{}{}\n'.format(s.header, 'N'*500, s.deGap().seq,'N'*500))
+                        abundances.write('{}\t{}\n'.format(s.header, s.abun/sum([s.abun for s in self.Seqs]*100))) #remove round(,2)
+                        dlNS.write('{}\t{}\tlinear\n'.format(s.header, s.header))      
+                        genomes.write('{}\t{}\n'.format(s.header, sampleFasta))
     
     def plot_abundances(self):
         """ Plot abundance distribution """

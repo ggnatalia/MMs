@@ -80,10 +80,16 @@ def write_table(data, title, outputDir = '.', rows = None , columns = None, data
         columns = ['C_' + str(i) for i in range(data.shape()[1])]
     df = pd.DataFrame(data, index = rows , columns = columns)
     export_csv = df.to_csv ('{}/{}.tsv'.format(outputDir, title), index = True, header=True, sep = '\t')
-    export_csv = df.to_csv ('{}/{}.csv'.format(outputDir, title), index = True, header=True, sep = ',')
+    #export_csv = df.to_csv ('{}/{}.csv'.format(outputDir, title), index = True, header=True, sep = ',')
     if dataframe:
         return(df)
-    
+
+def read_table(table):
+    df = pd.read_csv(table, sep = '\t', header=0, index_col = 0)
+    return(df)
+
+
+
 def load_table(filepath, rows = None , cols = None, path = '.', sep = ','):
     """ Load a csv file as pandas dataframe """
     if rows  and cols:
