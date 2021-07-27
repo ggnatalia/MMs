@@ -17,5 +17,5 @@ cd ../..
 ln -s $MMS_DIR/bin/* $PREFIX/bin/
 cd $MMS_DIR/libs
 #echo pwd
-python setup.py build_ext --inplace
+python3 setup.py build_ext --inplace
 cd ..

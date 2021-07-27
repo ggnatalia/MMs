@@ -5,7 +5,7 @@
 -scipy  
 -math
 -pandas
--scikit-learn=0.23
+-scikit-learn==0.23
 -random
 -re
 -glob
@@ -37,7 +37,7 @@
 	# And extract the metagenome model:
 	cd NanoSim/pre-trained_models
 	tar -xzvf metagenome_ERR3152364_Even.tar.gz
-	cd ..
+	cd ../..
 
 ### SILVA databases: Download or configure them by running the MMs/bin/make_databases.py script
 	python3 MMs/bin/make_databases.py
