@@ -20,10 +20,10 @@ requirements:
       #- os
       #- sys
       #- shutil
-    - numpy=1.19
+    - numpy
     - scipy  
       #- math
-    - pandas=1.1
+    - pandas
     - scikit-learn
       #- random
       #- re
@@ -53,7 +53,7 @@ test:
     - numpy
     - pandas
     - scipy
-    - sklearn
+    #- sklearn
     - daiquiri
     - pysam
     - plotly

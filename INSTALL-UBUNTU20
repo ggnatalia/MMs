@@ -5,7 +5,7 @@
 -scipy  
 -math
 -pandas
--scikit-learn
+-scikit-learn=0.23
 -random
 -re
 -glob
@@ -23,6 +23,8 @@
 -cython
 -htseq
 -pybedtools
+
+# Note that NanoSim does not work with the latest version of scikit-learn:https://github.com/bcgsc/NanoSim/issues/131
 
 ### Moreover, you have to install mothur (https://mothur.org/wiki/installation/) and place it on your $PATH
 

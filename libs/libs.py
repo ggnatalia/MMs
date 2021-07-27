@@ -99,7 +99,7 @@ def load_table(filepath, rows = None , cols = None, path = '.', sep = ','):
     return(data)
 
 ########################### MUTATIONS
-def mutate(string, N, start = None, end = None, regions = None): # WORK HACER QUE FUNCIONE QUITANDO LOS GAPS A LA SECUENCIA 
+def mutate(string, N, start = None, end = None, regions = None, header = None): # WORK HACER QUE FUNCIONE QUITANDO LOS GAPS A LA SECUENCIA 
     """ Generate a mutate string from original one in N positions """
     bases = ['A','T','C','G','-']
     if not start:
@@ -131,9 +131,8 @@ def mutate(string, N, start = None, end = None, regions = None): # WORK HACER QU
         mutation_sites = list(np.random.choice(possiblePos, N, replace=False))
     else:
         by_region = regions.copy()
-        print(by_region)
+        #print(by_region)
         # Change probability of positions to be muted. If sum 1, only introduce mutations in that regions, otherwise introduce mutations in any region
-        print('hiii')
         prob_pos = [list(range(r[1], r[2])) for r in by_region] # First element is strict or not strict
         # Remove those positions that are not possible
         prob_pos_good = []
@@ -153,11 +152,11 @@ def mutate(string, N, start = None, end = None, regions = None): # WORK HACER QU
                         #prob_pos_good[j] = list(range(prob_pos[j][0], (i- 1)))
                     else:
                         prob_pos_good[j].append(i)
-        print(len(prob_pos_good))
+        #print(len(prob_pos_good))
         #print([len(reg) for reg in prob_pos])
-        print(len(possiblePos))
+        #print(len(possiblePos))
         #print(prob_pos[-1])
-        print(prob_pos_good[-1])
+        #print(prob_pos_good[-1])
         #exit(-1)
         # If some region is not present, remove those possitions from possiblePos
 
@@ -165,7 +164,7 @@ def mutate(string, N, start = None, end = None, regions = None): # WORK HACER QU
         #prob_values = list(np.repeat(0, len(flattened(prob_pos))))
         for j in range(len(prob_pos_good)):
             for i in prob_pos_good[j][:-1]:
-                #print('porbvalues')
+                #print('probvalues')
                 #print(str(i))
                 #print(len(prob_values))
                 #print(prob_values[i])
@@ -174,30 +173,29 @@ def mutate(string, N, start = None, end = None, regions = None): # WORK HACER QU
                 #print(prob_pos_good[j])
                     #print(str(len(strings_list)))
                 prob_values[i] = by_region[j][3]/(len(prob_pos_good[j][:-1]))  # Probabilidad de que sea par 1/2: 50%, cual es la probabilidad de cada uno de los valores pares: 1/6==0.50/3
-            if not round(sum([float(r[3]) for r in by_region])) == 1:
-                probdivide = (1 - sum(prob_values))/sum([True if v == 0 else False for v in prob_values]) # Calculate percentage for the rest of regions until sum 1
-                prob_values = [probdivide if v == 0 else v for v in prob_values]
+        if not round(sum([float(r[3]) for r in by_region])) == 1:
+            probdivide = (1 - sum(prob_values))/sum([True if v == 0 else False for v in prob_values]) # Calculate percentage for the rest of regions until sum 1
+            prob_values = [probdivide if v == 0 else v for v in prob_values]
             # If we have removed a region, we modify the probabilities per region, so we have to add the probability of that region to the others
-            if sum(prob_values) < 1:
-                #print('diff')
-                diff = 1 - float(sum(prob_values))
-                #prob_values = [v + float(diff/sum([len(block)-1 for block in prob_pos_good])) if v in [p for r in prob_pos_good for p in r] else v for v in prob_values]
-                prob_values[0] = prob_values[0] + diff
+        if sum(prob_values) < 1:
+            #print('diff')
+            diff = 1 - float(sum(prob_values))
+            #prob_values = [v + float(diff/sum([len(block)-1 for block in prob_pos_good])) if v in [p for r in prob_pos_good for p in r] else v for v in prob_values]
+            prob_values[0] = prob_values[0] + diff
             print(str(sum(prob_values)))
-            if N < sum([True if f>0 else False for f in prob_values]): # More mutations that possible positions
-                mutation_sites = list(np.random.choice(possiblePos, N, p = prob_values, replace = False))
-            else:
-                print('Warning: More mutation sites than possible options are requested. Please, select wider regions or disable strict mode to introduce point mutations in different regions although with less probability')
-                exit(-1)
-    print(sorted(mutation_sites))
-    for pos in mutation_sites: # Avoid cases in which the mutated base is identical to the original
-        original_pos = pos_equivalence[pos] # see what is the position in the sequence with '.' and '-'
-        print('orig ' + str(original_pos))
-        print('new ' + str(pos))
-        print(len(string))
-        print(''.join(strings_list)[pos])
-        original_string[original_pos] = random.sample(list(filter(lambda x: x != ''.join(strings_list)[pos], bases)), 1)[0]
-        print(original_string[original_pos])
+        if N < sum([True if f>0 else False for f in prob_values]): # More mutations that possible positions
+            mutation_sites = list(np.random.choice(possiblePos, N, p = prob_values, replace = False))
+        else:
+            print('Warning: More mutation sites than possible options are requested. Please, select wider regions or disable strict mode to introduce point mutations in different regions although with less probability')
+            exit(-1)
+    #print(sorted(mutation_sites))
+    with open('{}.nt_mutations.tsv'.format(header), 'w') as nt_out:
+        for pos in sorted(mutation_sites): # Avoid cases in which the mutated base is identical to the original
+            original_pos = pos_equivalence[pos] # see what is the position in the sequence with '.' and '-'
+            random_nt = random.sample(list(filter(lambda x: x != ''.join(strings_list)[pos], bases)), 1)[0]
+            nt_out.write('{}\t{}\t{}\t{}\t{}\n'.format(header, original_pos, pos, original_string[original_pos], random_nt))
+            original_string[original_pos] = random_nt
+        #print(original_string[original_pos])
     #tring_mutate = ''.join(strings_list.tolist())
     return(''.join(original_string.tolist()))
 
