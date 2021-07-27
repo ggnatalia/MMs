@@ -110,13 +110,13 @@ M&Ms accepts one of the following five independent types of inputs depending on 
       --inputfile: The user can provide an align file or a FASTA file without creating it from scratch.
 
 - To repeat just sequencing simulation (step 4):   
-   e) Repeat just the sequencing simulation.  
+   e) Repeat just the sequencing simulation with InSilicoSeqs.  
    
       # The user has two options, provide the names of the FASTA files and the abundances' files with the following options:
-      --sequences_files: List of files to obtain reads: sequences <projectName><mockName>.<sampleName>.sequences16S.fasta. Same order that paired abundance files
-      --abundance_files: List of files to obtain reads: abundances<projectName><mockName>.<sampleName>.abundances. Same order that paired sequence files
+      --ISSsequences_files: List of files to obtain reads: sequences <projectName><mockName>.<sampleName>.sequences16S.fasta. Same order that paired abundance files
+      --ISSabundance_files: List of files to obtain reads: abundances<projectName><mockName>.<sampleName>.abundances. Same order that paired sequence files
       # Or do it automatically with:
-      --repeat_InSilicoSeqs_autocomplete: If True use mock community and samples directly from the directory, without writing one by one the files
+      --repeat_ISS_autocomplete: If True use mock community and samples directly from the directory, without writing one by one the files
    
 ##### Options
 
@@ -133,12 +133,8 @@ M&Ms accepts one of the following five independent types of inputs depending on 
  - Select the microdiversity per species:
  
        -ASVsmean,--ASVsmean: Mean of mutant sequences (microdiversity) per reference sequence. Default 5.
-       --cutoff: Cutoff to identify species and its microdiversity (distance calculations). Default 0.03
+       --threshold: Cutoff to identify species and its microdiversity (distance calculations). Default 0.97
 
- - InSilicoSeqs parameters:    
-
-       --errormodel: Mode to generate InSilicoSeqs (see InSilicoSeqs documentation: https://insilicoseq.readthedocs.io/en/latest/index.html): basic, perfect,    MiSeq, HiSeq, NovaSeq
-       --InSilicoparams: List of two elements in the following order: Read length, insert size. Default = [150, 200]. 
   
   - Region of the 16S to consider: 
     
@@ -148,20 +144,32 @@ M&Ms accepts one of the following five independent types of inputs depending on 
    
    - Making a mock randomly 
     
-         --minseqs: Minimun number of sequences to extract from DB. Default 5
+         --minseqs: Minimun number of sequences to extract from DB. Default 100
     
    - Performance
  
          --cpus: Number of threads
          --force-overwrite: Force overwrite if the output directory already exists
          --just_taxa_selection: If True: do the selection of the sequences and stop
-    
+         --by_region: File with defined regions to introduce point mutations
+
    - Other customizable parameters
     
          --alpha: Correlation Matrix: Probability for a coefficient to be zero. Larger values enforce more sparsity. Default 0.9
          --pstr0: ZINBD: Probability of structure 0. Default 0.2
          --size: 'ZINBD: Size - dispersion of ZINBD. Default 1
+         --Sim {InSilicoSeqs,NanoSim}: Choose read simulator: InSilicoSeqs or NanoSim
+   - InSilicoSeqs parameters:    
 
+         --ISSerrormodel: Mode to generate InSilicoSeqs (see InSilicoSeqs documentation: https://insilicoseq.readthedocs.io/en/latest/index.html): basic, perfect,    MiSeq, HiSeq, NovaSeq
+         --ISSparams: List of two elements in the following order: Read length, insert size. Default = [150, 200]. 
+   -NanoSim parameters:
+   
+         --NSerrormodel {perfect,metagenome}: Mode to generate NanoSim
+         --NSparams:  (Maximum read length, Minimum read length
+         --repeat_NS_autocomplete: If True use mock and samples directly from the directory, without writing one by one the files
+
+  
 
 ### Cite
 Please, if you use this software, do not forget to cite:   
