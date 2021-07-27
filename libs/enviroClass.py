@@ -5,6 +5,7 @@ from libs.maths import *
 from libs.plots import *
 from libs.seqsClass import Sequence
 from libs.mockClass import Mock
+from libs.distances import calculate_distances_cython
 
 import pandas as pd
 import numpy as np
@@ -14,6 +15,8 @@ import os
 from itertools import combinations, combinations_with_replacement
 import itertools
 from multiprocessing import Pool
+import cython
+
 
 class Enviro():
     
@@ -25,7 +28,7 @@ class Enviro():
     silva_taxa = dict()
     rank = None
     degap = False
-    
+    notax = False # To avoid taxonomic annotation
     selected = []
     
     def __init__(self, prefix, enviro, Seqs, nASVs):
@@ -35,7 +38,7 @@ class Enviro():
         self.nASVs = nASVs
     
     @classmethod
-    def init_from_enviro(cls, nASVs, prefix, enviro, refEnviro = '/home/natalia/Projects/natalia/opt/makemocks/utils/speciesperEnviro.check.collapse.tsv', refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', nTaxa = 10000, rank = 5, cpus = 20):
+    def init_from_enviro(cls, nASVs, prefix, enviro, refEnviro = '/home/natalia/Projects/natalia/opt/makemocks/utils/speciesperEnviro.check.collapse.tsv', refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', nTaxa = 10000, rank = 5, cpus = 20, by_region = None):
         """ Return a Environment object from a given environment """
         print('Environment: \'{}\''.format(enviro))
         taxa = cls.subset_taxa_from_environment( enviro, refEnviro = refEnviro, nTaxa = nTaxa ) 
@@ -43,20 +46,23 @@ class Enviro():
         # Collapse abundances of equal taxa
         taxAbun =  dict(Counter(taxa)) # Sequences from most abundant taxa will have been selected more times
         #print('subsetSilvaproportions')
-        headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, ref = ref, rank = rank )
+        write_logfile('info', 'Enviro', 'Subset sequences')
+        headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, ref = ref, rank = rank, cpus = cpus )
         #print('headers ' + str(len(headers)))
         #print('neededSeqs ' + str(len(neededSeqs)))
+        write_logfile('info', 'Enviro', 'Select sequences')
         Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, selected = list(headers), degap = False) # Original Seqs from Silva
         #print('fakeASVs')
+        write_logfile('info', 'Enviro', 'Complete sequences')
         if neededSeqs:
-            FakeSeqs = cls.make_fake_taxa(neededSeqs, rank = rank, cpus = cpus, ref = ref, refTax = refTax)
+            FakeSeqs = cls.make_fake_taxa(neededSeqs, rank = rank, cpus = cpus, ref = ref, refTax = refTax, by_region = by_region)
             TotalSeqs = Seqs|FakeSeqs
         else:
             TotalSeqs = Seqs
         return( Enviro(prefix, enviro, TotalSeqs, nASVs) ) 
     
     @classmethod
-    def make_fake_taxa(cls, neededSeqs, rank, cpus, ref, refTax):
+    def make_fake_taxa(cls, neededSeqs, rank, cpus, ref, refTax, by_region = None):
         """ Return a Seqs set with the fake taxa that fall short """
 
         fakeSeqs = set()
@@ -82,7 +88,7 @@ class Enviro():
             #print('Nposmax ' , str(Nposmax))
             Nstrains = int(seqs2fake[s.header]) 
             #print('mutant seqs I want ' + s.header + ' ' + str(Nstrains))
-            newS = s.generatemutantASVs(Nstrains = Nstrains, Nposmax = Nposmax, start = 0, end = 50000, include_original = False)
+            newS = s.generatemutantASVs(Nstrains = Nstrains, Nposmax = Nposmax, start = 0, end = 50000, include_original = False, by_region = by_region)
             #print('newS ' + str(len(newS)))
             fakeSeqs.update(newS)                
         return(fakeSeqs)
@@ -115,7 +121,7 @@ class Enviro():
         return( Enviro(prefix, enviro, TotalSeqs, nASVs) ) 
     
     @classmethod   
-    def init_from_seqs(cls, prefix, rank, seqs, nASVs, minseqs = 1, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', cpus = 20):
+    def init_from_seqs(cls, prefix, rank, seqs, nASVs, minseqs = 100, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', cpus = 20):
         enviro = 'seqs'
         #write_logfile('info', 'SEQUENCES PROVIDED', 'Sequences {} are treated as OTUs, mutant ASVs will be generated until complete {} ASVs'.format(seqs, nASVs))
         if seqs:
@@ -131,63 +137,64 @@ class Enviro():
         return( Enviro(prefix, enviro, Seqs, nASVs) ) 
     
     @classmethod
-    def init_from_file(cls, prefix, path, inputfile, refTax = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', cpus = 20, rank = 5):
+    def init_from_file(cls, prefix, path, inputfile, cpus = 20):
         """ Open and load an align file """
         if os.path.isfile('{}/{}'.format(path, inputfile)): 
             write_logfile('info', 'PREVIOUS ALIGN', 'The file {}/{} will be used as reference'.format(path, inputfile))
             enviro = 'inputfile'
-            Seqs = cls.set_sequences( fastaFile = '{}/{}'.format(path, inputfile), refTax = refTax , cpus = cpus, rank = rank, selected = [], degap = False)
+            Seqs = cls.set_sequences( fastaFile = '{}/{}'.format(path, inputfile), cpus = cpus, rank = None, refTax = '', selected = [], degap = False)
         else:
             write_logfile('warning', 'INPUT ALIGN', '{} not found in {}.'.format(inputfile, path))
             exit(-2)
         return( Enviro(prefix, enviro, Seqs, len(Seqs)) )
     
     @classmethod 
-    def distances(cls, Seqs, prefix, region, start, end, cutoff, cpus, complete = False): # igual se puede combinar con makeASVs
+    def distances(cls, Seqs, prefix, region, start, end, cpus, complete = False): # igual se puede combinar con makeASVs
         """ Calculate distances in an specific region (plot a heatmap) and filter sequences based on them. """
-        cutoff = float(cutoff)
         cpus = int(cpus)
+        nSeqs = len(Seqs)
         # Trim sequences according to start end position. Return set of Seqs objects
         # https://www.geeksforgeeks.org/copy-python-deep-copy-shallow-copy
-        cls.multiprocessing_globals = {s.trimregion(start, end) for s in Seqs}
-        equivalence = np.array([s.header for s in cls.multiprocessing_globals]) #"https://docs.python.org/2/library/stdtypes.html#mapping-types-dict: If keys, values and items views are iterated over with no intervening modifications to the dictionary, the order of items will directly correspond"
-        if cpus == 1 or len(Seqs) < 100:
-            #write_logfile('info', 'CONVERT SEQS', 'Start 1 cpu')
-            cls.multiprocessing_globals_seqs = tuple(map(Sequence.nt2dict, cls.multiprocessing_globals))
+        cls.multiprocessing_globals = iter([s.trimregion(start, end) for s in Seqs])
+        equivalence = np.array([s.header for s in Seqs]) #"https://docs.python.org/2/library/stdtypes.html#mapping-types-dict: If keys, values and items views are iterated over with no intervening modifications to the dictionary, the order of items will directly correspond"
+        if cpus == 1 or nSeqs < 100:
+            write_logfile('info', 'CONVERT SEQS', 'Start 1 cpu')
+            cls.multiprocessing_globals_seqs = list(map(Sequence.nt2array, cls.multiprocessing_globals)) # Una vez use cls.multiprocessing_globals_seqs se vacía automáticamente el iterable
         else:
-            #write_logfile('info', 'CONVERT SEQS', 'Start multiprocessing')
+            write_logfile('info', 'CONVERT SEQS', 'Start multiprocessing')
             with Pool(cpus) as pool:
-                cls.multiprocessing_globals_seqs = tuple(pool.map(Sequence.nt2dict, cls.multiprocessing_globals, chunksize = 50))
-        #write_logfile('info', 'CONVERT SEQS', 'Finish')
-        cls.multiprocessing_globals = tuple()
-        cls.multiprocessing_globals_combinations = tuple(combinations_with_replacement(list(range(len(cls.multiprocessing_globals_seqs))),2))
-        if cpus == 1 or len(Seqs) < 100:
-            #write_logfile('info', 'DISTANCE CALCULATIONS', 'Start 1 cpu')
-            distances = list(map(cls.calc_dist, cls.multiprocessing_globals_combinations))
+                cls.multiprocessing_globals_seqs = list(pool.map(Sequence.nt2array, cls.multiprocessing_globals, chunksize = 50)) #iterable, imap consume iterable y devuelve iterable
+        write_logfile('info', 'CONVERT SEQS', 'Finish')
+        cls.multiprocessing_globals_combinations = combinations_with_replacement(list(range(nSeqs)),2)
+        if cpus == 1 or nSeqs < 100:
+            write_logfile('info', 'DISTANCE CALCULATIONS', 'Start 1 cpu')
+            arr = np.zeros(shape=(nSeqs, nSeqs), dtype = np.float32)
+            distances = map(cls.calc_dist, cls.multiprocessing_globals_combinations)
+            for (i, j, d) in map(cls.calc_dist, cls.multiprocessing_globals_combinations):
+                arr[i, j] = d 
         else:
-            #write_logfile('info', 'DISTANCE CALCULATIONS', 'Start multiprocessing')
+            write_logfile('info', 'DISTANCE CALCULATIONS', 'Start multiprocessing')
+            arr = np.zeros(shape=(nSeqs, nSeqs), dtype = np.float32)
             with Pool(cpus) as pool:
-                distances = list(pool.map(cls.calc_dist, cls.multiprocessing_globals_combinations, chunksize = 50))
-        #write_logfile('info', 'DISTANCE CALCULATIONS', 'Finish')
-        
-        length2split = list(reversed(range(1, len(equivalence) + 1)))   # split the list into one row per original sequence: for 3 sequences: [(1,1),(1,2),(1,3)],[(2,2), (2,3)],[(3,3)]: split 3, 2, 1
-        iterable_distances = iter(distances) 
-        dist_trian = [list(itertools.islice(iterable_distances, elem)) for elem in length2split]
-        
-        fill = list(range(0, len(equivalence)))
-        # Prepare 0 to complete the df as a matrix
-        #write_logfile('info', 'DISTANCE CALCULATIONS', 'Finish')
-        arr = np.array(list(map(lambda x, y: x*[0] + y, fill, dist_trian)))
+                #print(list(distances))
+                for (i, j, d) in pool.imap(cls.calc_dist, cls.multiprocessing_globals_combinations, chunksize = 50):
+                    arr[i, j] = d 
+        write_logfile('info', 'DISTANCE CALCULATIONS', 'Finish')
+        #arr = np.array(list(map(lambda x, y: x*[0] + y, fill, dist_trian)))
+        #print(arr)
         # Make a df with distance calcs for all the sequences
         df = pd.DataFrame(arr, columns = equivalence, index = equivalence)
         # Logical df with False when value ==-1, to remove this columns
+        #print('mask')
         mask = df.values!=-1
         # Remove these columns and the corresponding rows
-        df = df.drop(index = list(np.where(mask==False)[1]), columns = list(np.where(mask==False)[1]))
+        df = df.drop(index = equivalence[list(np.where(mask==False)[1])], columns = equivalence[list(np.where(mask==False)[1])])
         seqstoremove = list(np.where(mask==False)[1])
         SeqsFilteredheaders = list(np.delete(equivalence, seqstoremove))
         SeqsFiltered = {s for s in Seqs if s.header in SeqsFilteredheaders}
+        cls.clear_multiprocessing_globals()
         if complete:
+            print('writing')
             write_table(df, title = '{}.distances'.format(prefix), rows = list(df.index) , columns = list(df.columns), dataframe = None)
             return(SeqsFiltered, df)
         else:
@@ -195,23 +202,25 @@ class Enviro():
         
     @classmethod
     def clear_multiprocessing_globals(cls): # Clean class variable instead of overwrite it
-        cls.multiprocessing_globals_seqs = tuple()
-        cls.multiprocessing_globals_combinations = tuple()
-        cls.multiprocessing_globals = tuple()
+        cls.multiprocessing_globals_seqs = ''
+        cls.multiprocessing_globals_combinations = ''
+        cls.multiprocessing_globals = ''
     
     @classmethod
     def calc_dist(cls, args): 
         """ args is a tuple of two index combinations with the index of the sequences between calculate distances """
-        d = calculate_distance_set(cls.multiprocessing_globals_seqs[args[0]], cls.multiprocessing_globals_seqs[args[1]])
+        d = calculate_distances_cython(cls.multiprocessing_globals_seqs[args[0]], cls.multiprocessing_globals_seqs[args[1]])
         if d != 0:
-            return(d)
+            return(args[0], args[1], d)
+            #return(d)
         elif args[0] == args[1]: # Si es el mismo indice contra si mismo, d = 0 they are identical
-            return(0.0)
+            return(args[0], args[1], 0.0)
+            #return(0.0)
         else:    
-            return(-1.0) # Return -1 to filter by this value after and remove those sequences which are identical
-
+            return(args[0], args[1], -1.0) # Return -1 to filter by this value after and remove those sequences which are identical
+            #return(-1.0)
     # Methods for Enviro objects
-    def makeASVs(self, region, start, end, ASVsmean, cutoff , cpus ): # ADD ASV/OTU calculation
+    def makeASVs(self, region, start, end, ASVsmean, cutoff , cpus, by_region = None ): # ADD ASV/OTU calculation
         """ Create fake ASVs from sequences """
         # Subset Seqs, do ASVs, until complete nASVs
         ASVs = set()
@@ -220,15 +229,20 @@ class Enviro():
             newS = random.sample(self.Seqs, 1)[0] # Subset one sequence. Return a list with one element
             if newS.header not in [s.header for s in sampleSeqs]: # if that sequence has not been yet taken 
                 sampleSeqs.add(newS)
-                newSasvs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = 45, start = start, end = end)
+                Nposmax = int(round(cutoff * len(newS.deGap().trimregion(start, end).seq)))
+                #print(newS.seq)
+                #print(len(newS.seq))
+                #print(len(newS.deGap().seq))
+                #print(str(Nposmax))
+                newSasvs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = Nposmax, start = start, end = end, by_region = by_region)
                 #Check distances
-                ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cutoff = cutoff, cpus = cpus)
+                ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus)
                 #write_logfile('warning', 'SUBSET RANDOM SEQS', 'len(ASVs) {}\tlen(ASVsdiff) {}'.format(len(newSavs), len(ASVsdiff)))
                 i=0
                 while len(ASVsdiff) < len(newSasvs): # If one sequence have been removed 'cause it is identical to another one, repeat to take ASVs from that sequence, otherwise some taxa can be minusvalorated
-                    newSavs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = 45, start = start, end = end)
+                    newSavs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = 45, start = start, end = end, by_region = by_region)
                     #Check distances
-                    ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cutoff = cutoff, cpus = cpus)
+                    ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus)
                     i = i+1
                     if i > 10:
                         #write_logfile('warning', 'SUBSET RANDOM SEQS2', 'len(ASVsdiff) {}\tlen(newSavs) {}'.format(len(newSavs), len(ASVsdiff)))
@@ -236,18 +250,18 @@ class Enviro():
                 ASVs.update(ASVsdiff)
             else:
                 continue
-        ASVsdiff, distdf = self.distances(Seqs = ASVs, prefix = self.prefix, region = region, start = start, end = end, cutoff = cutoff, cpus = cpus, complete = True) 
+        ASVsdiff, distdf = self.distances(Seqs = ASVs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus, complete = True) 
         #ASVsdiffselected = set(random.sample({s for s in ASVs if s.header not in [so.header for so in SeqsSilvaselected]}, args.nASVs-len(SeqsSilvaselected))) # No matter if original sequences are included or not
         ASVsdiffselected = set(random.sample(ASVsdiff, self.nASVs))
         #self.Seqs = SeqsSilvaselected.union(ASVsdiffselected) # No matter if original sequences are included or not
         self.Seqs = ASVsdiffselected # I REALLY WANT TO MODIFY IT, I want to remove extra Sequences
         write_logfile('info', 'ENVIRONMENT', 'Plotting distances heatmap')
-        self.plot_distances(df = distdf, region = region, cutoff = cutoff, text = None, symmetric = True)
+        self.plot_distances(df = distdf, region = region, text = None, symmetric = True)
         return(self)# I really want to modify it
     
     
     #### PLOTS & OUTPUTS
-    def plot_distances(self, df, region = '16S', cutoff = 0.03, text = None, symmetric = None):
+    def plot_distances(self, df, region = '16S',  text = None, symmetric = None):
         """ Plot distances among selected sequences """
         # Update df with the final sequences that finally have been included:
         Seqs_headers = [s.header for s in self.Seqs]
@@ -275,24 +289,25 @@ class Enviro():
                     align.write('>{}\n{}\n'.format(s.header, s.seq))
                     fasta.write('>{}\n{}\n'.format(s.header, s.deGap().seq))
                     taxonomy.write('{}\t{}\n'.format(s.header, s.tax))
-                return(True)
+                return(True) 
     
     @classmethod
     def set_sequences( cls, fastaFile, refTax, rank, cpus = 1, Nrandom = 0, selected = [], degap = False):
         """ Make a list of sequence objects (or select some based on the header) from fasta """
         cls.rank = rank
-        cls.silva_taxa = loadTaxa(refTax = refTax)
         cls.degap = degap
-        
-        if Nrandom != 0:
-            cls.selected = random.sample(cls.silva_taxa.keys(), Nrandom)
+        if not refTax:
+            cls.notax = True
         else:
-            cls.selected = selected
-            
+            cls.silva_taxa = loadTaxa(refTax = refTax)
+            if Nrandom != 0:
+                cls.selected = random.sample(cls.silva_taxa.keys(), Nrandom)
+            else:
+                cls.selected = selected
         with Pool(cpus) as pool:
             with open(fastaFile, 'r') as fasta:
-                Seqs = set(list(filter(None, pool.map(cls.validate_Sequence, itertools.zip_longest(*[fasta]*2)))))
-            return(Seqs)
+                Seqs = set(list(filter(None, pool.imap(cls.validate_Sequence, itertools.zip_longest(*[fasta]*2)))))
+        return(Seqs)
     
     @classmethod
     def validate_Sequence(cls, combo):
@@ -307,7 +322,10 @@ class Enviro():
             Seq = None
             if not cls.selected: # select all the sequences from the fasta file
                 #write_logfile('debug', 'Sequence.set_Sequences', cls.selected)
-                Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa), 0)
+                if not cls.notax:
+                    Seq = Sequence(header, seq.rstrip('\n'), Sequence.assign_taxonomy(header, cls.silva_taxa), 0)
+                else:
+                    Seq = Sequence(header, seq.rstrip('\n'), None, 0) # No taxonomic annotation
                 #write_logfile('debug', 'Sequence.set_Sequences NOT selected ', Seq.header)
             else:
                 #write_logfile('debug', 'Sequence.set_Sequences', cls.selected)
@@ -351,12 +369,29 @@ class Enviro():
         #print(selectedTaxas)
         return(selectedTaxas)
 
-    @staticmethod
-    def subsetSilvaproportions(taxAbun, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', rank = 3):
+
+    @classmethod
+    def checkN(cls, combo):
+        header = combo[0]
+        seq = combo[1]
+        header = simplifyString(header.lstrip('>').rstrip('\n')) # assuming SILVA db
+        if not 'N' in seq: #checkpoint: some sequences from silva contain N, exclude those sequences
+            return(header)
+
+
+
+
+
+
+    @classmethod
+    def subsetSilvaproportions(cls, taxAbun, refTax =  '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.tax', ref = '/home/natalia/Projects/natalia/DB/silva.nr_v138/silva.nr_v138.align', rank = 3, cpus = 12):
         """ From a dict of taxas {'tax':Abun} take, sequences from silva """
         rank = rank
         silva_taxa = loadTaxa(refTax = refTax, rank = rank)
-        silvaSeqs = list(fasta2dict(ref).keys())
+        #silvaSeqs = list(fasta2dict(ref).keys())
+        with Pool(cpus) as pool:
+            with open(ref, 'r') as fasta:
+                silvaSeqs = set(list(pool.map(cls.checkN, itertools.zip_longest(*[fasta]*2))))
         for seq in list(silva_taxa.keys()):
             if not seq in silvaSeqs:
                 silva_taxa.pop(seq)
@@ -379,7 +414,7 @@ class Enviro():
                 # If the sequence has been added in a previous loop, it does not matter 'cause it is a set, no duplicates
                 subsetSeqs = subsetSeqs.union(set(seq))
             else:
-                write_logfile('error', 'SUBSET RANDOM SEQS', '{} not present in the DB {} sequences'.format(tx, abun))
+                write_logfile('error', 'SUBSET RANDOM SEQS', '{} not present'.format(tx))
         return(subsetSeqs, moreSeqs)
 
     @staticmethod

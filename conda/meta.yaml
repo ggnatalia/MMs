@@ -1,15 +1,19 @@
 package:
   name: mms
-  version: '0.0.1'
+  version: '0.0.2'
 
 source:
   #git_url: git@github.com:ggnatalia/MMs.git
-  git_url: https://github.com/ggnatalia/MMs 
+  git_url: https://github.com/ggnatalia/MMs
+  git_tag: dev
+  #git_url: /home/natalia/opt/MMs/
   #md5: 
 
 requirements:
   build:
-    - python=3.7   
+    - python=3.7
+    #- {{ compiler('python_c') }}
+    - cython
   run:
     - python=3.7  
       #- argparse 
@@ -34,9 +38,13 @@ requirements:
     - mothur=1.44
     - biopython
     - joblib
-    - pysam
+    - pysam=0.15
     - requests
     - plotly
+    - cython=0.29.21
+    - htseq
+    - pybedtools
+    #- six
 
 build:
   noarch: generic
@@ -45,7 +53,7 @@ test:
     - numpy
     - pandas
     - scipy
-    - sklearn
+    #- sklearn
     - daiquiri
     - pysam
     - plotly

@@ -1,0 +1,53 @@
+### To run M&Ms without conda, make sure that you have installed python3 (at least python 3.7) and the following python modules:
+# Example of command: python3 -m pip install pysam
+
+-numpy
+-scipy  
+-math
+-pandas
+-scikit-learn=0.23
+-random
+-re
+-glob
+-logging
+-daiquiri
+-collections
+-itertools
+-multiprocessing  
+-matplotlib
+-biopython
+-joblib
+-pysam
+-requests
+-plotly
+-cython
+-htseq
+-pybedtools
+
+# Note that NanoSim does not work with the latest version of scikit-learn:https://github.com/bcgsc/NanoSim/issues/131
+
+### Moreover, you have to install mothur (https://mothur.org/wiki/installation/) and place it on your $PATH
+
+### M&Ms. You can clone the github repository:
+	git clone http://github.com/ggnatalia/MMs
+
+### NanoSim
+	# In the same directory, download NanoSim:
+	git clone https://github.com/bcgsc/NanoSim.git
+	# And extract the metagenome model:
+	cd NanoSim/pre-trained_models
+	tar -xzvf metagenome_ERR3152364_Even.tar.gz
+	cd ..
+
+### SILVA databases: Download or configure them by running the MMs/bin/make_databases.py script
+	python3 MMs/bin/make_databases.py
+
+### This is not mandatory, but you can add to your $PATH the following scripts:
+	$MMS_DIR is the path where the M&Ms folder has been downloaded.
+
+export PATH=$PATH:MMS_DIR/makemocks.py
+export PATH=$PATH:MMS_DIR/bin/make_databases.py
+
+### Within $MMS_DIR/libs, build the distances module:
+python3 setup.py build_ext --inplace
+

@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 import re
 import sys
+import os
+
+sys.path.append('{}/../extlibs'.format('/'.join(os.path.abspath(__file__).split('/')[:-1])))
+#print(sys.path)
 
 from iss.app import main
 

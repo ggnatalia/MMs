@@ -7,6 +7,8 @@ conda activate MMs
 
 #3.Install M&Ms package and its dependencies
 conda install -c anaconda -c bioconda -c conda-forge mms
+# From local (conda build .): 
+#conda install --use-local mms
 
 #4. Deactivate the enviroment
 conda deactivate

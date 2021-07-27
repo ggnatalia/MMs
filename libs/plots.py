@@ -34,7 +34,7 @@ def plot_heatmap(data, outputDir, title, zmin, zmax, legendtitle = 'z', symmetri
     fig.update_layout(title = {'text': title, 'xanchor': 'center', 'yanchor': 'top', 'y' : 1, 'x' : 0.5})
     #pio.write_image(fig, '{}/{}.svg'.format(outputDir, title))
     fig.write_html('{}/{}.html'.format(outputDir, title))
-    fig.show()
+    #fig.show()
     
     
 def barplotpc(df, title, outputDir, ylab = 'Axis y', xlab = 'Axis x'):
@@ -49,7 +49,7 @@ def barplotpc(df, title, outputDir, ylab = 'Axis y', xlab = 'Axis x'):
     #fig.write_image('{}/{}.png'.format(outputDir, title))
     #pio.write_image(fig, '{}/{}.svg'.format(outputDir, title))
     fig.write_html('{}/{}.html'.format(outputDir, title))
-    fig.show()
+    #fig.show()
 
 
 
@@ -87,7 +87,7 @@ def barplot(df, title, outputDir, T = False, rowfig = None, colfig = None, ylab 
     fig.update_xaxes(title_text = xlab,  tickangle = -45)
     fig.update_yaxes(title_text = ylab)
     fig.write_html('{}/{}.html'.format(outputDir, title))
-    fig.show()
+    #fig.show()
 
 
 
