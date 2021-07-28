@@ -185,11 +185,11 @@ def mutate(string, N, start = None, end = None, regions = None, header = None): 
             #prob_values = [v + float(diff/sum([len(block)-1 for block in prob_pos_good])) if v in [p for r in prob_pos_good for p in r] else v for v in prob_values]
             prob_values[0] = prob_values[0] + diff
             #print(str(sum(prob_values)))
-        print('mutate N ' + str(N) + ' ' + str(sum([True if f>0 else False for f in prob_values])))    
+        #print('mutate N ' + str(N) + ' ' + str(sum([True if f>0 else False for f in prob_values])))    
         if N < sum([True if f>0 else False for f in prob_values]): # More mutations that possible positions
             mutation_sites = list(np.random.choice(possiblePos, N, p = prob_values, replace = False))
         else:
-            print('Warning: More mutation sites than possible options are requested. Please, select wider regions or disable strict mode to introduce point mutations in different regions although with less probability')
+           # print('Warning: More mutation sites than possible options are requested. Please, select wider regions or disable strict mode to introduce point mutations in different regions although with less probability')
             #exit(-1)
             N = sum([True if f>0 else False for f in prob_values])
             mutation_sites = list(np.random.choice(possiblePos, N, p = prob_values, replace = False))

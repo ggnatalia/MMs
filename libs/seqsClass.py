@@ -62,7 +62,7 @@ class Sequence():
         originalSeqName = self.header
         #  Create a set with different Seq objects, the Seq original object, and the strains if it is not the same
         Npos = random.randint(1, Nposmax)
-        print('Nposmax ' + str(Nposmax) + 'Npos ' + str(Npos))
+        #print('Nposmax ' + str(Nposmax) + 'Npos ' + str(Npos))
         clusterSeqs = set()
         if include_original:
             clusterSeqs.add(Sequence(originalSeqName, self.seq, self.tax)) ##### NEW LINE TO ADD THE REAL STRAIN TO THE MOCK
