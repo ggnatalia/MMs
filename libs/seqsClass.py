@@ -44,11 +44,11 @@ class Sequence():
     
     def trimregion(self, start, end):
         """ Trim a sequence according to start, end positions """
-        #print(str(start) + str(end))
         start, end = int(start), int(end)
         if self.seq[start:end].replace('.','').replace('-',''): # seq has something in that region, not only '............' or '----------------'
             seq = self.seq[start:end]
             return(Sequence(self.header, seq, self.tax))
+        return(Sequence(None, None, None))
     
     def deGap(self): 
         """ Remove '.' and '-' from a sequence """
@@ -62,15 +62,16 @@ class Sequence():
         originalSeqName = self.header
         #  Create a set with different Seq objects, the Seq original object, and the strains if it is not the same
         Npos = random.randint(1, Nposmax)
+        print('Nposmax ' + str(Nposmax) + 'Npos ' + str(Npos))
         clusterSeqs = set()
         if include_original:
             clusterSeqs.add(Sequence(originalSeqName, self.seq, self.tax)) ##### NEW LINE TO ADD THE REAL STRAIN TO THE MOCK
             for i in range(0, Nstrains):   
-                newSequence = Sequence('{}.asv_{}'.format(originalSeqName, i+1),  mutate(string = self.seq, N = Npos, start = start, end = end, regions = by_region, header = self.header), self.tax)
+                newSequence = Sequence('{}.asv_{}'.format(originalSeqName, i+1),  mutate(string = self.seq, N = Npos, start = start, end = end, regions = by_region, header = '{}.asv_{}'.format(originalSeqName, i+1)), self.tax)
                 clusterSeqs.add(newSequence) # Add new Seq objects
         else:
             for i in range(0, Nstrains):   
-                newSequence = Sequence('{}-{}'.format(originalSeqName, i+1),  mutate(string = self.seq, N = Npos, start = start, end = end, regions = by_region, header = self.header), self.tax)
+                newSequence = Sequence('{}-{}'.format(originalSeqName, i+1),  mutate(string = self.seq, N = Npos, start = start, end = end, regions = by_region, header = '{}.asv_{}'.format(originalSeqName, i+1)), self.tax)
                 clusterSeqs.add(newSequence) # Add new Seq objects
         return(clusterSeqs)         # set with different Seq objects from a single Seq object
 

@@ -6,6 +6,8 @@ import random
 import subprocess
 import logging
 import daiquiri
+import os
+import shutil
 ################################################################################################### Useful functions, common in different steps
 
 ########################### WORK WITH FASTA/ ALIGN FILES
@@ -183,13 +185,21 @@ def mutate(string, N, start = None, end = None, regions = None, header = None): 
             #prob_values = [v + float(diff/sum([len(block)-1 for block in prob_pos_good])) if v in [p for r in prob_pos_good for p in r] else v for v in prob_values]
             prob_values[0] = prob_values[0] + diff
             #print(str(sum(prob_values)))
+        print('mutate N ' + str(N) + ' ' + str(sum([True if f>0 else False for f in prob_values])))    
         if N < sum([True if f>0 else False for f in prob_values]): # More mutations that possible positions
             mutation_sites = list(np.random.choice(possiblePos, N, p = prob_values, replace = False))
         else:
             print('Warning: More mutation sites than possible options are requested. Please, select wider regions or disable strict mode to introduce point mutations in different regions although with less probability')
-            exit(-1)
+            #exit(-1)
+            N = sum([True if f>0 else False for f in prob_values])
+            mutation_sites = list(np.random.choice(possiblePos, N, p = prob_values, replace = False))
     #print(sorted(mutation_sites))
-    with open('{}.nt_mutations.tsv'.format(header), 'w') as nt_out:
+    try:
+        os.mkdir('mutations')
+    except OSError as e: #[Errno 17] File exists: 'output'
+        if e.errno != 17:
+            raise
+    with open('mutations/{}.nt_mutations.tsv'.format(header), 'w') as nt_out:
         for pos in sorted(mutation_sites): # Avoid cases in which the mutated base is identical to the original
             original_pos = pos_equivalence[pos] # see what is the position in the sequence with '.' and '-'
             random_nt = random.sample(list(filter(lambda x: x != ''.join(strings_list)[pos], bases)), 1)[0]

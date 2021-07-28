@@ -13,6 +13,8 @@ def parse_arguments():
     general.add_argument( '-m', '--mockName', type = str, required = True, help = 'Mock name. Ex: mock1')
     general.add_argument( '-o', '--output', type = str, required = True, help = 'Output directory. Preferably, name of the environment. Ex: Aquatic')
     general.add_argument( '--align', type = str, help = 'The user can provide an align file without creating it from scratch.')
+    general.add_argument('--start', default = 0, type=int, help = 'Start position')
+    general.add_argument('--end', default = 50000, type = int, help = 'End position')
     args = general.parse_args()
     return(args)
 
@@ -44,7 +46,9 @@ def main(args):
     cutoffs = [0.00, 1-0.97, 1-0.945, 1-0.865, 1-0.82, 1-0.785, 1-0.75]
     labels = ['ASVs', 'species', 'genus', 'family', 'order', 'class', 'phylum']
     # Make distances with mothur
-    command = ['mothur','#dist.seqs(fasta = {}/{})'.format(projectPath, args.align)]
+    command = ['mothur', '#pcr.seqs(fasta = {}/{})'.format(projectPath, args.align)]
+    runCommand(command)
+    command = ['mothur','#dist.seqs(fasta = {}/{}.pcr.align)'.format(projectPath, args.align.replace('.align', ''))]
     runCommand(command)
     # Create an abundance table like mothur requires
     df = load_table('{}/checkDB/{}.raw.abundances_original.tsv'.format(mockPath, mockPrefix), rows = True , cols = True, path = '.', sep = '\t')

@@ -85,9 +85,9 @@ class Enviro():
         for s in moreSeqs:
             #print(s.header)
             Nposmax = int(estimate_mutations(rank, length = len(s.seq.replace('.','').replace('-',''))))
-            #print('Nposmax ' , str(Nposmax))
+            print('Nposmax ' , str(Nposmax))
             Nstrains = int(seqs2fake[s.header]) 
-            #print('mutant seqs I want ' + s.header + ' ' + str(Nstrains))
+            print('mutant seqs I want ' + s.header + ' ' + str(Nstrains))
             newS = s.generatemutantASVs(Nstrains = Nstrains, Nposmax = Nposmax, start = 0, end = 50000, include_original = False, by_region = by_region)
             #print('newS ' + str(len(newS)))
             fakeSeqs.update(newS)                
@@ -227,29 +227,28 @@ class Enviro():
         sampleSeqs = set()
         while len(ASVs) < self.nASVs:  # Repeat until complete number of ASVs
             newS = random.sample(self.Seqs, 1)[0] # Subset one sequence. Return a list with one element
-            if newS.header not in [s.header for s in sampleSeqs]: # if that sequence has not been yet taken 
-                sampleSeqs.add(newS)
-                Nposmax = int(round(cutoff * len(newS.deGap().trimregion(start, end).seq)))
-                #print(newS.seq)
-                #print(len(newS.seq))
-                #print(len(newS.deGap().seq))
-                #print(str(Nposmax))
-                newSasvs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = Nposmax, start = start, end = end, by_region = by_region)
-                #Check distances
-                ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus)
-                #write_logfile('warning', 'SUBSET RANDOM SEQS', 'len(ASVs) {}\tlen(ASVsdiff) {}'.format(len(newSavs), len(ASVsdiff)))
-                i=0
-                while len(ASVsdiff) < len(newSasvs): # If one sequence have been removed 'cause it is identical to another one, repeat to take ASVs from that sequence, otherwise some taxa can be minusvalorated
-                    newSavs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = 45, start = start, end = end, by_region = by_region)
+            if newS.trimregion(start, end).seq:
+                if newS.header not in [s.header for s in sampleSeqs]: # if that sequence has not been yet taken 
+                    sampleSeqs.add(newS)
+                    Nposmax = int(round(cutoff * len(newS.trimregion(start, end).deGap().seq)))
+                    #print(newS.seq)
+                    #print(len(newS.seq))
+                    newSasvs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = Nposmax, start = start, end = end, by_region = by_region)
                     #Check distances
                     ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus)
-                    i = i+1
-                    if i > 10:
-                        #write_logfile('warning', 'SUBSET RANDOM SEQS2', 'len(ASVsdiff) {}\tlen(newSavs) {}'.format(len(newSavs), len(ASVsdiff)))
-                        break
-                ASVs.update(ASVsdiff)
-            else:
-                continue
+                    #write_logfile('warning', 'SUBSET RANDOM SEQS', 'len(ASVs) {}\tlen(ASVsdiff) {}'.format(len(newSavs), len(ASVsdiff)))
+                    i=0
+                    while len(ASVsdiff) < len(newSasvs): # If one sequence have been removed 'cause it is identical to another one, repeat to take ASVs from that sequence, otherwise some taxa can be minusvalorated
+                        newSavs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = 45, start = start, end = end, by_region = by_region)
+                        #Check distances
+                        ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus)
+                        i = i+1
+                        if i > 10:
+                            #write_logfile('warning', 'SUBSET RANDOM SEQS2', 'len(ASVsdiff) {}\tlen(newSavs) {}'.format(len(newSavs), len(ASVsdiff)))
+                            break
+                    ASVs.update(ASVsdiff)
+                else:
+                    continue
         ASVsdiff, distdf = self.distances(Seqs = ASVs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus, complete = True) 
         #ASVsdiffselected = set(random.sample({s for s in ASVs if s.header not in [so.header for so in SeqsSilvaselected]}, args.nASVs-len(SeqsSilvaselected))) # No matter if original sequences are included or not
         ASVsdiffselected = set(random.sample(ASVsdiff, self.nASVs))
