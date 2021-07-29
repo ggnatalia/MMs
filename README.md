@@ -102,7 +102,7 @@ M&Ms accepts one of the following five independent types of inputs depending on 
 
       -env, --enviro: Let the user simulate an environmental mock by choosing species from a specific environment
      
-     *List of possible environments: Aquatic.Freshwater.sediment, Aquatic.Freshwater.saline.waters.interfase, Aquatic.Freshwaters, Aquatic.Saline.waters, Aquatic.Soil.Freshwaters.interfase, Aquatic.Soil.Saline.waters.interfase, Host.associated.and.Organic.Animal.host, Host.associated.and.Organic.Gut, Host.associated.and.Organic.Oral, Host.associated.and.Organic.Organic, Host.associated.and.Organic.Other.tissue, Host.associated.and.Organic.Vagina, Other.Aerial, Other.Artificial, Other.Oil, Terrestrial.Plants, Terrestrial.Saline.soil, Terrestrial.Soil, Thermal.Geothermal, Thermal.Hydrothermal.*      
+     List of possible environments: *Aquatic.Freshwater.sediment, Aquatic.Freshwater.saline.waters.interfase, Aquatic.Freshwaters, Aquatic.Saline.waters, Aquatic.Soil.Freshwaters.interfase, Aquatic.Soil.Saline.waters.interfase, Host.associated.and.Organic.Animal.host, Host.associated.and.Organic.Gut, Host.associated.and.Organic.Oral, Host.associated.and.Organic.Organic, Host.associated.and.Organic.Other.tissue, Host.associated.and.Organic.Vagina, Other.Aerial, Other.Artificial, Other.Oil, Terrestrial.Plants, Terrestrial.Saline.soil, Terrestrial.Soil, Thermal.Geothermal, Thermal.Hydrothermal.*      
           
 - To recreate microbial abundances and sequencing simulation (step 3):   
    d) Use a FASTA file  
