@@ -179,6 +179,8 @@ Please, if you use this software, do not forget to cite:
 
 -InSilicoSeqs: Hadrien Gourlé, Oskar Karlsson-Lindsjö, Juliette Hayer, Erik Bongcam-Rudloff. (2019). Simulating Illumina metagenomic data with InSilicoSeq, Bioinformatics, 35(3): 521–522, https://doi.org/10.1093/bioinformatics/bty630    
 
--Schloss PD, Westcott SL, Ryabin T, Hall JR, Hartmann M, Hollister EB, Lesniewski RA, Oakley BB, Parks DH, Robinson CJ, Sahl JW, Stres B, Thallinger GG, Van Horn DJ, Weber CF. (2009). Introducing mothur: open-source, platform-independent, community-supported software for describing and comparing microbial communities. Applied Environmental Microbiology, 75(23):7537-7541; doi: https://aem.asm.org/content/75/23/7537
+-Mothur: Schloss PD, Westcott SL, Ryabin T, Hall JR, Hartmann M, Hollister EB, Lesniewski RA, Oakley BB, Parks DH, Robinson CJ, Sahl JW, Stres B, Thallinger GG, Van Horn DJ, Weber CF. (2009). Introducing mothur: open-source, platform-independent, community-supported software for describing and comparing microbial communities. Applied Environmental Microbiology, 75(23):7537-7541; doi: https://aem.asm.org/content/75/23/7537
+
+-NanoSim: Yang C, Chu J, Warren RL, Birol I. (2017). NanoSim: nanopore sequence read simulator based on statistical characterization. Gigascience, 6(4):1-6. doi: https://academic.oup.com/gigascience/article/6/4/gix010/3051934 
 
 
