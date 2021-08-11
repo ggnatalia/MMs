@@ -144,7 +144,7 @@ def main(args):
     inputfile = args.inputfile
 
     Sim = args.Sim
-    
+    makemocks_home = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
     
     if not args.ref or not args.refTax:
         makemocks_home = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
