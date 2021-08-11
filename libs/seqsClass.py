@@ -65,7 +65,8 @@ class Sequence():
         #print('Nposmax ' + str(Nposmax) + 'Npos ' + str(Npos))
         clusterSeqs = set()
         if include_original:
-            clusterSeqs.add(Sequence(originalSeqName, self.seq, self.tax)) ##### NEW LINE TO ADD THE REAL STRAIN TO THE MOCK
+            clusterSeqs.add(Sequence(originalSeqName, self.trimregion(start, end).seq, self.tax)) ##### NEW LINE TO ADD THE REAL STRAIN TO THE MOCK
+            #clusterSeqs.add(Sequence(originalSeqName, self.seq, self.tax)) ##### NEW LINE TO ADD THE REAL STRAIN TO THE MOCK
             for i in range(0, Nstrains):   
                 newSequence = Sequence('{}.asv_{}'.format(originalSeqName, i+1),  mutate(string = self.seq, N = Npos, start = start, end = end, regions = by_region, header = '{}.asv_{}'.format(originalSeqName, i+1)), self.tax)
                 clusterSeqs.add(newSequence) # Add new Seq objects

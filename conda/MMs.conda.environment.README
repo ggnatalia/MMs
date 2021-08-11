@@ -6,7 +6,7 @@ conda create -y --name MMs python=3.7
 conda activate MMs
 
 #3.Install M&Ms package and its dependencies
-conda install -c anaconda -c bioconda -c conda-forge mms
+conda install -c anaconda -c bioconda -c conda-forge -c ggnatalia mms
 # From local (conda build .): 
 #conda install --use-local mms
 

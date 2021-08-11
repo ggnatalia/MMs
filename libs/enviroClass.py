@@ -85,9 +85,9 @@ class Enviro():
         for s in moreSeqs:
             #print(s.header)
             Nposmax = int(estimate_mutations(rank, length = len(s.seq.replace('.','').replace('-',''))))
-            print('Nposmax ' , str(Nposmax))
+            #print('Nposmax ' , str(Nposmax))
             Nstrains = int(seqs2fake[s.header]) 
-            print('mutant seqs I want ' + s.header + ' ' + str(Nstrains))
+            #print('mutant seqs I want ' + s.header + ' ' + str(Nstrains))
             newS = s.generatemutantASVs(Nstrains = Nstrains, Nposmax = Nposmax, start = 0, end = 50000, include_original = False, by_region = by_region)
             #print('newS ' + str(len(newS)))
             fakeSeqs.update(newS)                
@@ -220,11 +220,13 @@ class Enviro():
             return(args[0], args[1], -1.0) # Return -1 to filter by this value after and remove those sequences which are identical
             #return(-1.0)
     # Methods for Enviro objects
+       # Methods for Enviro objects
     def makeASVs(self, region, start, end, ASVsmean, cutoff , cpus, by_region = None ): # ADD ASV/OTU calculation
         """ Create fake ASVs from sequences """
         # Subset Seqs, do ASVs, until complete nASVs
         ASVs = set()
         sampleSeqs = set()
+        j = 0
         while len(ASVs) < self.nASVs:  # Repeat until complete number of ASVs
             newS = random.sample(self.Seqs, 1)[0] # Subset one sequence. Return a list with one element
             if newS.trimregion(start, end).seq:
@@ -249,6 +251,12 @@ class Enviro():
                     ASVs.update(ASVsdiff)
                 else:
                     continue
+            else:
+                j = j + 1
+            maxj = 0.1*len(ASVs)
+            if j > maxj:
+                write_logfile('warning', 'ENVIRONMENT', 'More than the 10% of the total of requested sequences that we have subset are empty in the region included between your start/end positions, so we have decided to stop iterating. Please, remember that these positions are referred to the SILVA alignment and not the length of the 16S')
+                exit()
         ASVsdiff, distdf = self.distances(Seqs = ASVs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus, complete = True) 
         #ASVsdiffselected = set(random.sample({s for s in ASVs if s.header not in [so.header for so in SeqsSilvaselected]}, args.nASVs-len(SeqsSilvaselected))) # No matter if original sequences are included or not
         ASVsdiffselected = set(random.sample(ASVsdiff, self.nASVs))
@@ -256,8 +264,7 @@ class Enviro():
         self.Seqs = ASVsdiffselected # I REALLY WANT TO MODIFY IT, I want to remove extra Sequences
         write_logfile('info', 'ENVIRONMENT', 'Plotting distances heatmap')
         self.plot_distances(df = distdf, region = region, text = None, symmetric = True)
-        return(self)# I really want to modify it
-    
+        return(self)# I really want to modify it 
     
     #### PLOTS & OUTPUTS
     def plot_distances(self, df, region = '16S',  text = None, symmetric = None):
