@@ -232,6 +232,8 @@ class Enviro():
         j = 0
         if start and end:
             trimmed = True
+        else:
+            trimmed = False
         while len(ASVs) < self.nASVs:  # Repeat until complete number of ASVs
             #print('Seqs' + str(len(self.Seqs)))
             newS = random.sample(self.Seqs, 1)[0] # Subset one sequence. Return a list with one element
