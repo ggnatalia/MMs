@@ -48,7 +48,7 @@ def parse_arguments():
 
     # Options for making your mock randomly
     general.add_argument( '--rank', type = str, default = 'phylum', help = 'Rank to subset taxa: phlyum, order, class, family, genus')
-    general.add_argument( '-ASVsmean','--ASVsmean',type = int, default = 5, help = 'Mean of mutant ASV per silva sequence')
+    general.add_argument( '-ASVsmean','--ASVsmean',type = int, default = 6, help = 'Mean of mutant ASV per silva sequence')
     general.add_argument( '-nASVs','--nASVs', type = int, required = False, help = 'Number of ASVs') 
     general.add_argument( '-env', '--enviro', type = str, default = False, help = 'Let the user simulate an environmental mock. Look refEnv for options')
 

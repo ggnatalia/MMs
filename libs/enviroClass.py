@@ -149,13 +149,16 @@ class Enviro():
         return( Enviro(prefix, enviro, Seqs, len(Seqs)) )
     
     @classmethod 
-    def distances(cls, Seqs, prefix, region, start, end, cpus, complete = False): # igual se puede combinar con makeASVs
+    def distances(cls, Seqs, prefix, region, start, end, cpus, complete = False, trimmed = False): # igual se puede combinar con makeASVs
         """ Calculate distances in an specific region (plot a heatmap) and filter sequences based on them. """
         cpus = int(cpus)
         nSeqs = len(Seqs)
         # Trim sequences according to start end position. Return set of Seqs objects
         # https://www.geeksforgeeks.org/copy-python-deep-copy-shallow-copy
-        cls.multiprocessing_globals = iter([s.trimregion(start, end) for s in Seqs])
+        if trimmed:
+            cls.multiprocessing_globals = iter([s for s in Seqs])
+        else:
+            cls.multiprocessing_globals = iter([s.trimregion(start, end) for s in Seqs])
         equivalence = np.array([s.header for s in Seqs]) #"https://docs.python.org/2/library/stdtypes.html#mapping-types-dict: If keys, values and items views are iterated over with no intervening modifications to the dictionary, the order of items will directly correspond"
         if cpus == 1 or nSeqs < 100:
             write_logfile('info', 'CONVERT SEQS', 'Start 1 cpu')
@@ -227,7 +230,10 @@ class Enviro():
         ASVs = set()
         sampleSeqs = set()
         j = 0
+        if start and end:
+            trimmed = True
         while len(ASVs) < self.nASVs:  # Repeat until complete number of ASVs
+            #print('Seqs' + str(len(self.Seqs)))
             newS = random.sample(self.Seqs, 1)[0] # Subset one sequence. Return a list with one element
             if newS.trimregion(start, end).seq:
                 if newS.header not in [s.header for s in sampleSeqs]: # if that sequence has not been yet taken 
@@ -257,8 +263,10 @@ class Enviro():
             if j > maxj:
                 write_logfile('warning', 'ENVIRONMENT', 'More than the 10% of the total of requested sequences that we have subset are empty in the region included between your start/end positions, so we have decided to stop iterating. Please, remember that these positions are referred to the SILVA alignment and not the length of the 16S')
                 exit()
-        ASVsdiff, distdf = self.distances(Seqs = ASVs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus, complete = True) 
+        ASVsdiff, distdf = self.distances(Seqs = ASVs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus, complete = True, trimmed = trimmed) 
         #ASVsdiffselected = set(random.sample({s for s in ASVs if s.header not in [so.header for so in SeqsSilvaselected]}, args.nASVs-len(SeqsSilvaselected))) # No matter if original sequences are included or not
+        #print('ASVsdiff ' + str(len(ASVsdiff)))
+        #print('nASVs ' + str(self.nASVs))
         ASVsdiffselected = set(random.sample(ASVsdiff, self.nASVs))
         #self.Seqs = SeqsSilvaselected.union(ASVsdiffselected) # No matter if original sequences are included or not
         self.Seqs = ASVsdiffselected # I REALLY WANT TO MODIFY IT, I want to remove extra Sequences
