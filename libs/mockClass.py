@@ -229,7 +229,7 @@ class Mock():
     def make_global_samples_distribution(shannonIndex, nASVs, reads = 20000):
         """Calculate the abundances distribution based on a shannon Index (H). Formula approach"""  
         if (-2*(shannonIndex - np.log(nASVs))) < 0:
-            write_logfile('warning', 'ABUNDANCE ESTIMATION SHANNON', -2*(shannonIndex - np.log(nASVs)))
+            write_logfile('warning', 'ABUNDANCE ESTIMATION SHANNON', 'You\'re trying to calculate the square root of a negative randicand:{}. Please check the Supplementary Material Notes'.format(-2*(shannonIndex - np.log(nASVs))))
             exit(-5)
         else:
             sd = math.sqrt(-2*(shannonIndex - np.log(nASVs)))
