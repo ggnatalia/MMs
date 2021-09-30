@@ -55,14 +55,14 @@ class Enviro():
         #print('fakeASVs')
         write_logfile('info', 'Enviro', 'Complete sequences')
         if neededSeqs:
-            FakeSeqs = cls.make_fake_taxa(neededSeqs, rank = rank, cpus = cpus, ref = ref, refTax = refTax, by_region = by_region)
+            FakeSeqs = cls.make_fake_taxa(neededSeqs, rank = rank, cpus = cpus, ref = ref, refTax = refTax, by_region = by_region, by_pos = None)
             TotalSeqs = Seqs|FakeSeqs
         else:
             TotalSeqs = Seqs
         return( Enviro(prefix, enviro, TotalSeqs, nASVs) ) 
     
     @classmethod
-    def make_fake_taxa(cls, neededSeqs, rank, cpus, ref, refTax, by_region = None):
+    def make_fake_taxa(cls, neededSeqs, rank, cpus, ref, refTax, by_region = None, by_pos = None):
         """ Return a Seqs set with the fake taxa that fall short """
 
         fakeSeqs = set()
@@ -88,7 +88,7 @@ class Enviro():
             #print('Nposmax ' , str(Nposmax))
             Nstrains = int(seqs2fake[s.header]) 
             #print('mutant seqs I want ' + s.header + ' ' + str(Nstrains))
-            newS = s.generatemutantASVs(Nstrains = Nstrains, Nposmax = Nposmax, start = 0, end = 50000, include_original = False, by_region = by_region)
+            newS = s.generatemutantASVs(Nstrains = Nstrains, Nposmax = Nposmax, start = 0, end = 50000, include_original = False, by_region = by_region, by_pos = by_pos)
             #print('newS ' + str(len(newS)))
             fakeSeqs.update(newS)                
         return(fakeSeqs)
@@ -110,8 +110,11 @@ class Enviro():
         #    taxaAbund = estimate_abundances(nTaxa, args.nASVs)
         taxAbun = dict(zip(taxa, taxa_abundances))
         #taxAbun = tuple(zip(taxa, taxa_abundances))
+        write_logfile('info', 'Taxa', 'Subset sequences')
         headers, neededSeqs = cls.subsetSilvaproportions( taxAbun, refTax = refTax, ref = ref, rank = rank )
+        write_logfile('info', 'Enviro', 'Select sequences')
         Seqs = cls.set_sequences( fastaFile = ref, refTax = refTax , cpus = cpus, rank = rank, selected = list(headers), degap = False)
+        write_logfile('info', 'Taxa', 'Complete sequences')
         if neededSeqs:
             FakeSeqs = cls.make_fake_taxa(neededSeqs, rank = rank, cpus = cpus, ref = ref, refTax = refTax)
             TotalSeqs = Seqs|FakeSeqs
@@ -224,7 +227,7 @@ class Enviro():
             #return(-1.0)
     # Methods for Enviro objects
        # Methods for Enviro objects
-    def makeASVs(self, region, start, end, ASVsmean, cutoff , cpus, by_region = None ): # ADD ASV/OTU calculation
+    def makeASVs(self, region, start, end, ASVsmean, cutoff , cpus, by_region = None, by_pos = None ): # ADD ASV/OTU calculation
         """ Create fake ASVs from sequences """
         # Subset Seqs, do ASVs, until complete nASVs
         ASVs = set()
@@ -243,13 +246,13 @@ class Enviro():
                     Nposmax = int(round(cutoff * len(newS.trimregion(start, end).deGap().seq)))
                     #print(newS.seq)
                     #print(len(newS.seq))
-                    newSasvs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = Nposmax, start = start, end = end, by_region = by_region)
+                    newSasvs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = Nposmax, start = start, end = end, by_region = by_region, by_pos = by_pos)
                     #Check distances
                     ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus)
                     #write_logfile('warning', 'SUBSET RANDOM SEQS', 'len(ASVs) {}\tlen(ASVsdiff) {}'.format(len(newSavs), len(ASVsdiff)))
                     i=0
                     while len(ASVsdiff) < len(newSasvs): # If one sequence have been removed 'cause it is identical to another one, repeat to take ASVs from that sequence, otherwise some taxa can be minusvalorated
-                        newSavs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = 45, start = start, end = end, by_region = by_region)
+                        newSavs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = 45, start = start, end = end, by_region = by_region, by_pos = by_pos)
                         #Check distances
                         ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus)
                         i = i+1

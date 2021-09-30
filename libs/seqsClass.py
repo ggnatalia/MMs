@@ -55,7 +55,7 @@ class Sequence():
         seq = self.seq.replace('.','').replace('-','')
         return(Sequence(self.header, seq, self.tax))
         
-    def generatemutantASVs(self, Nstrains = None, Nmean = 2, Nposmax = 45, start = 0, end = 50000, by_region = None, include_original = True): # Nmax: numero de cepas maximas por specie, Nposmax: max n? de posiciones que pueden ser mutadas #WORK
+    def generatemutantASVs(self, Nstrains = None, Nmean = 2, Nposmax = 45, start = 0, end = 50000, by_region = None, by_pos = None, include_original = True): # Nmax: numero de cepas maximas por specie, Nposmax: max n? de posiciones que pueden ser mutadas #WORK
         """ For a given Sequence object, return a set of Sequence objects with one object per 'fake' Nstrains """
         if not Nstrains: #Numero de cepas exactas
             Nstrains = np.random.random_integers(0, (Nmean-1)*2) #  to be exact with ASVmean: (Nmean-1)*2??
@@ -68,11 +68,11 @@ class Sequence():
             clusterSeqs.add(Sequence(originalSeqName, self.trimregion(start, end).seq, self.tax)) ##### NEW LINE TO ADD THE REAL STRAIN TO THE MOCK
             #clusterSeqs.add(Sequence(originalSeqName, self.seq, self.tax)) ##### NEW LINE TO ADD THE REAL STRAIN TO THE MOCK
             for i in range(0, Nstrains):   
-                newSequence = Sequence('{}.asv_{}'.format(originalSeqName, i+1),  mutate(string = self.seq, N = Npos, start = start, end = end, regions = by_region, header = '{}.asv_{}'.format(originalSeqName, i+1)), self.tax)
+                newSequence = Sequence('{}.asv_{}'.format(originalSeqName, i+1),  mutate(string = self.seq, N = Npos, start = start, end = end, regions = by_region, positions = by_pos, header = '{}.asv_{}'.format(originalSeqName, i+1)), self.tax)
                 clusterSeqs.add(newSequence) # Add new Seq objects
         else:
             for i in range(0, Nstrains):   
-                newSequence = Sequence('{}-{}'.format(originalSeqName, i+1),  mutate(string = self.seq, N = Npos, start = start, end = end, regions = by_region, header = '{}.asv_{}'.format(originalSeqName, i+1)), self.tax)
+                newSequence = Sequence('{}-{}'.format(originalSeqName, i+1),  mutate(string = self.seq, N = Npos, start = start, end = end, regions = by_region, positions = by_pos, header = '{}-{}'.format(originalSeqName, i+1)), self.tax)
                 clusterSeqs.add(newSequence) # Add new Seq objects
         return(clusterSeqs)         # set with different Seq objects from a single Seq object
 

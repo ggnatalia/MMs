@@ -1,6 +1,6 @@
 package:
   name: mms
-  version: '0.0.3'
+  version: '0.0.4'
 
 source:
   #git_url: git@github.com:ggnatalia/MMs.git
