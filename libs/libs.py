@@ -6,6 +6,8 @@ import random
 import subprocess
 import logging
 import daiquiri
+import os
+import shutil
 ################################################################################################### Useful functions, common in different steps
 
 ########################### WORK WITH FASTA/ ALIGN FILES
@@ -99,7 +101,7 @@ def load_table(filepath, rows = None , cols = None, path = '.', sep = ','):
     return(data)
 
 ########################### MUTATIONS
-def mutate(string, N, start = None, end = None, regions = None, header = None): # WORK HACER QUE FUNCIONE QUITANDO LOS GAPS A LA SECUENCIA 
+def mutate(string, N, start = None, end = None, regions = None, header = None, positions = None): # WORK HACER QUE FUNCIONE QUITANDO LOS GAPS A LA SECUENCIA 
     """ Generate a mutate string from original one in N positions """
     bases = ['A','T','C','G','-']
     if not start:
@@ -113,83 +115,104 @@ def mutate(string, N, start = None, end = None, regions = None, header = None): 
     pos_equivalence = {}
     #print(str(len(string)))
     #print(str(len(strings_list)))
-    j = 0 #Initial pos without '.' and '-'
-    for i, old_pos in enumerate(list(string)):
-        if old_pos == '.' or old_pos == '-':
-            continue
-        else:
+    if positions: # List of positions given by the user
+        mutation_sites = positions
+        print(positions)
+        j = 0 #Initial pos without '.' and '-'
+        for i, old_pos in enumerate(list(string)):
             pos_equivalence[j] = i
-            #print('o' + str(i))
-            #print('n' + str(j))
-        j += 1
-    # If mutation site includes '.' sample another mutation site. No repeat positions
-    # List of possible positions without '.'
-    possiblePos = [i for i,nt in enumerate(strings_list)] #list of indexes
-    #print('possiblePos ' + str(len(possiblePos)))
-    #print(possiblePos)
-    if not isinstance(regions, list):
-        mutation_sites = list(np.random.choice(possiblePos, N, replace=False))
+                #print('o' + str(i))
+                #print('n' + str(j))
+            j += 1
+        strings_list = original_string
+        #print(pos_equivalence)
     else:
-        by_region = regions.copy()
-        #print(by_region)
-        # Change probability of positions to be muted. If sum 1, only introduce mutations in that regions, otherwise introduce mutations in any region
-        prob_pos = [list(range(r[1], r[2])) for r in by_region] # First element is strict or not strict
-        # Remove those positions that are not possible
-        prob_pos_good = []
-        for j in range(len(prob_pos)):
-            if prob_pos[j][0] not in possiblePos:
-                #print('# Remove complete region')
-                possiblePos = possiblePos[:prob_pos[j-1][-1]]
-                #print('byregion ' + len(by_region))
+        j = 0 #Initial pos without '.' and '-'
+        for i, old_pos in enumerate(list(string)):
+            if old_pos == '.' or old_pos == '-':
+                continue
             else:
-                #print('iterate')
-                prob_pos_good.append([]) # add the region
-                for i in prob_pos[j]: # Adjust last region
-                    if i not in possiblePos:
-                        #print('adjust')
-                        #print(str(i))
-                        continue
-                        #prob_pos_good[j] = list(range(prob_pos[j][0], (i- 1)))
-                    else:
-                        prob_pos_good[j].append(i)
-        #print(len(prob_pos_good))
-        #print([len(reg) for reg in prob_pos])
-        #print(len(possiblePos))
-        #print(prob_pos[-1])
-        #print(prob_pos_good[-1])
-        #exit(-1)
-        # If some region is not present, remove those possitions from possiblePos
+                pos_equivalence[j] = i
+                #print('o' + str(i))
+                #print('n' + str(j))
+            j += 1
 
-        prob_values = list(np.repeat(0, len(possiblePos)))
-        #prob_values = list(np.repeat(0, len(flattened(prob_pos))))
-        for j in range(len(prob_pos_good)):
-            for i in prob_pos_good[j][:-1]:
-                #print('probvalues')
-                #print(str(i))
-                #print(len(prob_values))
-                #print(prob_values[i])
-                #print(str(len(possiblePos)))
-                #print(str(prob_pos_good[j]))
-                #print(prob_pos_good[j])
-                    #print(str(len(strings_list)))
-                prob_values[i] = by_region[j][3]/(len(prob_pos_good[j][:-1]))  # Probabilidad de que sea par 1/2: 50%, cual es la probabilidad de cada uno de los valores pares: 1/6==0.50/3
-        if not round(sum([float(r[3]) for r in by_region])) == 1:
-            probdivide = (1 - sum(prob_values))/sum([True if v == 0 else False for v in prob_values]) # Calculate percentage for the rest of regions until sum 1
-            prob_values = [probdivide if v == 0 else v for v in prob_values]
-            # If we have removed a region, we modify the probabilities per region, so we have to add the probability of that region to the others
-        if sum(prob_values) < 1:
-            #print('diff')
-            diff = 1 - float(sum(prob_values))
-            #prob_values = [v + float(diff/sum([len(block)-1 for block in prob_pos_good])) if v in [p for r in prob_pos_good for p in r] else v for v in prob_values]
-            prob_values[0] = prob_values[0] + diff
-            #print(str(sum(prob_values)))
-        if N < sum([True if f>0 else False for f in prob_values]): # More mutations that possible positions
-            mutation_sites = list(np.random.choice(possiblePos, N, p = prob_values, replace = False))
+        # If mutation site includes '.' sample another mutation site. No repeat positions
+        # List of possible positions without '.'
+        possiblePos = [i for i,nt in enumerate(strings_list)] #list of indexes
+        #print('possiblePos ' + str(len(possiblePos)))
+        #print(possiblePos)
+        if not isinstance(regions, list): 
+            mutation_sites = list(np.random.choice(possiblePos, N, replace=False))
         else:
-            print('Warning: More mutation sites than possible options are requested. Please, select wider regions or disable strict mode to introduce point mutations in different regions although with less probability')
-            exit(-1)
-    #print(sorted(mutation_sites))
-    with open('{}.nt_mutations.tsv'.format(header), 'w') as nt_out:
+            by_region = regions.copy()
+            #print(by_region)
+            # Change probability of positions to be muted. If sum 1, only introduce mutations in that regions, otherwise introduce mutations in any region
+            prob_pos = [list(range(r[1], r[2])) for r in by_region] 
+            # Remove those positions that are not possible
+            prob_pos_good = []
+            for j in range(len(prob_pos)):
+                if prob_pos[j][0] not in possiblePos:
+                    #print('# Remove complete region')
+                    possiblePos = possiblePos[:prob_pos[j-1][-1]]
+                    #print('byregion ' + len(by_region))
+                else:
+                    #print('iterate')
+                    prob_pos_good.append([]) # add the region
+                    for i in prob_pos[j]: # Adjust last region
+                        if i not in possiblePos:
+                            #print('adjust')
+                            #print(str(i))
+                            continue
+                            #prob_pos_good[j] = list(range(prob_pos[j][0], (i- 1)))
+                        else:
+                            prob_pos_good[j].append(i)
+            #print(len(prob_pos_good))
+            #print([len(reg) for reg in prob_pos])
+            #print(len(possiblePos))
+            #print(prob_pos[-1])
+            #print(prob_pos_good[-1])
+            #exit(-1)
+            # If some region is not present, remove those possitions from possiblePos
+    
+            prob_values = list(np.repeat(0, len(possiblePos)))
+            #prob_values = list(np.repeat(0, len(flattened(prob_pos))))
+            for j in range(len(prob_pos_good)):
+                for i in prob_pos_good[j][:-1]:
+                    #print('probvalues')
+                    #print(str(i))
+                    #print(len(prob_values))
+                    #print(prob_values[i])
+                    #print(str(len(possiblePos)))
+                    #print(str(prob_pos_good[j]))
+                    #print(prob_pos_good[j])
+                        #print(str(len(strings_list)))
+                    prob_values[i] = by_region[j][3]/(len(prob_pos_good[j][:-1]))  # Probabilidad de que sea par 1/2: 50%, cual es la probabilidad de cada uno de los valores pares: 1/6==0.50/3
+            if not round(sum([float(r[3]) for r in by_region])) == 1:
+                probdivide = (1 - sum(prob_values))/sum([True if v == 0 else False for v in prob_values]) # Calculate percentage for the rest of regions until sum 1
+                prob_values = [probdivide if v == 0 else v for v in prob_values]
+                # If we have removed a region, we modify the probabilities per region, so we have to add the probability of that region to the others
+            if sum(prob_values) < 1:
+                #print('diff')
+                diff = 1 - float(sum(prob_values))
+                #prob_values = [v + float(diff/sum([len(block)-1 for block in prob_pos_good])) if v in [p for r in prob_pos_good for p in r] else v for v in prob_values]
+                prob_values[0] = prob_values[0] + diff
+                #print(str(sum(prob_values)))
+            #print('mutate N ' + str(N) + ' ' + str(sum([True if f>0 else False for f in prob_values])))    
+            if N < sum([True if f>0 else False for f in prob_values]): # More mutations that possible positions
+                mutation_sites = list(np.random.choice(possiblePos, N, p = prob_values, replace = False))
+            else:
+               # print('Warning: More mutation sites than possible options are requested. Please, select wider regions or disable strict mode to introduce point mutations in different regions although with less probability')
+                #exit(-1)
+                N = sum([True if f>0 else False for f in prob_values])
+                mutation_sites = list(np.random.choice(possiblePos, N, p = prob_values, replace = False))
+        #print(sorted(mutation_sites))
+    try:
+        os.mkdir('mutations')
+    except OSError as e: #[Errno 17] File exists: 'output'
+        if e.errno != 17:
+            raise
+    with open('mutations/{}.nt_mutations.tsv'.format(header), 'w') as nt_out:
         for pos in sorted(mutation_sites): # Avoid cases in which the mutated base is identical to the original
             original_pos = pos_equivalence[pos] # see what is the position in the sequence with '.' and '-'
             random_nt = random.sample(list(filter(lambda x: x != ''.join(strings_list)[pos], bases)), 1)[0]
@@ -198,6 +221,13 @@ def mutate(string, N, start = None, end = None, regions = None, header = None): 
         #print(original_string[original_pos])
     #tring_mutate = ''.join(strings_list.tolist())
     return(''.join(original_string.tolist()))
+
+
+def load_positions(positions_file):
+    with open(positions_file, 'r') as positions_align:
+        positions=positions_align.read().rstrip()
+        pos = np.where(np.array(list(positions)) == '1')[0].tolist()
+    return(pos)
 
 ########################### TAXONOMY
 def rank2number(rank): 
@@ -290,5 +320,18 @@ def read_mutation_regions(f):
     #l.insert(0, strict)
         return(l) # this will be input of by_region
     
+def load_mutations_regions(regions):
+    """ Load the default mutation regions just in case the user wants to use them """
+    regions_default = {'V1': (69, 99), 'V2': (137, 242), 'V3': (433, 497), 'V4': (576, 682) , 'V5': (822, 879), 'V6': (986, 1043), 'V7': (1117, 1173), 'V8': (1243, 1294), 'V9': (1435, 1465)}
+    # Pick the regions that the user wants and distribute probabilities between them
+    l = []
+    number_regions = len(regions)
+    for r in regions:
+        l.append((r, regions_default[r][0], regions_default[r][1], 1.0/number_regions)) # the sum of all probabilities must be 1
+    return(l)
+
+
+
+
     
     
