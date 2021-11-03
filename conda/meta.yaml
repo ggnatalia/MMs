@@ -1,6 +1,6 @@
 package:
   name: mms
-  version: '0.0.4'
+  version: '0.0.5'
 
 source:
   #git_url: git@github.com:ggnatalia/MMs.git
@@ -37,7 +37,7 @@ requirements:
     - matplotlib
       #- seaborn  
     - mothur=1.44
-    - biopython
+    - biopython=1.78
     - joblib
     - pysam=0.15
     - requests

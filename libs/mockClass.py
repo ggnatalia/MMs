@@ -26,7 +26,7 @@ class Mock():
         cls.multiprocessing_globals_samples = []
         cls.SimInput = []
         
-    def __init__(self, prefix, Seqs, df, samples, alignment = [0, 50000, '16S'], cpus = 12, reads = 10000, Sim = 'InSilicoSeqs', ISSerrormodel = 'perfect', ISSparams = (150,200), NSerrormodel = 'perfect', NSparams = (500, 50)):
+    def __init__(self, prefix, Seqs, df, samples, alignment = [0, 50000, '16S'], cpus = 12, reads = 10000, Sim = 'InSilicoSeqs', ISSerrormodel = 'perfect', ISSparams = (150,200), NSerrormodel = 'perfect', NSparams = (500, 50), ambiguidities = 500):
         self.prefix = prefix
         self.samples = samples
         self.df = df # row: samples, col: species
@@ -39,28 +39,29 @@ class Mock():
         self.ISSparams = ISSparams
         self.NSerrormodel = NSerrormodel
         self.NSparams = NSparams
+        self.ambiguidities = ambiguidities
     
     def __repr__(self): 
         return(self.df)
     
     @classmethod    
-    def init_and_run_InSilico(cls, prefix, ISSsequence_files, ISSabundance_files, alignment = [0, 50000, '16S'], cpus = 12, reads = 20000, Sim = 'InSilicoSeqs', ISSerrormodel = 'perfect', ISSparams = (150, 200)):
-        mock = Mock(prefix, set(), pd.DataFrame(index=[], columns=[]), [], alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel,  ISSparams = ISSparams)
+    def init_and_run_InSilico(cls, prefix, ISSsequence_files, ISSabundance_files, alignment = [0, 50000, '16S'], cpus = 12, reads = 20000, Sim = 'InSilicoSeqs', ISSerrormodel = 'perfect', ISSparams = (150, 200), ambiguidities = 500):
+        mock = Mock(prefix, set(), pd.DataFrame(index=[], columns=[]), [], alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel,  ISSparams = ISSparams, ambiguidities = ambiguidities)
         for i, (fasta, abun) in enumerate(zip(ISSsequence_files, ISSabundance_files)):
             sampleName = 'S_' + str(i)
             mock.SimInput.append((fasta, abun, sampleName))
         return(mock.reads_generation())
     
     @classmethod    
-    def init_and_run_NanoSim(cls, prefix, NSsequence_files, NSabundance_files, NSdl_files, alignment = [0, 50000, '16S'], cpus = 12, reads = 10000, Sim = 'NanoSim', NSerrormodel = 'perfect', NSparams = (500, 50)):
-        mock = Mock(prefix, set(), pd.DataFrame(index=[], columns=[]), [], alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, NSerrormodel = NSerrormodel, NSparams = NSparams)
+    def init_and_run_NanoSim(cls, prefix, NSsequence_files, NSabundance_files, NSdl_files, alignment = [0, 50000, '16S'], cpus = 12, reads = 10000, Sim = 'NanoSim', NSerrormodel = 'perfect', NSparams = (500, 50), ambiguidities = 500):
+        mock = Mock(prefix, set(), pd.DataFrame(index=[], columns=[]), [], alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, NSerrormodel = NSerrormodel, NSparams = NSparams, ambiguidities = ambiguidities)
         for i, (fasta, abun, dl) in enumerate(zip(NSsequence_files, NSabundance_files, NSdl_files)):
             sampleName = 'S_' + str(i)
             mock.SimInput.append((fasta, abun, dl, sampleName))
         return(mock.reads_generation())
     
     @classmethod
-    def init_from_previousmock(cls, prefix, sequence_file, abun_table, alignment = [0, 50000, '16S'], cpus = 12, reads = 20000, Sim = 'InSilicoSeqs', ISSerrormodel = 'perfect',  ISSparams = (150,200), NSerrormodel = 'perfect',  NSparams = (500,50)):
+    def init_from_previousmock(cls, prefix, sequence_file, abun_table, alignment = [0, 50000, '16S'], cpus = 12, reads = 20000, Sim = 'InSilicoSeqs', ISSerrormodel = 'perfect',  ISSparams = (150,200), NSerrormodel = 'perfect',  NSparams = (500,50), ambiguidities = 500):
         write_logfile('info', 'LOADING A PREVIOUS MOCK', 'Loading sequence and abundance files')
         #Check if the files exists:
         gSeqs = set()
@@ -75,8 +76,8 @@ class Mock():
                 seq = fasta.readline().rstrip('\n')
                 if not 'N' in seq:
                     gSeqs.add(Sequence(header, seq, None, 0))
-        mock = Mock(prefix, gSeqs, df, [], alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel, ISSparams = ISSparams, NSerrormodel = NSerrormodel, NSparams = NSparams)
-        mock.multiprocessing_globals_samples = [Sample.init_from_df(prefix = prefix, sample = df.loc[sample], Seqs = gSeqs, alignment = alignment, reads = reads, Sim = Sim) for sample in list(df.index.values)] # List of sample objects
+        mock = Mock(prefix, gSeqs, df, [], alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel, ISSparams = ISSparams, NSerrormodel = NSerrormodel, NSparams = NSparams, ambiguidities = ambiguidities)
+        mock.multiprocessing_globals_samples = [Sample.init_from_df(prefix = prefix, sample = df.loc[sample], Seqs = gSeqs, alignment = alignment, reads = reads, Sim = Sim, ambiguidities = ambiguidities) for sample in list(df.index.values)] # List of sample objects
         if cpus == 1:
             write_logfile('info', 'Creating input files for squencing simulator', 'Start 1 cpu')
             mock.SimInput = list(map(Sample.generate_Simulator_input_files(), mock.multiprocessing_globals_samples)) #[('seq', 'abun', sample_name),()]
@@ -94,7 +95,7 @@ class Mock():
 
 
     @classmethod
-    def init_from_enviro(cls, Enviro, prefix, Nsamples, shannonIndex, alignment = [0, 50000, '16S'], cpus = 12, alpha = 0.9,  smallest_coef = 0.1, largest_coef = 0.9, reads = 20000, pstr0 = 0.2, size = 1, Sim = 'InSilicoSeqs', ISSerrormodel = 'perfect',  ISSparams = (150,200), NSerrormodel = 'perfect',  NSparams = (500,50)):
+    def init_from_enviro(cls, Enviro, prefix, Nsamples, shannonIndex, alignment = [0, 50000, '16S'], cpus = 12, alpha = 0.9,  smallest_coef = 0.1, largest_coef = 0.9, reads = 20000, pstr0 = 0.2, size = 1, Sim = 'InSilicoSeqs', ISSerrormodel = 'perfect',  ISSparams = (150,200), NSerrormodel = 'perfect',  NSparams = (500,50), ambiguidities = 500):
         """ Creating a mock from scratch. A set of Samples objects"""
         write_logfile('info', 'CREATE MOCK', 'Estimating abundances')
         if Nsamples == 1:
@@ -109,12 +110,12 @@ class Mock():
         # To each sequence, add they global abundance in all the samples
         for s in Enviro.Seqs:
             s.abun = df[s.header].sum()
-        mock = Mock(prefix, Enviro.Seqs, df, [], alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel, ISSparams = ISSparams, NSerrormodel = NSerrormodel, NSparams = NSparams)
+        mock = Mock(prefix, Enviro.Seqs, df, [], alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ambiguidities = ambiguidities, ISSerrormodel = ISSerrormodel, ISSparams = ISSparams, NSerrormodel = NSerrormodel, NSparams = NSparams)
         return(mock.run_mock()) #samples is empty, in run samples, it will be filled
         
     def run_mock(self):
         """ Work sample by sample: create input files for InSilicoSeqs, plots and run InSilicoSeqs """
-        self.samples = [Sample.init_from_df(prefix = self.prefix, sample = self.df.loc[sample], Seqs = self.gSeqs, alignment = self.alignment, reads = self.reads, Sim = self.Sim) for sample in list(self.df.index.values)] # List of sample objects
+        self.samples = [Sample.init_from_df(prefix = self.prefix, sample = self.df.loc[sample], Seqs = self.gSeqs, alignment = self.alignment, reads = self.reads, Sim = self.Sim, ambiguidities = self.ambiguidities) for sample in list(self.df.index.values)] # List of sample objects
         write_logfile('info', 'CREATE MOCK', 'Writing output abundance tables')
         write_table(self.df, title = 'checkDB/{}.raw.abundances_original'.format(self.prefix), rows = list(self.df.index) , columns = list(self.df.columns), dataframe = None)
         abunTablePercent = make_percent(self.df, outputDir = 'checkDB/', write = True, fileName = '{}.abundances_original'.format(self.prefix), T = False)

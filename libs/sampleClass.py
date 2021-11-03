@@ -21,7 +21,7 @@ class Sample():
     
     #print('{}/../extlibs/'.format('/'.join(os.path.abspath(__file__).split('/')[:-1])))
     #sys.path.append('{}/../extlibs/'.format('/'.join(os.path.abspath(__file__).split('/')[:-1])))
-    def __init__(self, prefix, sampleName, Seqs, alignment, reads, Sim):
+    def __init__(self, prefix, sampleName, Seqs, alignment, reads, Sim, ambiguidities):
         
         self.prefix = prefix
         self.sample_name = sampleName
@@ -30,6 +30,7 @@ class Sample():
         self.alignment = alignment # list [start, end, region]
         self.reads = reads
         self.Sim = Sim
+        self.ambiguidities = ambiguidities
         
     def __repr__(self): 
         return(self.sample_name)
@@ -78,7 +79,7 @@ class Sample():
             if not os.path.isfile(sampleFasta) or not os.path.isfile(sampleAbun):
                 with open(sampleFasta, 'w') as seqs, open(sampleAbun, 'w') as abundances: # ADD NNNNNNNNNNNNNNNNNNNNN to simulate part of the reads that are no 16S
                     for s in self.Seqs:
-                        seqs.write('>{}\n{}{}{}\n'.format(s.header, 'N'*500, s.deGap().seq,'N'*500))
+                        seqs.write('>{}\n{}{}{}\n'.format(s.header, 'N'*self.ambiguidities, s.deGap().seq,'N'*self.ambiguidities))
                         abundances.write('{}\t{}\n'.format(s.header, s.abun/sum([s.abun for s in self.Seqs]))) #remove round(,2)
             return('{}.{}.sequences16S.fasta'.format(self.prefix, self.sample_name), '{}.{}.abundances'.format(self.prefix, self.sample_name), self.sample_name)
         elif self.Sim == 'NanoSim':
@@ -89,7 +90,7 @@ class Sample():
                 with open(sampleFasta, 'w') as seqs, open(sampleAbun, 'w') as abundances, open(sampleDL, 'w') as dlNS, open(sampleGL, 'w') as genomes: # ADD NNNNNNNNNNNNNNNNNNNNN to simulate part of the reads that are no 16S
                     abundances.write('Size\t{}\n'.format(self.reads))
                     for s in self.Seqs:
-                        seqs.write('>{}\n{}{}{}\n'.format(s.header, 'N'*500, s.deGap().seq,'N'*500))
+                        seqs.write('>{}\n{}{}{}\n'.format(s.header, 'N'*self.ambiguidities, s.deGap().seq,'N'*self.ambiguidities))
                         abundances.write('{}\t{}\n'.format(s.header, s.abun/sum([s.abun for s in self.Seqs]*100))) #remove round(,2)
                         dlNS.write('{}\t{}\tlinear\n'.format(s.header, s.header))      
                         genomes.write('{}\t{}\n'.format(s.header, sampleFasta))
@@ -109,7 +110,7 @@ class Sample():
             
             
     @classmethod
-    def init_from_df(cls, prefix, sample, Seqs, alignment, reads, Sim):
+    def init_from_df(cls, prefix, sample, Seqs, alignment, reads, Sim, ambiguidities):
         """ Create a Sample object from pandas df 1D and alignSeqs"""
         #sample = row of the df, name = 'S_0'
         sampleName = sample.name
@@ -120,7 +121,7 @@ class Sample():
             if s.abun == 0:
                 seqsNull.add(s.header)
         SeqsSample = {s for s in Seqscopy if s.header not in seqsNull}
-        return(Sample(prefix, sampleName, SeqsSample, alignment, reads, Sim))
+        return(Sample(prefix, sampleName, SeqsSample, alignment, reads, Sim, ambiguidities))
 
 
 

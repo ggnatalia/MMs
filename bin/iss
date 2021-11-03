@@ -4,7 +4,7 @@ import re
 import sys
 import os
 
-sys.path.append('{}/../extlibs'.format('/'.join(os.path.abspath(__file__).split('/')[:-1])))
+sys.path.append('{}/../extlibs/InSilicoSeq-1.5.4/'.format('/'.join(os.path.abspath(__file__).split('/')[:-1])))
 #print(sys.path)
 
 from iss.app import main

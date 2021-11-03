@@ -1,0 +1,42 @@
+# project specific files
+*.fastq
+*.bam
+*.bam.bai
+*.bt2
+test_runs/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+
+# Unit test / coverage reports
+.cache
+.coverage
+coverage.xml
+
+# files needed for tests
+!SRR1660402_mapped.bam
+!SRR1660402_mapped.bam.bai
+!ecoli.fasta
+!ecoli_R*.fastq
+!ecoli.bam
+!ecoli.bam.bai
+!substitutions_test.bam
+!substitutions_test.bam.bai
+
+# virtualenv
+venv_iss/
+
+# MacOS stuff
+.DS_Store
+
+# fastqc reports
+*fastqc*
+
+# editor configs
+.vscode/

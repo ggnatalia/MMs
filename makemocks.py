@@ -92,6 +92,7 @@ def parse_arguments():
     general.add_argument('--alpha', default = 0.9, type = float, help = 'Correlation Matrix: Probability that a coefficient is zero. Larger values enforce more sparsity.')
     general.add_argument('--pstr0', default = 0.2, type = float, help = 'ZINBD: Probability of structure 0')
     general.add_argument('--size', default = 1, type = int, help = 'ZINBD: Size - dispersion of ZINBD')
+    general.add_argument('--ambiguidities', default = 500, type = int, help = 'Number of Ns at the beginning or the end of the sequence')
     
     # For testing
     general.add_argument( '--just_taxa_selection', action = 'store_true', help = 'If True: do the selection of the sequences and stop.')
@@ -207,7 +208,7 @@ def main(args):
     pstr0 = args.pstr0
     size = args.size
     alpha = args.alpha
-
+    ambiguidities = args.ambiguidities
     # OPTION 1: REPEAT ONLY THE READ GENERATION: sequences and abundances files are provided, run Insilico, and prepare files to smiTE. 
     
     if (Sim == 'InSilicoSeqs' and args.repeat_ISS_autocomplete) or (ISSsequences_files and ISSabundance_files and args.repeat_ISS_autocomplete): 
@@ -241,7 +242,7 @@ def main(args):
             if not os.path.isfile('../{}.fasta'.format(projectPrefix)) or not os.path.isfile('checkDB/{}.raw.abundances_original.tsv'.format(mockPrefix)):
                 write_logfile('error', 'MOCK REPEAT', '../{}.fasta and checkDB/{}.raw.abundances_original.tsv do not exist. Please be sure you are running this script outside your output directory and that you have these files from a previous mock community.'.format(projectPrefix, mockPrefix))
             else:
-                Mock.init_from_previousmock(mockPrefix, sequence_file = '../{}.fasta'.format(projectPrefix), abun_table = 'checkDB/{}.raw.abundances_original.tsv'.format(mockPrefix), alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel,  ISSparams = ISSparams, NSerrormodel = NSerrormodel,  NSparams = NSparams)
+                Mock.init_from_previousmock(mockPrefix, sequence_file = '../{}.fasta'.format(projectPrefix), abun_table = 'checkDB/{}.raw.abundances_original.tsv'.format(mockPrefix), alignment = alignment, cpus = cpus, reads = reads, Sim = Sim, ISSerrormodel = ISSerrormodel,  ISSparams = ISSparams, NSerrormodel = NSerrormodel,  NSparams = NSparams, ambiguidities = ambiguidities)
         else:
             write_logfile('error', 'MOCK REPEAT', '{} does not exist. Please be sure you are running this script outside your output directory.'.format(mockPath))
             exit(-2) # Exit -2: dir not found
@@ -307,7 +308,7 @@ def main(args):
             os.mkdir('{}/samples'.format(mockPath))
             os.mkdir('{}/checkDB'.format(mockPath))
             #Define mock abundances
-            mock = Mock.init_from_enviro(Env, mockPrefix, S, shannon, alignment = alignment, cpus = cpus, alpha = alpha,  smallest_coef = 0.1, largest_coef = 0.9, reads = reads, pstr0 = pstr0, size = size, Sim = Sim, ISSerrormodel =ISSerrormodel, ISSparams = ISSparams, NSerrormodel = NSerrormodel, NSparams = NSparams)
+            mock = Mock.init_from_enviro(Env, mockPrefix, S, shannon, alignment = alignment, cpus = cpus, alpha = alpha,  smallest_coef = 0.1, largest_coef = 0.9, reads = reads, pstr0 = pstr0, size = size, Sim = Sim, ISSerrormodel =ISSerrormodel, ISSparams = ISSparams, NSerrormodel = NSerrormodel, NSparams = NSparams, ambiguidities = ambiguidities)
             os.chdir(path)
             # ShannonIndex correspondence (mothur is REQUIRED : CHECK)
             write_logfile('info', 'SHANNON INDEX', 'To know the correspondence of Shannon Index in the different taxonomic ranks, mothur is required')

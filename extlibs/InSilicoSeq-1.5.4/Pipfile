@@ -1,0 +1,24 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+future = "*"
+numpy = "*"
+scipy = "*"
+biopython = "==1.78"
+joblib = "*"
+pysam = "==0.15.4"
+requests = "*"
+urllib3 = ">=1.26.5"
+
+[dev-packages]
+nose = "*"
+codecov = "*"
+"pep8" = "*"
+pycodestyle = "*"
+
+[scripts]
+iss = "python -m iss"
+tests = "nosetests --with-coverage --cover-package=iss --cover-xml"
