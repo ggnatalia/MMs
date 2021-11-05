@@ -248,13 +248,13 @@ class Enviro():
                     #print(len(newS.seq))
                     newSasvs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = Nposmax, start = start, end = end, by_region = by_region, by_pos = by_pos)
                     #Check distances
-                    ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus)
+                    ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus, trimmed = trimmed)
                     #write_logfile('warning', 'SUBSET RANDOM SEQS', 'len(ASVs) {}\tlen(ASVsdiff) {}'.format(len(newSavs), len(ASVsdiff)))
                     i=0
                     while len(ASVsdiff) < len(newSasvs): # If one sequence have been removed 'cause it is identical to another one, repeat to take ASVs from that sequence, otherwise some taxa can be minusvalorated
                         newSavs = newS.generatemutantASVs(Nstrains = None, Nmean = ASVsmean, Nposmax = 45, start = start, end = end, by_region = by_region, by_pos = by_pos)
                         #Check distances
-                        ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus)
+                        ASVsdiff = self.distances(Seqs = newSasvs, prefix = self.prefix, region = region, start = start, end = end, cpus = cpus, trimmed = trimmed)
                         i = i+1
                         if i > 10:
                             #write_logfile('warning', 'SUBSET RANDOM SEQS2', 'len(ASVsdiff) {}\tlen(newSavs) {}'.format(len(newSavs), len(ASVsdiff)))
