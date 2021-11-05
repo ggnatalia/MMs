@@ -88,7 +88,7 @@ def extract_positions(taxa, ref = '/home/natalia/Documentos/TRABAJO/MMs/DB/silva
     """ From a particular taxa, extract more variable positions regarding a cutoff"""
     positions = []
     # First load the taxonomy for all the sequences in the reference
-    silva_taxa = loadTaxa(rank = rank2number(rank))
+    silva_taxa = loadTaxa(refTax = refTax, rank = rank2number(rank))
     # Collect the name of all the sequences from a corresponding taxa
     global sequences
     sequences = set()
