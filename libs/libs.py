@@ -117,7 +117,7 @@ def mutate(string, N, start = None, end = None, regions = None, header = None, p
     #print(str(len(strings_list)))
     if positions: # List of positions given by the user
         mutation_sites = positions
-        print(positions)
+        #print(positions)
         j = 0 #Initial pos without '.' and '-'
         for i, old_pos in enumerate(list(string)):
             pos_equivalence[j] = i
