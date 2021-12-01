@@ -159,6 +159,7 @@ M&Ms accepts one of the following five independent types of inputs depending on 
          --pstr0: ZINBD: Probability of structure 0. Default 0.2
          --size: 'ZINBD: Size - dispersion of ZINBD. Default 1
          --Sim {InSilicoSeqs,NanoSim}: Choose read simulator: InSilicoSeqs or NanoSim
+         --ambiguidities: Add a number of 'N' at the beginning or the end of the sequence
    - InSilicoSeqs parameters:    
 
          --ISSerrormodel: Mode to generate InSilicoSeqs (see InSilicoSeqs documentation: https://insilicoseq.readthedocs.io/en/latest/index.html): basic, perfect,    MiSeq, HiSeq, NovaSeq
