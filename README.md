@@ -176,7 +176,7 @@ For more information, you can check the wiki: https://github.com/ggnatalia/MMs/w
 
 ### Cite
 Please, if you use this software, do not forget to cite:   
--M&Ms: Natalia García-García, Javier Tamames, Fernando Puente-Sánchez. (2021). M&Ms: A software for building realistic Microbial Mock communities. bioRxiv 2021.04.21.440404; doi: https://doi.org/10.1101/2021.04.21.440404    
+-M&Ms: Natalia García-García, Javier Tamames, Fernando Puente-Sánchez. (2022). M&Ms: A versatile software for building Microbial Mock communities. Bioinformatics; btab882, https://doi.org/10.1093/bioinformatics/btab882
 
 -InSilicoSeqs: Hadrien Gourlé, Oskar Karlsson-Lindsjö, Juliette Hayer, Erik Bongcam-Rudloff. (2019). Simulating Illumina metagenomic data with InSilicoSeq, Bioinformatics, 35(3): 521–522, https://doi.org/10.1093/bioinformatics/bty630    
 
