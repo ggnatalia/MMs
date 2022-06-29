@@ -25,7 +25,7 @@ requirements:
     - scipy  
       #- math
     - pandas
-    - scikit-learn
+    - scikit-learn=0.22.1 
       #- random
       #- re
       #- glob
