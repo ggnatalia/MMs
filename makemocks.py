@@ -280,7 +280,11 @@ def main(args):
             if enviro:
                 Env = Enviro.init_from_enviro(nASVs = nASVs, prefix = projectPrefix, enviro = enviro, refEnviro = refEnviro, refTax = refTax, ref = ref, nTaxa = 10000, rank = 5, cpus = cpus, by_region = by_region)
                 rank = 5
-            elif taxa: 
+            elif taxa:
+                if os.path.isfile('{}/{}'.format(path,taxa[0])):
+                    taxa, taxaAbund = parseTaxas('{}/{}'.format(path,taxa[0]))
+                print('\t'.join(taxa))
+                print('\t'.join(map(str,taxaAbund)))
                 Env = Enviro.init_from_taxa(nASVs = nASVs, prefix = projectPrefix, rank = rank, taxa = taxa, taxa_abundances = taxaAbund, refTax =  refTax, ref = ref, cpus = cpus)
             else: # seqs
                 Env = Enviro.init_from_seqs(prefix = projectPrefix, rank = rank, seqs = seqs, nASVs = nASVs, minseqs = minseqs, refTax =  refTax, ref = ref, cpus = cpus)
