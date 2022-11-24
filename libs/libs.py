@@ -43,6 +43,7 @@ def fastq2fasta(fastq, fasta):
             coment= fastqfile.readline().rstrip('\n')
             qual = fastqfile.readline().rstrip('\n')
             fastafile.write('>{}\n{}\n'.format(header, seq))
+            
 def parseTaxas(taxafile):
     with open(taxafile) as tx:
         taxas = []
