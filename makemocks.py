@@ -92,7 +92,7 @@ def parse_arguments():
     general.add_argument('--alpha', default = 0.9, type = float, help = 'Correlation Matrix: Probability that a coefficient is zero. Larger values enforce more sparsity.')
     general.add_argument('--pstr0', default = 0.2, type = float, help = 'ZINBD: Probability of structure 0')
     general.add_argument('--size', default = 1, type = int, help = 'ZINBD: Size - dispersion of ZINBD')
-    general.add_argument('--ambiguidities', default = 500, type = int, help = 'Number of Ns at the beginning or the end of the sequence')
+    general.add_argument('--ambiguities', default = 500, type = int, help = 'Number of Ns at the beginning or the end of the sequence')
     
     # For testing
     general.add_argument( '--just_taxa_selection', action = 'store_true', help = 'If True: do the selection of the sequences and stop.')
@@ -208,7 +208,7 @@ def main(args):
     pstr0 = args.pstr0
     size = args.size
     alpha = args.alpha
-    ambiguidities = args.ambiguidities
+    ambiguidities = args.ambiguities
     # OPTION 1: REPEAT ONLY THE READ GENERATION: sequences and abundances files are provided, run Insilico, and prepare files to smiTE. 
     
     if (Sim == 'InSilicoSeqs' and args.repeat_ISS_autocomplete) or (ISSsequences_files and ISSabundance_files and args.repeat_ISS_autocomplete): 
