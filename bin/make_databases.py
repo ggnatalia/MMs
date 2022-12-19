@@ -46,7 +46,26 @@ def main(args):
         with open(silva_version, 'wb') as f: # write the content to a file
             f.write(silva.raw.read())
         with tarfile.open(silva_version, 'r') as tar_ref:
-            tar_ref.extractall()
+            def is_within_directory(directory, target):
+                
+                abs_directory = os.path.abspath(directory)
+                abs_target = os.path.abspath(target)
+            
+                prefix = os.path.commonprefix([abs_directory, abs_target])
+                
+                return prefix == abs_directory
+            
+            def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+            
+                for member in tar.getmembers():
+                    member_path = os.path.join(path, member.name)
+                    if not is_within_directory(path, member_path):
+                        raise Exception("Attempted Path Traversal in Tar File")
+            
+                tar.extractall(path, members, numeric_owner=numeric_owner) 
+                
+            
+            safe_extract(tar_ref)
     else:
        os.symlink(args.ref, '{}/{}'.format(DB, args.ref.split('/')[-1]))
        os.symlink(args.refTax, '{}/{}'.format(DB, args.refTax.split('/')[-1]))
